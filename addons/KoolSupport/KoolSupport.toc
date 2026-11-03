@@ -6,4 +6,5 @@
 ## SavedVariablesPerCharacter: KoolSupportDB
 Core.lua
 BarTheme.lua
+Diagnostics.lua
 UI.lua

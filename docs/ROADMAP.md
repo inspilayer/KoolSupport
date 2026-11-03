@@ -93,3 +93,10 @@ Added user-initiated GitHub Actions workflow to verify and push an immutable `vV
 - **Release:** now `0.10.2-rc.1` source (0.10.1 tag already exists); no new tag or CurseForge file from merging. Previous `v0.10.0-rc.1-beta` immutable. Test Nov 4 evening in the live client: trait tree names/IDs, spell rank and cost API returns, talent changes, tooltip hook, crit math labels, visual layout and cache under reload/combat. Any mismatch is corrected in 0.10.x before publishing or stable promotion.
 
 References: https://warcraft.wiki.gg/wiki/API_C_ClassTalents.GetActiveConfigID ; https://warcraft.wiki.gg/wiki/API_C_Traits.GetConfigInfo ; https://warcraft.wiki.gg/wiki/API_C_Traits.GetNodeInfo ; https://warcraft.wiki.gg/wiki/API_C_Spell.GetSpellPowerCost ; https://talentsforever.com/druid/talents ; https://talentsforever.com/rogue/talents/efficient-strikes ; https://talentsforever.com/rogue/talents/coup-de-grace .
+
+
+## Sprint 4 — in-game Launch Checks / unified-suite readiness
+
+Add a read-only `/kool` → Launch Checks screen to report client Interface marker, five addon loaded/registered/enabled states and the mere *presence* of spellbook, talents, tooltip processor, nameplate and combo-point API entry points. The page has explicit uncertainty labels and a manual Re-run action, no combat resource reads, no macro edits, no file/network access. Fix the stale Home wording that incorrectly implies only Base+Macros ship. Add an offline diagnostic UI/mock test. This is pre-launch instrumentation to assist Nov 4; **no API presence check is a claim of actual gameplay correctness or release approval**.
+
+Next engineering hardening sprint: test and strengthen migration/idempotency and macro ownership with malformed or conflicting legacy SavedVariables and native macro fixtures. Keep `0.10.2-rc.1` untagged until user permits a new Beta and completes live checks.
