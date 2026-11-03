@@ -31,6 +31,13 @@ local function makeFrame(parent)
 end
 CreateFrame=function(_,_,parent) return makeFrame(parent) end
 assert(loadfile('addons/KoolSupport/Core.lua'))()
+local styled=0
+KoolSupport.BarTheme={StyleBar=function(_,bar,role)
+  assert(role=="bleed")
+  styled=styled+1
+  bar:SetStatusBarTexture("Interface\\\\Buttons\\\\WHITE8X8")
+  bar:SetStatusBarColor(.94,.34,.4,1)
+ end}
 local p1=makeFrame(nil);p1.namePlateUnitToken='nameplate1'
 local p2=makeFrame(nil);p2.namePlateUnitToken='nameplate2'
 local plates={["nameplate1"]=p1,["nameplate2"]=p2}
@@ -49,6 +56,7 @@ assert(loadfile('addons/KSStealth/Module.lua'))()
 local S=KSStealth
 S:OnEvent('PLAYER_LOGIN')
 assert(calls.nameplate1 and calls.nameplate2,'must update ALL visible nameplate units')
+assert(styled==10,'Stealth must use shared KS bar theme on all ten segments')
 assert(#S.plates[p1].bars==5 and #S.plates[p2].bars==5)
 for _,b in ipairs(S.plates[p1].bars) do
  assert(b.values[#b.values]==SECRET,'secret passes through to StatusBar with no Lua math')
