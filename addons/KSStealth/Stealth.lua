@@ -155,6 +155,12 @@ function S:SetOffset(value)
 end
 function S:OnModuleEnabled()
   self.active=true
+  if self:Store().talentImpactOverlay and self.RefreshTalentInsights and not KoolSupport:IsInCombat() then
+    self:RefreshTalentInsights()
+  end
+  if self:Store().talentAnnotate and self.InstallTalentTooltipHook then
+    self:InstallTalentTooltipHook()
+  end
   self:UpdateAll()
 end
 function S:OnModuleDisabled()
@@ -166,6 +172,12 @@ end
 function S:OnEvent(event,unit)
   if event=="PLAYER_LOGIN" then
     self.active=KoolSupport:IsModuleEnabled("ks_stealth")
+    if self.active and self:Store().talentImpactOverlay and self.RefreshTalentInsights and not KoolSupport:IsInCombat() then
+      self:RefreshTalentInsights()
+    end
+    if self.active and self:Store().talentAnnotate and self.InstallTalentTooltipHook then
+      self:InstallTalentTooltipHook()
+    end
     self:UpdateAll()
   elseif not self.active then return
   elseif event=="NAME_PLATE_UNIT_ADDED" then self:UpdatePlate(unit)
