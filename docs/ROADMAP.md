@@ -108,3 +108,10 @@ Next engineering hardening sprint: test and strengthen migration/idempotency and
 - Guard native macro lookup, native body inspection and slot counting from errors/malformed returns. Unknown native state **must prevent writes**. Guard native create/edit calls, only update KS ownership after successful client result.
 - Preserve batch **preflight** invariants (all collisions/slot counts evaluated before any changes); a native failure after part of a batch can still leave prior player-approved writes, which must be reported and is not fully transactional.
 - Add mock regression fixture of malformed root SavedVariables, hand-edited macro, unrelated same-name macro, and API errors. Need real player backup fixture and in-client validation Nov 4 before stable promotion. No new tag on merge.
+
+
+## Sprint 6 — unified load/startup smoke test
+
+- Add a CI-run Lua cold boot that loads the entire one-project package in **actual five .toc file order**, including Afflictions vendor locales/tracker/bridge, using a single fake WoW runtime.
+- Assert four module registrations, all pages, optional module toggles, dependence of Support Sessions on Macros, vendor namespace, no macro writes at load, and preservation of unrecognized player and tracker SavedVariables.
+- Ensure both mock test CI and the upstream CurseForge five-folder dry-run pass before merge. This reduces pre-launch integration risk but does not validate live game behavior.
