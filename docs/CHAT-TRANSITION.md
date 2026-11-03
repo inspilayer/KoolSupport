@@ -69,6 +69,11 @@ User-visible nesting does not mean nested WoW addon folders: each addon uses a s
 5. Only after the foundation is stable: optional `KSMacroProfiles` JSON workflow and KS Stealth HUD.
 6. Obtain real-client verification and CurseForge review decisions before publicly shipping the modular package.
 
+### Mainline checkpoint after the foundation PR
+
+- PR #1 merged on 2026-11-03 with squash commit `69cb19529ec3daaddeecbed3f6dd509d6cb163b1`. The offline GitHub Actions run passed. The modular foundation is now on `main`, but it is **not** a v0.6.4 upgrade.
+- PR #2 establishes CI enforcement: every PR must modify this exact handoff path, or its verify workflow fails. This rule is about future engineering continuity; it does not change player-facing behavior or the CurseForge review artifact.
+
 ## 8. Required commit/PR update format
 
 Update this document with: current branch/commit/version, what changed (and why), tests actually executed, any migration/backward compatibility impact, known problems, and precise next work. Update `docs/ROADMAP.md` if the status or dependencies change. Review PR descriptions and CI; do not treat a screenshot or source comment as production proof.
