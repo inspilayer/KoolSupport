@@ -38,14 +38,16 @@ assert(loadfile("addons/KoolSupport/Core.lua"))()
 KoolSupport.ShowPage=function(_,page)KoolSupport.lastPage=page end
 assert(loadfile("addons/KSStealth/Stealth.lua"))()
 assert(loadfile("addons/KSStealth/TalentImpactData.lua"))()
+assert(loadfile("addons/KSStealth/TalentResolver.lua"))()
+assert(loadfile("addons/KSStealth/TalentTooltip.lua"))()
 assert(loadfile("addons/KSStealth/UI.lua"))()
 assert(loadfile("addons/KSStealth/TalentImpactUI.lua"))()
 assert(loadfile("addons/KSStealth/Module.lua"))()
 local S=KSStealth
 local db=S:Store()
 assert(db.talentImpactOverlay==false,"opt-in must default OFF")
-assert(#S:GetTalentImpactCatalog("DRUID")==3)
-assert(#S:GetTalentImpactCatalog("ROGUE")==4)
+assert(#S:GetTalentImpactCatalog("DRUID")==6)
+assert(#S:GetTalentImpactCatalog("ROGUE")==10)
 assert(#S:GetTalentImpactCatalog("PRIEST")==0)
 local sf=S:GetTalentImpactById("DRUID","savage_fury")
 assert(sf and sf.maxRank==2)
@@ -86,7 +88,7 @@ local detail,affected={},{}
 for _,f in ipairs(frames) do
   if f.kind=="FontString" then
     if f.text and f.text:find("Savage Fury",1,true) then detail[#detail+1]=f.text end
-    if f.text=="Shred" then affected[#affected+1]=f end
+    if f.text and f.text:find("Shred",1,true)==1 then affected[#affected+1]=f end
   end
 end
 assert(#detail>=1 and #affected>=1,"hover should draw affected ability list")
