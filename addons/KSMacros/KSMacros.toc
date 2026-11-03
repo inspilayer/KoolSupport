@@ -1,9 +1,11 @@
 ## Interface: 16001
 ## Title: KS Macros
-## Notes: Bundled macro workshop (requires KoolSupport Base)
+## Notes: Bundled generic Macro Suite, Full Spellbook and Custom Builder
 ## Author: KoolSupport
-## Version: 0.7.0-dev
+## Version: 0.8.0-dev
 ## Dependencies: KoolSupport
 Engine.lua
+Spellbook.lua
+Suite.lua
 Workshop.lua
 Module.lua

@@ -15,6 +15,34 @@ function M:Store()
   data.owned = data.owned or {}
   data.drafts = data.drafts or {}
   data.draftOrder = data.draftOrder or {}
+  if not data.legacyMigrationV1 then
+    -- Copy only safely attributed legacy macros. Legacy owned[name] is a boolean;
+    -- generated[name] is the last body written. Preserve both legacy tables.
+    if type(root.owned)=="table" and type(root.generated)=="table" then
+      for name, owned in pairs(root.owned) do
+        local oldBody=root.generated[name]
+        if owned and type(oldBody)=="string" and data.owned[name]==nil then
+          data.owned[name]=oldBody
+        end
+      end
+    end
+    if type(root.customDrafts)=="table" then
+      local present={}
+      for _,name in ipairs(data.draftOrder) do present[name]=true end
+      for _,name in ipairs(root.customOrder or {}) do
+        local legacy=root.customDrafts[name]
+        local body=type(legacy)=="table" and legacy.body or legacy
+        if type(name)=="string" and type(body)=="string" and data.drafts[name]==nil then
+          local normalized=self:NormalizeTooltip(body)
+          if self:Validate(name,normalized) then
+            data.drafts[name]=normalized
+            if not present[name] then data.draftOrder[#data.draftOrder+1]=name;present[name]=true end
+          end
+        end
+      end
+    end
+    data.legacyMigrationV1=true
+  end
   return data
 end
 
@@ -90,4 +118,39 @@ function M:Install(name, body)
   end
   data.owned[name] = body
   return true
+end
+
+-- Validate every proposed macro before writing any; client API errors can still
+-- interrupt a batch, but conflicts and slot exhaustion cannot partially apply.
+function M:InstallBatch(entries)
+  if KoolSupport:IsInCombat() then return false,"Cannot edit macros in combat" end
+  if type(entries)~="table" or #entries==0 then return false,"No macros selected" end
+  if type(GetMacroIndexByName)~="function" or type(GetMacroBody)~="function" or type(GetNumMacros)~="function" then
+    return false,"WoW macro APIs unavailable"
+  end
+  local store=self:Store()
+  local seen,need={},0
+  for _,entry in ipairs(entries) do
+    if type(entry)~="table" then return false,"Invalid template" end
+    local body=self:NormalizeTooltip(entry.body)
+    local ok,why=self:Validate(entry.name,body)
+    if not ok then return false,entry.name..": "..why end
+    if seen[entry.name] then return false,"Duplicate macro name: "..entry.name end
+    seen[entry.name]=true
+    local index=GetMacroIndexByName(entry.name) or 0
+    if index>0 then
+      if not store.owned[entry.name] or GetMacroBody(index)~=store.owned[entry.name] then
+        return false,"Refusing to overwrite an unrelated or edited macro: "..entry.name
+      end
+    else need=need+1 end
+  end
+  local _,count=GetNumMacros()
+  if (count or 0)+need>(MAX_CHARACTER_MACROS or 18) then return false,"Character macro slots are full" end
+  local completed=0
+  for _,entry in ipairs(entries) do
+    local ok,why=self:Install(entry.name,entry.body)
+    if not ok then return false,"Installed "..completed.." before API failure: "..tostring(why) end
+    completed=completed+1
+  end
+  return true,"Installed "..completed.." macro(s)"
 end

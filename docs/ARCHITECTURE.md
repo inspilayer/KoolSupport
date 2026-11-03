@@ -1,61 +1,63 @@
 # KoolSupport modular architecture
 
-**Approved direction, updated 2026-11-03.** This document describes product dependencies and the initial 0.7.0-dev foundation. Features still being migrated are identified as planned; do not assume they already exist in the modular build.
+Updated 2026-11-03 — current development checkpoint **0.8.0-dev**. This is not a released replacement for monolithic v0.6.4.
 
-## Product and physical addon hierarchy
+## Physical dependency graph
 
 ```text
-KoolSupport Base                              required, bundled
-└── KS Macros                                  required default download, bundled
-    ├── KS Macro Profiles                      optional, requires KS Macros
-    └── KS Support Sessions                    optional, requires KS Macros
-KS Stealth                                    optional, requires Base
-  └── optional macro packages via KS Macros    soft integration
+KoolSupport/                       required Base + UI shell
+KSMacros/                          required, ships with Base (`## Dependencies: KoolSupport`)
+KSSupportSessions/                 optional (`## Dependencies: KoolSupport, KSMacros`)
+KSStealth/                         optional (`## Dependencies: KoolSupport`, `## OptionalDeps: KSMacros`)
 ```
 
-Separate WoW addons reside in **sibling directories** beneath `Interface/AddOns/`. Logical parent/child relationships are expressed via `.toc` dependencies, not nested directories. The standard KoolSupport download must include *both* `KoolSupport/` and `KSMacros/` with Macros enabled by default. Users should not have to install a second package to write normal macros.
+All `.toc` directories are siblings within `Interface/AddOns`, never nested. Package the standard Base download with `KoolSupport` and `KSMacros` together. Optional addons have separate ZIPs and are hidden/disabled in the Base module manager when not installed or switched off. Loaded Lua does not unload without `/reload`.
 
-## Responsibilities
+## Ownership
 
-- **Base** owns Home, the module registry, module/page gating, user settings, shared UI, startup messages, and lifecycle hooks. Base must never become a spell-casting or native macro editing library.
-- **KS Macros** owns the generic macro workshop, spellbook integration, native macro install/update safety, drafts, macro templates and extensibility. The 0.7.0-dev scaffold presently implements only the initial workshop and safe installer; advanced v0.6.4 functionality is not yet migrated.
-- **KS Macro Profiles** will own user-reviewed, versioned profile import/export via copy-paste JSON. WoW addons cannot access arbitrary JSON files from the filesystem at runtime. JSON is **not** the SavedVariables format.
-- **KS Support Sessions** will own character supportee selection, named `/focus` creation, focus/focustarget heals/offense, class support presets, follow/mobility macro creation and resurrection templates. This is *not* input broadcasting or automated multiboxing.
-- **KS Stealth** will own informational Rogue/Feral resource HUD and class utilities. The HUD should function without KS Macros; if Macros is present, Stealth can contribute templates.
+- **Base**: Home, module registration (`API_VERSION=1`), dependency and toggle enforcement, shared shell and SavedVariables root. No spell actions or macro writes.
+- **KS Macros**: generic Macro Suite templates/drafts, actual learned active spellbook enumeration, custom builder palette and native macro installer. Does not select a healer or supportee and does not contain class-specific healing presets.
+- **KS Support Sessions**: optional class-aware focus/focustarget/follow/heal/utility presets, supportee name/recipient class selection, checks whether individual templates are selected, delegates every macro installation to `KSMacros:Install`. Presets derive from archived v0.6.4 Profiles source, not newly imagined abilities.
+- **KS Stealth**: optional Rogue/Feral nameplate information display, sized/positioned from per-character settings, with a shell page. It does not need KS Macros to render. Future macro templates may integrate with Macros if present.
+- **KS Macro Profiles**: planned; optional dependent on Macros. Versioned share/import/export by copy/paste JSON, not disk reads from Lua.
 
-## API v1 (development)
+## Module and page API
 
-`KoolSupport:RegisterModule({id, title, apiVersion=1, defaultEnabled, requires, onEnable, onDisable})` registers a module after Core loads. `KoolSupport:RegisterPage({id, title, moduleId, build(parent, core)})` registers its UI page. `GetModule`, `IsModuleEnabled`, `SetModuleEnabled`, `CanOpenPage`, `ShowPage`, `GetDatabase` and `IsInCombat` are the base APIs. Plugin APIs will be versioned rather than accessing another module's private tables. A disabled module is hidden from navigation; already-loaded Lua remains resident until reload.
+`KoolSupport:RegisterModule({id,title,apiVersion=1,defaultEnabled,requires,onEnable,onDisable})`
 
-### Module loading / dependency behavior
+`KoolSupport:RegisterPage({id,title,moduleId,build(parent,core)})`
 
-- Base `.toc` loads before `KSMacros` because Macros declares `## Dependencies: KoolSupport`.
-- `KSMacroProfiles` and `KSSupportSessions` must hard-depend on both `KoolSupport, KSMacros` when built.
-- `KSStealth` requires KoolSupport and may use `## OptionalDeps: KSMacros`.
-- Changing module toggles happens outside combat; enabling a child is blocked while its prerequisite is disabled.
-- Disabling a prerequisite is blocked while an enabled dependent still requires it. Disabling never deletes saved macros or SavedVariables.
-- This foundation does not yet implement LoadOnDemand; introduce only after testing the target WoW client's APIs.
+`IsModuleEnabled`, `SetModuleEnabled`, `ShowPage`, `CanOpenPage`, `GetDatabase`, `IsInCombat` are Base-owned. The Base navigation discovers registered module pages, and disabling a module hides its pages. Base blocks disabling an enabled dependency while a dependent is active. Module toggles cannot change in combat.
 
-## Persistence and migration
+## Per-character persistence and legacy compatibility
 
-Existing v0.6.4 per-character `KoolSupportDB` contains `owned`, `generated`, `enabledProfiles`, `customEnabled`, `customDrafts`, `customOrder`, supportee name/class/spec and other keys. **Do not delete, rename, or clobber these.** The new foundation writes under `KoolSupportDB.core.enabled` and `KoolSupportDB.modules.ks_macros` and leaves unknown legacy keys alone. This is not a completed migration: moving the old drafts, ownership fingerprints and support-session state requires versioned idempotent migrators with tests for collisions and hand edits.
+`KoolSupportDB` remains `## SavedVariablesPerCharacter` in Base. No old keys are removed. `KSMacros:Store()` performs a single idempotent migration to `KoolSupportDB.modules.ks_macros`:
 
-The first development package is **not an in-place upgrade** of v0.6.4. Never recommend installing it as a replacement until legacy feature parity and data migration have been proved. Snapshot and preserve old SavedVariables first.
+- Reads `KoolSupportDB.customDrafts`, `customOrder` and copies recognized valid bodies into namespaced `drafts` and `draftOrder` only if destination names are empty.
+- Copies previous `owned[name]` only if it has the matching last-written `generated[name]` body; new macro-update verification compares the current native macro body with the saved fingerprint.
+- Keeps all legacy root tables intact and marks `legacyMigrationV1` after conversion.
 
-## Security and native macro rules
+`KSSupportSessions:Store()` copies only missing legacy `character`, `recipientClass`, `spec`; selection of support macros consults old per-profile enabled settings when no new explicit override exists. Neither plugin deletes old records.
 
-- Only create or edit native macros on explicit player clicks, outside combat.
-- Do not generate state-calculated secure casts or bypass WoW secure actions.
-- No unattended healing, combo-point-based spell selection, cross-client input broadcasting, auto-follow loops or bot-like behavior.
-- Verify owned macro fingerprints before edits. If a player edits a macro, refuse to overwrite silently.
-- Respect 255-byte macro bodies and 16-byte names for the presently targeted macro APIs; re-verify against the actual client at release.
-- Keep `#showtooltip` as the first line in generated bodies.
-- Live Forever API compatibility (including `/follow`, `@focus`, C_SpellBook, combat restrictions, and GameTooltip) remains unverified.
+No full live-client migration can be claimed until the SavedVariables format is actually tested in Forever. The preserved monolith baseline is `legacy/v0.6.4/` and is **not shipped**.
 
-## Release boundaries
+## Macro safety and governance
 
-- v0.6.4 is the historical monolithic CurseForge-review candidate; **do not change the submitted ZIP**.
-- 0.7.0-dev is a new modular development foundation, not a verified release or feature-complete successor.
-- Interface value `16001` is taken from v0.6.4 and must be checked against the client before publishing.
-- Standard addon ZIP: ONLY sibling `KoolSupport/` and `KSMacros/`. Exclude tests, browser HTML previews and documentation from the installable addon zip.
-- Browser previews are mockups, not real in-game screenshots. CurseForge moderation and release approval cannot be assumed.
+Only explicit player clicks outside combat create/edit a native macro. No automatic target-follow loops, secure-action bypasses, combo-point-based rotation decisions, remote control or cross-client input broadcasting. Macros are not executed by the addon. Validate 255-byte bodies, 16-byte conservative names, and put `#showtooltip` on line 1. Native names not owned by this addon, or edited by a player, must never be overwritten. Macros cannot bypass Blizzard's restricted commands or client level/talent gates.
+
+## KS Stealth nameplate resource design
+
+Use `C_NamePlate.GetNamePlates()` and `GetNamePlateForUnit()` with `nameplateN` unit tokens to discover **visible nameplates**. There is no supported API for discovering every enemy in a radius or off-screen. Each nameplate gets five `StatusBar`s, with fixed ranges `[0,1]` through `[4,5]`. Pass the result of `GetComboPoints("player", unit)` directly to each `StatusBar:SetValue(points)` without comparing, counting, formatting, indexing or testing the value in Lua. Filled portions are visible; at zero the bars show no fill. No Lua decision on which targets have points.
+
+Events: `NAME_PLATE_UNIT_ADDED`, `NAME_PLATE_UNIT_REMOVED`, `UNIT_COMBO_POINTS`, `UNIT_POWER_UPDATE`, `UNIT_POWER_FREQUENT`, `PLAYER_TARGET_CHANGED`, `PLAYER_ENTERING_WORLD`, `UPDATE_SHAPESHIFT_FORM`. No combat automation or periodic range scanning. Secret-value handling and API access for **non-current** nameplates require live-client verification. If the engine hides those values, show only what can be displayed; do not substitute fabricated points. Do not claim reliable arbitrary-unit range detection.
+
+## Packaging and release boundary
+
+`scripts/check.py --package` validates all four manifests, Lua source, runtime tests, and creates:
+
+- `KoolSupport_Base_Macros_0.8.0-dev.zip` — standard bundled download.
+- `KSSupportSessions_Plugin_0.8.0-dev.zip` — optional child requiring both.
+- `KSStealth_Plugin_0.8.0-dev.zip` — optional sibling requiring Base.
+- `KoolSupport_All_Modules_Development_0.8.0-dev.zip` — test bundle only.
+
+Version and interface `16001` are development values. Browser HTML previews are mockups. The old v0.6.4 CurseForge submission must not be modified or replaced until the user explicitly authorizes a tested upgrade. Offline tests aren't proof of Forever client compatibility. Maintain `docs/CHAT-TRANSITION.md` **in every substantive PR**.

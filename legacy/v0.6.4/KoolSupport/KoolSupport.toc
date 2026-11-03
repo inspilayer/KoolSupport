@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: KoolSupport
+## Notes: Class-aware WoW macro workshop for WoW Forever; session character, healing, utility, emergency, control.
+## Author: KoolSupport
+## Version: 0.6.4
+## SavedVariablesPerCharacter: KoolSupportDB
+Profiles.lua
+Studio.lua
+KoolSupport.lua
