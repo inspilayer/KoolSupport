@@ -14,6 +14,8 @@ function S:Store()
   local s=d.modules.ks_stealth
   if s.nameplates==nil then s.nameplates=true end
   if s.talentImpactOverlay==nil then s.talentImpactOverlay=false end
+  if s.talentAnnotate==nil then s.talentAnnotate=false end
+  if s.talentCritEstimate==nil then s.talentCritEstimate=false end
   if type(s.scale)~="number" then s.scale=1 end
   if type(s.offsetY)~="number" then s.offsetY=12 end
   return s
@@ -126,6 +128,15 @@ end
 function S:SetTalentImpactOverlay(enabled)
   if KoolSupport:IsInCombat() then return false,"Change talent preview settings outside combat" end
   self:Store().talentImpactOverlay=not not enabled
+  return true
+end
+function S:SetTalentImpactSetting(key,enabled)
+  if KoolSupport:IsInCombat() then return false,"Change talent settings outside combat" end
+  if key~="talentAnnotate" and key~="talentCritEstimate" then
+    return false,"Unknown talent setting"
+  end
+  if type(enabled)~="boolean" then return false,"Expected toggle" end
+  self:Store()[key]=enabled
   return true
 end
 function S:SetScale(value)
