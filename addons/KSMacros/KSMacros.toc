@@ -6,6 +6,7 @@
 ## Dependencies: KoolSupport
 Engine.lua
 Spellbook.lua
+ClassPresets.lua
 Suite.lua
 Workshop.lua
 Module.lua
