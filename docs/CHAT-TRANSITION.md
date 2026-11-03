@@ -127,3 +127,14 @@ Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; l
 **Tests / handoff:** New `tests/test_class_recommendations.lua` validates all 45 entries, unique safe names, body limits, no @focus, spell requirements and icon fallbacks. Existing macro, spellbook, support, stealth and Afflictions tests must stay green. Inspect the actual PR/CI/merge results before citing them; `scripts/check.py --package` outputs `KoolSupport_CurseForge_Standard_0.10.0-rc.1.zip` for submission. At startup, verify current main and applicable build; do not assume a past PR remains latest.
 
 **Next steps:** Obtain launch-client screenshots and run a class-by-class sampling smoke test; fix any API/spell mismatches without weakening macro governance; verify old v0.6.4 migration, source/test parity and module loading; then label the next stable release only after independent in-game confirmation.
+
+
+## 2026-11-03: tag-only CurseForge packaging configuration
+
+The project owner connected the public GitHub repo to CurseForge and saw automatic packaging options. We have a monorepo under addons/ containing Base, Macros and optional plugins; shipping that raw is unsafe and would not install with expected sibling directory layout.
+
+A root .pkgmeta maps KoolSupport/addons/KoolSupport to KoolSupport and KoolSupport/addons/KSMacros to KSMacros. It excludes SupportSessions, Stealth, Afflictions, tests, docs, scripts, legacy, previews and GitHub workflows. Standard package remains Base + Macros only. New scripts/check_curseforge_packaging.py validates the intended layout. PR CI includes a BigWigsMods/packager@v2 dry-run with -d, then inspects the actual ZIP for unexpected files. This changes no Lua or SavedVariables.
+
+Release governance: recommend 'tagged commits only' in CurseForge, not 'Package all commits'. Do not automatically tag merges; live Forever validation still blocks stable publication. Beta tags must contain literal beta (for example v0.10.0-rc.1-beta), because rc alone may not classify as Beta. Secrets stay outside source. Check CI and merge status in the latest main before claiming any automatic packaging works. The CurseForge project remains unlisted until the owner changes General settings.
+
+See docs/PUBLISHING.md for the end-to-end instructions. No CurseForge upload or webhook creation is made in this sprint.
