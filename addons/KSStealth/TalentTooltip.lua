@@ -13,7 +13,7 @@ end
 
 function S:AnnotateTalentTooltip(tooltip,data)
  if not self:CanAnnotateTalent() then return end
- if type(data)~="table" or type(tooltip)~="table" then return end
+ if type(data)~="table" or not tooltip then return end
  local spellID=data.id
  if type(issecretvalue)=="function" then
   local ok,secret=pcall(issecretvalue,spellID)
