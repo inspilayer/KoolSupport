@@ -4,8 +4,17 @@ local _, ns = ...
 KSAfflictions = KSAfflictions or {}
 local A = KSAfflictions
 A.API_VERSION = 1
+-- All new installs use Modern KS, retaining the old display keys for upgrades.
 A.DEFAULTS = { target=true, focus=true, nameplates=true, lethal=true,
-  schoolColors=true, showLabels=true, scale=1, height=15, offsetY=7 }
+  schoolColors=true, showLabels=true, showIcons=true, scale=1, height=15, offsetY=7,
+  style="modern", lethalMode="dies", dotColor="purple",
+  lethalTarget=true, lethalFocus=true, lethalNameplates=true }
+A.ENUMS = {
+  style={modern=true,classic=true,minimal=true},
+  lethalMode={dies=true,skull=true,both=true,off=true},
+  dotColor={purple=true,gold=true,red=true,school=true}
+}
+A.PALETTE = {purple={.7,.32,.92}, gold={.96,.73,.30}, red={.91,.32,.34}}
 A.COLORS = { [1]={1,.37,.4}, [2]={1,.83,.36}, [4]={1,.45,.22}, [8]={.25,.91,.54},
  [16]={.39,.73,1}, [32]={.74,.5,1}, [64]={.60,.68,1} }
 function A:Store()
@@ -31,7 +40,9 @@ function A:ChangeSetting(key,value)
   if KoolSupport:IsInCombat() then return false,"Change display settings outside combat" end
   if self.DEFAULTS[key]==nil then return false,"Unknown option" end
   local old=self.DEFAULTS[key]
-  if type(old)=="boolean" then
+  if self.ENUMS[key] then
+    if type(value)~="string" or not self.ENUMS[key][value] then return false,"Invalid option" end
+  elseif type(old)=="boolean" then
     if type(value)~="boolean" then return false,"Expected a toggle" end
   elseif type(value)~="number" then return false,"Expected a number"
   elseif key=="scale" then value=math.max(.65,math.min(1.65,value))
@@ -48,6 +59,19 @@ function A:SchoolColor(school)
     return c[1],c[2],c[3]
   end
   return .99,.70,.28
+end
+function A:DotColor(school)
+  local mode=self:Store().dotColor
+  if mode=="school" then return self:SchoolColor(school) end
+  local c=self.PALETTE[mode] or self.PALETTE.purple
+  return c[1],c[2],c[3]
+end
+function A:LethalOn(unit)
+  local db=self:Store()
+  if not db.lethal or db.lethalMode=="off" then return false end
+  if unit=="target" then return db.lethalTarget end
+  if unit=="focus" then return db.lethalFocus end
+  return db.lethalNameplates
 end
 -- Integrators can use snapshots without loading KS Macros or KS Stealth.
 function A:GetDoTs(unit) return self:Snapshot(unit) end
