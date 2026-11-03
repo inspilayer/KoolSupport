@@ -109,7 +109,7 @@ assert(#tooltip.lines>=2 and tooltip.lines[1]=="KS Talent Impacts (read-only)")
 local count=#tooltip.lines
 hooks[1](tooltip,{id=9001})
 assert(#tooltip.lines==count,"must not append duplicate tooltip lines")
-hooks[1](tooltip,{id=9005})
+hooks[1](tooltip,{id=9999})
 assert(#tooltip.lines==count,"untrained talents cannot assert live modifier")
 pending=true
 local no,why=S:ReadTalentRanks()
