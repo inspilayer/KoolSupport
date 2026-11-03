@@ -14,6 +14,8 @@ function S:Store()
   local s=d.modules.ks_stealth
   if s.nameplates==nil then s.nameplates=true end
   if s.talentImpactOverlay==nil then s.talentImpactOverlay=false end
+  if s.talentAnnotate==nil then s.talentAnnotate=false end
+  if s.talentCritEstimate==nil then s.talentCritEstimate=false end
   if type(s.scale)~="number" then s.scale=1 end
   if type(s.offsetY)~="number" then s.offsetY=12 end
   return s
@@ -128,6 +130,15 @@ function S:SetTalentImpactOverlay(enabled)
   self:Store().talentImpactOverlay=not not enabled
   return true
 end
+function S:SetTalentImpactSetting(key,enabled)
+  if KoolSupport:IsInCombat() then return false,"Change talent settings outside combat" end
+  if key~="talentAnnotate" and key~="talentCritEstimate" then
+    return false,"Unknown talent setting"
+  end
+  if type(enabled)~="boolean" then return false,"Expected toggle" end
+  self:Store()[key]=enabled
+  return true
+end
 function S:SetScale(value)
   if KoolSupport:IsInCombat() then return false,"Change display settings outside combat" end
   if type(value)~="number" then return false,"Invalid scale" end
@@ -144,6 +155,12 @@ function S:SetOffset(value)
 end
 function S:OnModuleEnabled()
   self.active=true
+  if self:Store().talentImpactOverlay and self.RefreshTalentInsights and not KoolSupport:IsInCombat() then
+    self:RefreshTalentInsights()
+  end
+  if self:Store().talentAnnotate and self.InstallTalentTooltipHook then
+    self:InstallTalentTooltipHook()
+  end
   self:UpdateAll()
 end
 function S:OnModuleDisabled()
@@ -155,6 +172,12 @@ end
 function S:OnEvent(event,unit)
   if event=="PLAYER_LOGIN" then
     self.active=KoolSupport:IsModuleEnabled("ks_stealth")
+    if self.active and self:Store().talentImpactOverlay and self.RefreshTalentInsights and not KoolSupport:IsInCombat() then
+      self:RefreshTalentInsights()
+    end
+    if self.active and self:Store().talentAnnotate and self.InstallTalentTooltipHook then
+      self:InstallTalentTooltipHook()
+    end
     self:UpdateAll()
   elseif not self.active then return
   elseif event=="NAME_PLATE_UNIT_ADDED" then self:UpdatePlate(unit)

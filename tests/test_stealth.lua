@@ -52,6 +52,8 @@ GetComboPoints=function(player,unit)
 end
 assert(loadfile('addons/KSStealth/Stealth.lua'))()
 assert(loadfile('addons/KSStealth/TalentImpactData.lua'))()
+assert(loadfile('addons/KSStealth/TalentResolver.lua'))()
+assert(loadfile('addons/KSStealth/TalentTooltip.lua'))()
 assert(loadfile('addons/KSStealth/UI.lua'))()
 assert(loadfile('addons/KSStealth/TalentImpactUI.lua'))()
 assert(loadfile('addons/KSStealth/Module.lua'))()
