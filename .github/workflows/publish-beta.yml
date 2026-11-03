@@ -18,9 +18,17 @@ concurrency:
 
 jobs:
   tag-beta:
-    if: github.ref == 'refs/heads/main' && inputs.confirm_beta
     runs-on: ubuntu-latest
     steps:
+      - name: Require explicit confirmation on main
+        env:
+          CONFIRMED: ${{ inputs.confirm_beta }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != 'refs/heads/main' || "$CONFIRMED" != 'true' ]]; then
+            echo '::error::Choose main and approve Beta publishing explicitly'
+            exit 1
+          fi
       - name: Check out main including release tags
         uses: actions/checkout@v4
         with:
