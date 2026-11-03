@@ -239,3 +239,17 @@ function S:AbilityInsightLines(ability)
  end
  return lines
 end
+
+
+-- Trait/learned spell changes can invalidate a previous out-of-combat snapshot.
+-- Forever may omit events; RegisterEvent MUST be protected with pcall.
+local watcher=CreateFrame("Frame")
+for _,event in ipairs({"TRAIT_CONFIG_UPDATED","SPELLS_CHANGED","PLAYER_ENTERING_WORLD"}) do
+ pcall(watcher.RegisterEvent,watcher,event)
+end
+watcher:SetScript("OnEvent",function()
+ S.talentSnapshot=nil
+ if S:Store().talentImpactOverlay and not KoolSupport:IsInCombat() then
+  S:RefreshTalentInsights()
+ end
+end)
