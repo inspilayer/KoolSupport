@@ -41,7 +41,8 @@ local function hud(parent,small)
     local clip=CreateFrame("Frame",nil,h)
     clip:SetSize(17,17)
     clip:SetPoint("TOPRIGHT",h,"TOPRIGHT",-6,-1)
-    if clip.SetClipsChildren then clip:SetClipsChildren(true) end
+    local clipping = type(clip.SetClipsChildren)=="function"
+    if clipping then clipping = pcall(clip.SetClipsChildren,clip,true) end
     local detector=CreateFrame("StatusBar",nil,clip)
     detector:SetSize(12000,17)
     detector:SetPoint("RIGHT",clip,"RIGHT",0,0)
@@ -53,6 +54,7 @@ local function hud(parent,small)
     skull:SetPoint("RIGHT",detector:GetStatusBarTexture(),"RIGHT")
     h.lethal=detector
     h.lethalClip=clip
+    h.lethalAvailable=clipping
   end
   return h
 end
@@ -111,7 +113,7 @@ function A:Paint(h,unit)
       end
     end
     h.spells:SetText(#names>0 and table.concat(names,"  ·  ") or "No active DoTs")
-    h.lethalClip:SetShown(cfg.lethal)
+    h.lethalClip:SetShown(cfg.lethal and h.lethalAvailable)
   end
   h:Show()
 end
