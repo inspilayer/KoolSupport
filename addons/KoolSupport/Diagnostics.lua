@@ -39,8 +39,10 @@ function KS:CollectLaunchChecks()
   if loaded==false then
    add(name,title,"MISSING","WoW reports addon not loaded")
   elseif loaded==nil then
-   add(name,title,def and "UNVERIFIED" or "MISSING",
-     def and "Registered; WoW loaded-state API unavailable" or "Not registered; loaded state unknown")
+   add(name,title,(def or name=="KoolSupport") and "UNVERIFIED" or "MISSING",
+     (def or name=="KoolSupport") and "Registered; WoW loaded-state API unavailable" or "Not registered; loaded state unknown")
+  elseif name=="KoolSupport" then
+   add(name,title,"ENABLED","KoolSupport Base loaded; root is not a registered submodule")
   elseif not def then
    add(name,title,"MISSING","Loaded but not registered with KoolSupport")
   else
