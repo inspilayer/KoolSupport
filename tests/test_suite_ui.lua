@@ -57,6 +57,7 @@ end
 assert(install and install.scripts.OnClick,"Install control missing")
 assert(icons and icons>=5,"Class spell icons missing from visible rows")
 assert(locked,"Unlearned template should be visually locked")
+for i,w in ipairs(widgets) do if w.kind=="CheckButton" then print("CHECK",i,tostring(w.shown),tostring(w.enabled),tostring(w.scripts.OnClick)) end end
 assert(check and check.scripts.OnClick)
 check.checked=true
 check.scripts.OnClick(check)
