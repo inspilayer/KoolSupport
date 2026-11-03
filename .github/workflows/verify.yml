@@ -9,6 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Require handoff update in each PR
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" --depth=1
+          if ! git diff --name-only "origin/${{ github.base_ref }}" HEAD | grep -Fxq "docs/CHAT-TRANSITION.md"; then
+            echo "::error file=docs/CHAT-TRANSITION.md::Every PR must update the canonical engineering handoff"
+            exit 1
+          fi
       - name: Install Lua 5.4
         run: sudo apt-get update && sudo apt-get install -y lua5.4
       - name: Check and package
