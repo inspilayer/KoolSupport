@@ -76,3 +76,20 @@ Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; l
 4. Validate SavedVariables migration with an actual backed-up v0.6.4 character before recommending an in-place upgrade.
 5. Add versioned JSON Macro Profiles as a separate optional child only after the shared macro APIs stabilize.
 6. Release only after user approval, live testing and a fresh CurseForge policy review.
+
+
+## Engineering checkpoint addendum — 2026-11-03: KS Afflictions / 0.9.0-dev
+
+**Project owner request:** Integrate swirllyman/DoesItDie under KoolSupport with fewer separate addons, coherent KS-style bar customizations, appropriate licensing and a browser-based UI/feature preview before the Forever client returns November 4. The prior 0.8.0-dev files and frozen CurseForge monolithic v0.6.4 submission must not be overwritten.
+
+**Feature branch:** `feature/ks-afflictions-doesitdie-mit-090`; verify exact PR, status and main SHA at startup. No claim of live client verification.
+
+**Design & ownership:** `KSAfflictions` is an optional Base-only module and installs in one sibling AddOns folder. It bundles a modified *tracking-only* copy of DoesItDie by Joe Greive (MIT); original license/copyright retained in `addons/KSAfflictions/Vendor/LICENSE`, with details in `Vendor/NOTICE.md`. Source repository MIT license is added. KS Afflictions loads vendor locale + tracking, suppresses independent /did/UI, provides a tiny tracker display compatibility shim and KS-owned bars for current target, focus and visible nameplates. Independent saved data `KSAfflictionsTrackerDB` prevents collisions with standalone DoesItDie; UI preferences live under `KoolSupportDB.modules.ks_afflictions`.
+
+**Security/governance:** no automatic actions or rotation decisions; no Lua arithmetic/branching on Forever secret health values. Secret values pass directly to `StatusBar:SetMinMaxValues` and `SetValue`. Lethal icon uses an upstream-described clipping/statusbar UI-only approach; must be proven in client. Nameplate enumeration uses only visible unit tokens. DoT damage is estimated, not a guarantee. Disabled modules hide their rendering but already-loaded code persists until UI reload. Release requires real gameplay and CurseForge review.
+
+**UI and testing:** Added shared `BarTheme.lua` for color/texture consistency and a KS Afflictions settings page. `scripts/check.py --package` includes new module and tests, plus separate optional `KSAfflictions_Plugin_0.9.0-dev.zip`. Browser HTML at `preview/KS_Afflictions_Browser_Preview.html` if committed, otherwise attached development artifact. Browser simulation uses mock encounters, not actual WoW Lua and is explicitly labeled. No screenshot of the simulator is presented as an in-game screenshot.
+
+**Pending live-client smoke tests:** verify tracker startup `ADDON_LOADED`, spellcast and actual periodic damage correlation, status bar rendering of secret health, focus target, nameplates, module enable/disable, SavedVariables persistence, suspected-lethal indicator geometry, multilingual spell names and performance. Check target/focus frame anchoring and frame replacements. Disable the optional module instead of disrupting macro features if a display fails. Verify upstream MIT notices remain bundled.
+
+**Next PRs:** refine target-nameplate styling and data validity after actual WoW footage; migrate common bar options to a true shared component across KS Stealth; make browser and native visuals closer; add modular JSON profiles separately. Do not advertise production parity until actual proof exists.
