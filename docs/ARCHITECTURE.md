@@ -124,3 +124,10 @@ Runtime modules keep `.toc` dependency declarations and optional in-game enable/
 ## Read-only launch diagnostics
 
 `KoolSupport/Diagnostics.lua` is a Base-only capability detector, loaded before `UI.lua`. `CollectLaunchChecks()` creates an ephemeral table describing the known five-addon layout, registered/enabled module state, client Interface version versus `16001` development assumption, and entrypoint presence for spellbook, traits, tooltip, nameplates and combo points. No `GetComboPoints` call, combat-state inspection or cast/macro edits are permitted from this code. Native AddOns metadata access is guarded with availability checks; unsupported APIs display "UNVERIFIED", not healthy. `UI.lua` renders the results as an ordinary pageless `launch_checks` page in the Base app with a manual refresh control. All checks are informational, not live feature tests or a release gate bypass. Added `tests/test_launch_checks.lua`.
+
+
+## Legacy migration and macro API hardening
+
+Legacy `KoolSupportDB.owned[name]` may only become `modules.ks_macros.owned[name]` when exactly boolean `true` and the historical `generated[name]` body satisfies native safe length/name validation. Neither legacy root value is deleted. Native installation still checks exact last-written body fingerprints against current `GetMacroBody(index)`; a hand edit makes the macro **unowned for updates** until the player explicitly resolves it. Malformed legacy `customOrder` is left untouched and migration remains retryable.
+
+Preflight wrappers for native `GetMacroIndexByName`, `GetMacroBody`, and `GetNumMacros` reject errors, nonnumeric indexes and unknown slot count. `CreateMacro`/`EditMacro` failures are trapped and do not advance the stored ownership hash. Duplicate names, conflicting edits, invalid macros and insufficient known slots all fail before batch writes start. The native WoW API cannot guarantee true transaction/rollback across a partly completed batch; a later API refusal reports the completed count. `tests/test_macro_migration_hardening.lua` provides mock regression cases without any real user macro data. No change to existing SavedVariables schema.

@@ -3,6 +3,30 @@ KSMacros = KSMacros or {}
 local M = KSMacros
 local MAX_BODY, MAX_NAME = 255, 16
 
+-- Validate native API outputs before any mutation. Some Forever API surfaces
+-- may be unavailable or throw; ambiguous lookup must never become "new macro".
+local function nativeIndex(name)
+  if type(GetMacroIndexByName)~="function" then return nil end
+  local ok, index=pcall(GetMacroIndexByName,name)
+  if not ok or type(index)~="number" or index<0 or index~=math.floor(index) then return nil end
+  return index
+end
+local function nativeBody(index)
+  if type(GetMacroBody)~="function" then return nil end
+  local ok,body=pcall(GetMacroBody,index)
+  return ok and type(body)=="string" and body or nil
+end
+local function nativeCharacterCount()
+  if type(GetNumMacros)~="function" then return nil end
+  local ok,_,characters=pcall(GetNumMacros)
+  if not ok or type(characters)~="number" or characters<0 or characters~=math.floor(characters) then return nil end
+  return characters
+end
+local function characterLimit()
+  if type(MAX_CHARACTER_MACROS)=="number" and MAX_CHARACTER_MACROS>0 then return MAX_CHARACTER_MACROS end
+  return 18
+end
+
 local function trim(text)
   return (text or ""):match("^%s*(.-)%s*$")
 end
@@ -21,7 +45,10 @@ function M:Store()
     if type(root.owned)=="table" and type(root.generated)=="table" then
       for name, owned in pairs(root.owned) do
         local oldBody=root.generated[name]
-        if owned and type(oldBody)=="string" and data.owned[name]==nil then
+        -- Only an explicit legacy-owned flag and a valid name/body can grant
+        -- an ownership fingerprint. A future edit still requires an EXACT
+        -- match against the player's native GetMacroBody result.
+        if owned==true and self:Validate(name,oldBody) and data.owned[name]==nil then
           data.owned[name]=oldBody
         end
       end
@@ -29,6 +56,9 @@ function M:Store()
     if type(root.customDrafts)=="table" then
       local present={}
       for _,name in ipairs(data.draftOrder) do present[name]=true end
+      -- Preserve malformed historical values in place, never replace them.
+      -- Do not finalize migration until a malformed order can be reviewed.
+      if root.customOrder~=nil and type(root.customOrder)~="table" then return data end
       for _,name in ipairs(root.customOrder or {}) do
         local legacy=root.customDrafts[name]
         local body=type(legacy)=="table" and legacy.body or legacy
@@ -101,22 +131,23 @@ function M:Install(name, body, icon)
     return false, "WoW macro API is unavailable"
   end
   local data = self:Store()
-  local index = GetMacroIndexByName(name)
-  if index and index > 0 then
-    if type(GetMacroBody) ~= "function" then return false, "Cannot verify existing macro" end
+  local index=nativeIndex(name)
+  if index==nil then return false,"Cannot verify native macro lookup" end
+  if index>0 then
     if not data.owned[name] then return false, "Refusing to overwrite a macro not owned by KS Macros" end
-    if GetMacroBody(index) ~= data.owned[name] then return false, "Existing macro was edited outside KoolSupport" end
-    local result = EditMacro(index, name, icon or "INV_Misc_QuestionMark", body)
-    if not result then return false, "WoW rejected the macro update" end
+    local existing=nativeBody(index)
+    if existing==nil then return false,"Cannot verify existing macro body" end
+    if existing~=data.owned[name] then return false, "Existing macro was edited outside KoolSupport" end
+    local success,result=pcall(EditMacro,index,name,icon or "INV_Misc_QuestionMark",body)
+    if not success or not result then return false,"WoW rejected the macro update" end
   else
-    if type(GetNumMacros) ~= "function" then return false, "Macro count API unavailable" end
-    local _, numCharacter = GetNumMacros()
-    local limit = MAX_CHARACTER_MACROS or 18
-    if (numCharacter or 0) >= limit then return false, "Character macro slots are full" end
-    local result = CreateMacro(name, icon or "INV_Misc_QuestionMark", body, true)
-    if not result then return false, "WoW rejected the macro creation" end
+    local count=nativeCharacterCount()
+    if count==nil then return false,"Cannot verify character macro slots" end
+    if count>=characterLimit() then return false, "Character macro slots are full" end
+    local success,result=pcall(CreateMacro,name,icon or "INV_Misc_QuestionMark",body,true)
+    if not success or not result then return false,"WoW rejected the macro creation" end
   end
-  data.owned[name] = body
+  data.owned[name]=body
   return true
 end
 
@@ -137,15 +168,18 @@ function M:InstallBatch(entries)
     if not ok then return false,entry.name..": "..why end
     if seen[entry.name] then return false,"Duplicate macro name: "..entry.name end
     seen[entry.name]=true
-    local index=GetMacroIndexByName(entry.name) or 0
+    local index=nativeIndex(entry.name)
+    if index==nil then return false,"Cannot verify native macro lookup: "..entry.name end
     if index>0 then
-      if not store.owned[entry.name] or GetMacroBody(index)~=store.owned[entry.name] then
+      local body=nativeBody(index)
+      if not body or not store.owned[entry.name] or body~=store.owned[entry.name] then
         return false,"Refusing to overwrite an unrelated or edited macro: "..entry.name
       end
     else need=need+1 end
   end
-  local _,count=GetNumMacros()
-  if (count or 0)+need>(MAX_CHARACTER_MACROS or 18) then return false,"Character macro slots are full" end
+  local count=nativeCharacterCount()
+  if count==nil then return false,"Cannot verify character macro slots" end
+  if count+need>characterLimit() then return false,"Character macro slots are full" end
   local completed=0
   for _,entry in ipairs(entries) do
     local ok,why=self:Install(entry.name,entry.body,entry.icon)
