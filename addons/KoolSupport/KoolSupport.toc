@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: KoolSupport
+## Notes: Core framework for the KoolSupport addon family (development preview)
+## Author: KoolSupport
+## Version: 0.7.0-dev
+## SavedVariablesPerCharacter: KoolSupportDB
+Core.lua
+UI.lua
