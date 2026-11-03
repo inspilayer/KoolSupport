@@ -94,7 +94,7 @@ function A:EnsurePlate(plate)
   return h
 end
 function A:StyleHUD(h,db)
-  local modern=db.style=="modern", classic=db.style=="classic"
+  local classic=db.style=="classic"
   local c=BACK[db.style] or BACK.modern
   h.bg:SetColorTexture(c[1],c[2],c[3],c[4])
   if db.style=="minimal" then h:SetHeight(h.small and 37 or 66)
