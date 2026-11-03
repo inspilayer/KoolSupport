@@ -13,6 +13,7 @@ function S:Store()
   d.modules.ks_stealth=d.modules.ks_stealth or {}
   local s=d.modules.ks_stealth
   if s.nameplates==nil then s.nameplates=true end
+  if s.talentImpactOverlay==nil then s.talentImpactOverlay=false end
   if type(s.scale)~="number" then s.scale=1 end
   if type(s.offsetY)~="number" then s.offsetY=12 end
   return s
@@ -120,6 +121,11 @@ function S:SetNameplates(enabled)
   if KoolSupport:IsInCombat() then return false,"Change display settings outside combat" end
   self:Store().nameplates=not not enabled
   self:UpdateAll()
+  return true
+end
+function S:SetTalentImpactOverlay(enabled)
+  if KoolSupport:IsInCombat() then return false,"Change talent preview settings outside combat" end
+  self:Store().talentImpactOverlay=not not enabled
   return true
 end
 function S:SetScale(value)

@@ -6,5 +6,7 @@
 ## Dependencies: KoolSupport
 ## OptionalDeps: KSMacros
 Stealth.lua
+TalentImpactData.lua
 UI.lua
+TalentImpactUI.lua
 Module.lua

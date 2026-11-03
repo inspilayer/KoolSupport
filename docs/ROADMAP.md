@@ -64,3 +64,11 @@ KS Stealth now uses the shared `KoolSupport.BarTheme:StyleBar` palette for its c
 ## Beta delivery automation (manual approval → automatic packaging)
 
 Added user-initiated GitHub Actions workflow to verify and push an immutable `vVERSION-beta` tag from main only. It does not run on normal PR merges. Requires the owner to finish the external CurseForge GitHub push webhook setup in repository Settings; verify 2xx delivery and CurseForge file status when first used. Runtime gameplay/client compatibility remains unverified until real tests are completed.
+
+## KS Stealth talent effects — Sprint 1
+
+- **Implemented on feature branch**: opt-in read-only `Talent Impacts` page inside separately installed KS Stealth, initially Druid/Rogue. Hover and click a talent to see its affected ability list, a non-live tooltip-summary effect, and game spell textures when available.
+- Initial Druid: Ferocity, Shredding Attacks, Savage Fury. Initial Rogue: Efficient Strikes, Coup de Grace, Puncturing Wounds, Flawless Execution. November 2 Rogue renames included; actual Forever talent/spell data requires launch-client verification.
+- No trained ranks, stat/damage calculation, crit estimates, Blizzard talent-frame hooks, or spellbook annotation in this sprint. Existing combat nameplate resource HUD and user macro data stay unchanged.
+- **Sprint 2 acceptance:** detect trained ranks and learned spell ranks read-only, demonstrate per-component computations (direct hits vs DoTs/cost), optional crit estimates with explicit assumptions, optional spellbook overlay, safe fallbacks and talent change refresh. Validate actual Blizzard APIs and combat/secret restrictions before native tooltip hooks.
+- Beta distribution remains tag-only and deliberate; this optional feature is not contained in standard Base+Macros and should not trigger another CurseForge upload merely because this PR merges.
