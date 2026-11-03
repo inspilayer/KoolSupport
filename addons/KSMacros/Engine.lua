@@ -92,7 +92,7 @@ function M:SaveDraft(name, body)
   return true
 end
 
-function M:Install(name, body)
+function M:Install(name, body, icon)
   if KoolSupport:IsInCombat() then return false, "Cannot edit macros in combat" end
   body = self:NormalizeTooltip(body)
   local ok, why = self:Validate(name, body)
@@ -106,14 +106,14 @@ function M:Install(name, body)
     if type(GetMacroBody) ~= "function" then return false, "Cannot verify existing macro" end
     if not data.owned[name] then return false, "Refusing to overwrite a macro not owned by KS Macros" end
     if GetMacroBody(index) ~= data.owned[name] then return false, "Existing macro was edited outside KoolSupport" end
-    local result = EditMacro(index, name, "INV_Misc_QuestionMark", body)
+    local result = EditMacro(index, name, icon or "INV_Misc_QuestionMark", body)
     if not result then return false, "WoW rejected the macro update" end
   else
     if type(GetNumMacros) ~= "function" then return false, "Macro count API unavailable" end
     local _, numCharacter = GetNumMacros()
     local limit = MAX_CHARACTER_MACROS or 18
     if (numCharacter or 0) >= limit then return false, "Character macro slots are full" end
-    local result = CreateMacro(name, "INV_Misc_QuestionMark", body, true)
+    local result = CreateMacro(name, icon or "INV_Misc_QuestionMark", body, true)
     if not result then return false, "WoW rejected the macro creation" end
   end
   data.owned[name] = body
@@ -148,7 +148,7 @@ function M:InstallBatch(entries)
   if (count or 0)+need>(MAX_CHARACTER_MACROS or 18) then return false,"Character macro slots are full" end
   local completed=0
   for _,entry in ipairs(entries) do
-    local ok,why=self:Install(entry.name,entry.body)
+    local ok,why=self:Install(entry.name,entry.body,entry.icon)
     if not ok then return false,"Installed "..completed.." before API failure: "..tostring(why) end
     completed=completed+1
   end
