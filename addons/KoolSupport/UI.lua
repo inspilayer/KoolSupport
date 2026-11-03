@@ -28,8 +28,9 @@ local function buildHome(parent)
   button(parent, "Open Macro Suite", 20, -122, 208, function() KS:ShowPage("macro_suite") end)
   button(parent, "Full Spellbook", 246, -122, 190, function() KS:ShowPage("full_spellbook") end)
   button(parent, "Custom Builder", 456, -122, 190, function() KS:ShowPage("macro_workshop") end)
-  label(parent, "KS Macros ships with the base addon. Support Sessions and Stealth are optional.", 20, -195, 750)
-  label(parent, MUTED .. "Development only: not a replacement for the existing CurseForge candidate.|r", 20, -241, 760)
+  button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
+  label(parent, "One CurseForge package includes all five modules. Optional features are controlled in Modules.", 20, -227, 775)
+  label(parent, MUTED .. "0.10.x Beta candidate: launch-client verification required before stable.|r", 20, -270, 760)
 end
 local function buildModules(parent)
   label(parent, GOLD .. "Module Manager|r", 20, -22, 660, "GameFontNormalLarge")
@@ -47,6 +48,22 @@ local function buildModules(parent)
   end
 end
 
+local function buildLaunchChecks(parent)
+  label(parent, GOLD .. "Launch Checks  -  World of Warcraft: Forever", 20, -19, 775, "GameFontNormalLarge")
+  label(parent, "Read-only snapshot: installed modules and API presence, NOT proof features work.", 20, -54, 775)
+  label(parent, "No combat values, SavedVariables, macros or network requests are modified.", 20, -79, 775)
+  local rows=KS:CollectLaunchChecks()
+  for i,entry in ipairs(rows) do
+    local y=-119-(i-1)*36
+    local tone=(entry.status=="MISSING" or entry.status=="UNAVAILABLE") and "|cffff9a87" or
+      (entry.status=="REVIEW" or entry.status=="UNKNOWN" or entry.status=="UNVERIFIED") and "|cffffd87a" or "|cff9bd9ab"
+    label(parent, entry.title, 20, y, 225, "GameFontHighlightSmall")
+    label(parent, tone .. entry.status .. "|r", 255, y, 116, "GameFontHighlightSmall")
+    label(parent, entry.detail, 376, y, 408, "GameFontHighlightSmall")
+  end
+  label(parent, MUTED .. "API presence is preliminary; verify gameplay, tooltips and persistence in-client.|r",20,-540,775,"GameFontHighlightSmall")
+  button(parent, "Re-run checks", 20, -565, 186, function()KS:ShowPage("launch_checks")end)
+end
 local function clearCurrent()
   if pageWidgets then pageWidgets:Hide() end
   pageWidgets = nil
@@ -54,7 +71,7 @@ end
 local function redrawNavigation()
   if not navigation then return end
   for _, item in pairs(navButtons) do item:Hide() end
-  local ordered = {"home", "modules", "macro_suite", "full_spellbook", "macro_workshop", "support_session", "stealth"}
+  local ordered = {"home", "modules", "launch_checks", "macro_suite", "full_spellbook", "macro_workshop", "support_session", "stealth"}
   local seen = {}
   local index = 0
   local function addPage(id)
@@ -91,6 +108,7 @@ function KS:ShowPage(id)
   pageWidgets = pane
   if id == "home" then buildHome(pane)
   elseif id == "modules" then buildModules(pane)
+  elseif id == "launch_checks" then buildLaunchChecks(pane)
   else
     local page = self.pages[id]
     if page then page.build(pane, self) else buildHome(pane) end
@@ -129,3 +147,4 @@ function KS:Open(page)
 end
 KS:RegisterPage({id="home",title="Home",build=buildHome})
 KS:RegisterPage({id="modules",title="Modules",build=buildModules})
+KS:RegisterPage({id="launch_checks",title="Launch Checks",build=buildLaunchChecks})
