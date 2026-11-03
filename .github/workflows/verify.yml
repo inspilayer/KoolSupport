@@ -24,6 +24,8 @@ jobs:
         run: python3 scripts/check.py --package
       - name: Validate browser preview JavaScript
         run: python3 scripts/check_preview.py
+      - name: Validate CurseForge packaging rules
+        run: python3 scripts/check_curseforge_packaging.py
       - name: Upload development package
         uses: actions/upload-artifact@v4
         with:
@@ -31,3 +33,25 @@ jobs:
           path: |
             dist/*.zip
             preview/KS_Afflictions_Browser_Preview.html
+
+  curseforge-packager-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run upstream CurseForge-compatible packager without uploading
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+      - name: Inspect the exact generated WoW addon ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t candidates < <(find .release -type f -name 'KoolSupport*.zip' | sort)
+          if (( ${#candidates[@]} != 1 )); then
+            echo "::error::Expected exactly one CurseForge ZIP, found ${#candidates[@]}"
+            find .release -type f || true
+            exit 1
+          fi
+          python3 scripts/check_curseforge_packaging.py --built-zip "${candidates[0]}"

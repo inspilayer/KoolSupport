@@ -52,3 +52,11 @@ KS Stealth now uses the shared `KoolSupport.BarTheme:StyleBar` palette for its c
 - Kept existing native macro conflict, edit-fingerprint and combat protections. Added optional native icon support for templates.
 - Prepared software-only CurseForge description, changelog and exact two-directory standard ZIP package, alongside optional plugins.
 - **Release readiness gate remains open:** check all live client APIs and class spell names, version/Interface, hand-edited-macro protection and SavedVariables migration; current candidate is Beta/RC, not a live-verified stable release.
+
+
+## Distribution automation: tag-only native CurseForge packager
+
+- Added .pkgmeta to package the Base + Macros siblings and omit optional plugins and development assets.
+- Added CI tests to validate .pkgmeta and dry-run the BigWigs packager on every PR; no uploads in CI.
+- CurseForge should be set to package tagged commits only. Beta tag names must contain beta.
+- Outstanding: live client checks, manual review of a tagged release and observation of CurseForge's real generated file. No tag created here.
