@@ -100,3 +100,11 @@ References: https://warcraft.wiki.gg/wiki/API_C_ClassTalents.GetActiveConfigID ;
 Add a read-only `/kool` → Launch Checks screen to report client Interface marker, five addon loaded/registered/enabled states and the mere *presence* of spellbook, talents, tooltip processor, nameplate and combo-point API entry points. The page has explicit uncertainty labels and a manual Re-run action, no combat resource reads, no macro edits, no file/network access. Fix the stale Home wording that incorrectly implies only Base+Macros ship. Add an offline diagnostic UI/mock test. This is pre-launch instrumentation to assist Nov 4; **no API presence check is a claim of actual gameplay correctness or release approval**.
 
 Next engineering hardening sprint: test and strengthen migration/idempotency and macro ownership with malformed or conflicting legacy SavedVariables and native macro fixtures. Keep `0.10.2-rc.1` untagged until user permits a new Beta and completes live checks.
+
+
+## Sprint 5 — macro migration/ownership hardening
+
+- Restrict v0.6.4 `owned + generated` migration to an explicit boolean true, existing safe name/body constraints, never modifying historical root tables. A malformed old draft order remains preserved and migration retryable, not normalized destructively.
+- Guard native macro lookup, native body inspection and slot counting from errors/malformed returns. Unknown native state **must prevent writes**. Guard native create/edit calls, only update KS ownership after successful client result.
+- Preserve batch **preflight** invariants (all collisions/slot counts evaluated before any changes); a native failure after part of a batch can still leave prior player-approved writes, which must be reported and is not fully transactional.
+- Add mock regression fixture of malformed root SavedVariables, hand-edited macro, unrelated same-name macro, and API errors. Need real player backup fixture and in-client validation Nov 4 before stable promotion. No new tag on merge.
