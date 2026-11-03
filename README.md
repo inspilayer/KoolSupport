@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Development package **0.9.0-dev**. The monolithic v0.6.4 CurseForge-review package is not modified or replaced.
+Development package **0.10.0-rc.1**. The monolithic v0.6.4 CurseForge-review package is not modified or replaced.
 
 ## Modules
 
@@ -37,7 +37,7 @@ The addon only **writes ordinary user-triggered WoW macros** after an explicit c
 **[docs/CHAT-TRANSITION.md](docs/CHAT-TRANSITION.md) is canonical and must change in every substantive PR**. Read it on the current main branch before further work. See [roadmap](docs/ROADMAP.md) for migration gates and [archived monolithic source](legacy/v0.6.4/) for the previous release candidate. The archived source is never included in install ZIPs.
 
 
-## KS Afflictions — optional DoT tracking module (0.9.0-dev)
+## KS Afflictions — optional DoT tracking module (0.10.0-rc.1)
 
 The optional **KS Afflictions** module bundles a modified MIT-licensed tracking engine from [DoesItDie](https://github.com/swirllyman/DoesItDie) by Joe Greive. It provides KS-style **target, focus and visible-nameplate** DoT damage bars, DoT labels, spell-school colors, and an optional *estimated lethal* indicator. It requires KoolSupport Base only; it does not need DoesItDie installed separately or KS Macros.
 
@@ -46,3 +46,12 @@ Install `KSAfflictions/` alongside `KoolSupport/` and use `/kool afflictions`. S
 **Status:** development only; first game-client validation still required. Secret health values go directly into UI widgets; no automatic spell choices or protected actions. The browser demo uses simulated encounters and is never represented as genuine game footage.
 
 **License:** KoolSupport now uses MIT; see [LICENSE](LICENSE). Vendored DoesItDie retains its original author notice.
+
+
+## Class-aware recommended macros (0.10.0-rc.1)
+
+The bundled KS Macros module now detects the player's class and offers **five curated, optional quality-of-life macro templates for each of the nine Forever classes**. Templates use appropriate mouseover, pet, utility, stopcast, form, and modifier patterns. Spell icons are resolved from learned spells, with a native class-icon fallback. The full spellbook, generic templates and saved custom drafts remain available; the separate Support Sessions module still owns focus-based healer and follow profiles.
+
+Recommended macros are **never installed automatically**. Players review, select and install them outside combat. If the spellbook is available, macros with unlearned requirements cannot be selected. Unverified spellbook states are labeled, and individual casts remain subject to the client's level/talent and secure macro restrictions.
+
+**Distribution:** [CurseForge description](docs/CURSEFORGE_DESCRIPTION.md) · [release notes](docs/RELEASE_NOTES_0.10.0-rc.1.md) · [publishing checklist](docs/PUBLISHING.md). This is a release candidate, not an assertion that a live Forever client has been tested.
