@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Development candidate **0.10.1-rc.1** (0.10.x Beta line). The approved 0.10.0-rc.1-beta remains untouched. One CurseForge listing will include the entire suite after live Forever checks.
+Development candidate **0.10.2-rc.1** (0.10.x Beta line). The approved 0.10.0-rc.1-beta and the already-tagged v0.10.1-rc.1-beta remain untouched. One CurseForge listing will include the entire suite after live Forever checks.
 
 ## Modules
 
@@ -38,7 +38,7 @@ The addon only **writes ordinary user-triggered WoW macros** after an explicit c
 **[docs/CHAT-TRANSITION.md](docs/CHAT-TRANSITION.md) is canonical and must change in every substantive PR**. Read it on the current main branch before further work. See [roadmap](docs/ROADMAP.md) for migration gates and [archived monolithic source](legacy/v0.6.4/) for the previous release candidate. The archived source is never included in install ZIPs.
 
 
-## KS Afflictions — optional DoT tracking module (0.10.1-rc.1)
+## KS Afflictions — optional DoT tracking module (0.10.2-rc.1)
 
 The optional **KS Afflictions** module bundles a modified MIT-licensed tracking engine from [DoesItDie](https://github.com/swirllyman/DoesItDie) by Joe Greive. It provides KS-style **target, focus and visible-nameplate** DoT damage bars, DoT labels, spell-school colors, and an optional *estimated lethal* indicator. It requires KoolSupport Base only; it does not need DoesItDie installed separately or KS Macros.
 
@@ -49,17 +49,17 @@ CurseForge installs `KSAfflictions/` alongside all other KS folders; use `/kool 
 **License:** KoolSupport now uses MIT; see [LICENSE](LICENSE). Vendored DoesItDie retains its original author notice.
 
 
-## Class-aware recommended macros (0.10.1-rc.1)
+## Class-aware recommended macros (0.10.2-rc.1)
 
 The bundled KS Macros module now detects the player's class and offers **five curated, optional quality-of-life macro templates for each of the nine Forever classes**. Templates use appropriate mouseover, pet, utility, stopcast, form, and modifier patterns. Spell icons are resolved from learned spells, with a native class-icon fallback. The full spellbook, generic templates and saved custom drafts remain available; the separate Support Sessions module still owns focus-based healer and follow profiles.
 
 Recommended macros are **never installed automatically**. Players review, select and install them outside combat. If the spellbook is available, macros with unlearned requirements cannot be selected. Unverified spellbook states are labeled, and individual casts remain subject to the client's level/talent and secure macro restrictions.
 
-**Distribution:** [CurseForge description](docs/CURSEFORGE_DESCRIPTION.md) · [release notes](docs/RELEASE_NOTES_0.10.1-rc.1.md) · [publishing checklist](docs/PUBLISHING.md). This is a release candidate, not an assertion that a live Forever client has been tested.
+**Distribution:** [CurseForge description](docs/CURSEFORGE_DESCRIPTION.md) · [release notes](docs/RELEASE_NOTES_0.10.2-rc.1.md) · [publishing checklist](docs/PUBLISHING.md). This is a release candidate, not an assertion that a live Forever client has been tested.
 
 
 ## CurseForge automatic packaging
 
 Root .pkgmeta provides a verified five-folder unified distribution for CurseForge's tag-only GitHub packager. Optional modules are included in the same download and controlled in-game. CI checks the configuration and runs an upstream packager dry-run; see docs/PUBLISHING.md.
 
-Select tagged commits only, not Package all commits. Include beta in a pre-release tag. Merging code does **not** publish to CurseForge. After November 4 live testing, the manually approved candidate tag is `v0.10.1-rc.1-beta`. We stay on 0.10.x until validation.
+Select tagged commits only, not Package all commits. Include beta in a pre-release tag. Merging code does **not** publish to CurseForge. After November 4 live testing, the next manually approved candidate tag is `v0.10.2-rc.1-beta`. We stay on 0.10.x until validation.
