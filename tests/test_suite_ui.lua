@@ -51,8 +51,8 @@ for _,w in ipairs(widgets) do
  if w.kind=="Button" then buttons[#buttons+1]=w end
  if w.kind=="icon" and w.shown then icons=(icons or 0)+1 end
  if w.text=="Install selected" then install=w end
- if w.text=="Locked" then locked=w end
- if w.kind=="CheckButton" and w.shown and w.enabled then check=w end
+ if type(w.text)=="string" and w.text:find("Locked",1,true) then locked=w end
+ if w.kind=="CheckButton" and w.shown and w.enabled and not check then check=w end
 end
 assert(install and install.scripts.OnClick,"Install control missing")
 assert(icons and icons>=5,"Class spell icons missing from visible rows")
