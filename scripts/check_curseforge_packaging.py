@@ -66,7 +66,7 @@ def validate_zip(path):
     }
     assert expected.issubset(names), f"Missing addon source files: {sorted(expected - names)}"
     extra = names - expected
-    assert extra.issubset({"KoolSupport/LICENSE", "KSMacros/LICENSE"}), (
+    assert extra.issubset({"KoolSupport/LICENSE", "KSMacros/LICENSE", "KoolSupport/CHANGELOG.md"}), (
         f"Unexpected packager files; could install junk: {sorted(extra)}"
     )
     assert not any("/addons/" in n or n.startswith(("addons/", "docs/", "tests/")) for n in names)
