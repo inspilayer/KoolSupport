@@ -38,12 +38,12 @@ for _,entry in ipairs(M:GetRecommended()) do
    for _,name in ipairs(entry.requires) do spellbook[name]={spellID=201} end
  end
 end
-M.KnownSpellIndex=function()return spellbook end
 C_Spell={GetSpellTexture=function(id)return 888 end}
 M.ScanSpellbook=function()return {} end
 local installed
 M.InstallBatch=function(_,batch)installed=batch;return true,"Installed" end
 assert(loadfile("addons/KSMacros/Suite.lua"))()
+M.KnownSpellIndex=function()return spellbook end
 M.BuildSuite(parent)
 local install,check,locked,icons,buttons
 buttons={}
@@ -57,7 +57,6 @@ end
 assert(install and install.scripts.OnClick,"Install control missing")
 assert(icons and icons>=5,"Class spell icons missing from visible rows")
 assert(locked,"Unlearned template should be visually locked")
-for i,w in ipairs(widgets) do if w.kind=="CheckButton" then print("CHECK",i,tostring(w.shown),tostring(w.enabled),tostring(w.scripts.OnClick)) end end
 assert(check and check.scripts.OnClick)
 check.checked=true
 check.scripts.OnClick(check)
