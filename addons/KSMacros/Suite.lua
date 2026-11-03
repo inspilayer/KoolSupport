@@ -12,7 +12,7 @@ M.genericTemplates={
 }
 function M:GetSuite()
   local items={}
-  for _,template in ipairs(self:GetRecommended()) do items[#items+1]=template end
+  for _,template in ipairs(self.GetRecommended and self:GetRecommended() or {}) do items[#items+1]=template end
   for _,template in ipairs(self.genericTemplates) do items[#items+1]=template end
   local saved=self:Store()
   for _,name in ipairs(saved.draftOrder) do
