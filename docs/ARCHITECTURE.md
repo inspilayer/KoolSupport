@@ -76,3 +76,12 @@ Version and interface `16001` are development values. Browser HTML previews are 
 - Browser simulation is demonstrative only; demo health and damage are fabricated test values, and its lethal visualization is ordinary JavaScript rather than client-side secret-value UI machinery.
 
 **Release gate:** live test DoT attribution (especially combo finishers), focus, multi-nameplate behavior, secret-value drawing and layered icon geometry. No CurseForge release of 0.9.0-dev is authorized.
+
+## KS Afflictions visual styles — 0.9.0-dev development
+
+- `style`: `modern` (new user default), `classic`, `minimal`. Style affects frame background, typography and compactness; not tracking data.
+- `dotColor`: `purple` (default), `gold`, `red`, `school`. Settings are validated against a finite allowlist, not arbitrary Lua/eval.
+- `lethalMode`: `dies` (default), `skull`, `both`, `off`. Individual `lethalTarget`, `lethalFocus`, `lethalNameplates` visibility controls. Legacy `lethal` remains as a master switch. New defaults only fill missing saved keys; no destructive migration.
+- UI-only lethal indicator uses a `StatusBar` whose maximum comes directly from `UnitHealth(unit)` (may be a Forever secret), value comes from non-secret estimated DoT damage, and a `FontString`/skull anchored at the status-bar fill edge and clipped by a child frame. Do NOT compare, convert to string, branch or compute using `UnitHealth` in Lua.
+- Spell textures use supported client API where available and safely hide unavailable icons. Browser demo's direct health comparisons are **simulation only**.
+- Security, accuracy and client-release constraints from the previous sections remain in force.
