@@ -29,7 +29,7 @@ def verify():
     lua = shutil.which('lua') or shutil.which('lua5.4')
     if lua:
         for path in sorted(BASE.rglob('*.lua')):
-            cmd = [lua, '-e', 'assert(loadfile(arg[1]))', str(path)]
+            cmd = [lua, '-e', 'assert(loadfile([[' + str(path) + ']]))']
             subprocess.run(cmd, cwd=ROOT, check=True)
         for path in sorted((ROOT / 'tests').glob('test_*.lua')):
             subprocess.run([lua, str(path.relative_to(ROOT))], cwd=ROOT, check=True)
