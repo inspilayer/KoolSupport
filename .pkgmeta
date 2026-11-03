@@ -1,15 +1,14 @@
-# CurseForge's native GitHub tag packager: standard KoolSupport distribution only.
-# The repository is a monorepo. Preserve the two sibling AddOns directories.
-# Never bundle optional modules into the standard CurseForge project.
+# One KoolSupport CurseForge project / one installable ZIP / five sibling WoW addons.
+# Optional in the game UI does NOT require a separate CurseForge project.
 package-as: KoolSupport
 enable-nolib-creation: no
 move-folders:
-    KoolSupport/addons/KSMacros: KSMacros
     KoolSupport/addons/KoolSupport: KoolSupport
+    KoolSupport/addons/KSMacros: KSMacros
+    KoolSupport/addons/KSSupportSessions: KSSupportSessions
+    KoolSupport/addons/KSStealth: KSStealth
+    KoolSupport/addons/KSAfflictions: KSAfflictions
 ignore:
-    - addons/KSSupportSessions
-    - addons/KSStealth
-    - addons/KSAfflictions
     - docs
     - tests
     - scripts
