@@ -36,7 +36,10 @@ local function mk()
  function f:CreateTexture()return mk()end
  function f:CreateFontString()return mk()end
  function f:GetStatusBarTexture()return mk()end
- return setmetatable(f,{__index=function()return stub end})
+ return setmetatable(f,{__index=function(_,key)
+  if type(key)=="string" and (key:match("^Set") or key:match("^Get") or key:match("^Register") or key:match("^Clear")) then return stub end
+  return nil
+ end})
 end
 CreateFrame=function()return mk()end
 UIParent=mk();TargetFrame=mk();FocusFrame=mk()
