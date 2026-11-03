@@ -50,8 +50,12 @@ function S:MakePlate(plate,unit)
   local record={plate=plate,holder=holder,unit=unit,bars={}}
   for i=1,CAP do
     local bar=CreateFrame("StatusBar",nil,holder)
-    bar:SetStatusBarTexture(TEX)
-    bar:SetStatusBarColor(1,.25,.12,1)
+    if KoolSupport.BarTheme then
+      KoolSupport.BarTheme:StyleBar(bar,"bleed")
+    else -- old test mocks and early development clients
+      bar:SetStatusBarTexture(TEX)
+      bar:SetStatusBarColor(1,.25,.12,1)
+    end
     bar:SetMinMaxValues(i-1,i)
     bar:SetValue(0)
     record.bars[i]=bar
