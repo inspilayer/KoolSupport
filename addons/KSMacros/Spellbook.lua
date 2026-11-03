@@ -90,7 +90,16 @@ function M.BuildSpellbook(parent)
       local entry=filtered[(page-1)*perPage+i]
       b:SetShown(entry~=nil)
       if entry then
-        b:SetText(entry.name.."  ("..entry.group..")")
+        local name=entry.name.."  ("..entry.group..")"
+        -- Optional KS Stealth annotations, only on explicitly enabled talents.
+        -- A separate TooltipDataProcessor post-call covers native spell tooltips.
+        if KSStealth and type(KSStealth.CanAnnotateTalent)=="function" and
+          KSStealth:CanAnnotateTalent() and
+          type(KSStealth.AbilityInsightLines)=="function" then
+          local lines=KSStealth:AbilityInsightLines(entry.name)
+          if #lines>0 then name=name.."  |cff9bd9ab[KS talents]|r" end
+        end
+        b:SetText(name)
         b:SetScript("OnClick",function()
           local store=M:Store()
           store.selectedSpell=entry.name
