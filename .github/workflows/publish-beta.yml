@@ -51,7 +51,7 @@ jobs:
         with:
           args: -d
 
-      - name: Verify two-folder package from real packager
+      - name: Verify unified five-module package from real packager
         shell: bash
         run: |
           set -euo pipefail

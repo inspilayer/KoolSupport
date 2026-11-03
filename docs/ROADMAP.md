@@ -10,7 +10,7 @@ Updated 2026-11-03. Development labels are not release promises.
 | KS Support Sessions optional child | **0.8.0-dev implementation**: legacy healer presets, named focus setup, install delegation | Live class/spell syntax, UI parity, manual macro slot use and first-run testing |
 | KS Stealth optional sibling | **0.8.0-dev shell and visible-nameplate indicators** | Live confirmation of target-bound combo points for all visible nameplates, secret-value compatibility and API events |
 | KS Macro Profiles optional child | Not started | Versioned JSON import/export, validation and user-reviewed merge |
-| CurseForge release migration | **Blocked**: existing v0.6.4 review candidate frozen | Feature parity, actual client verification, approval of a new release |
+| CurseForge release migration | **Beta 0.10.0 approved; unified 0.10.1 candidate** | All five modules in one listing; verify Forever live APIs and feature behavior before newer tag |
 
 ## Immediate next work after this PR
 
@@ -71,4 +71,13 @@ Added user-initiated GitHub Actions workflow to verify and push an immutable `vV
 - Initial Druid: Ferocity, Shredding Attacks, Savage Fury. Initial Rogue: Efficient Strikes, Coup de Grace, Puncturing Wounds, Flawless Execution. November 2 Rogue renames included; actual Forever talent/spell data requires launch-client verification.
 - No trained ranks, stat/damage calculation, crit estimates, Blizzard talent-frame hooks, or spellbook annotation in this sprint. Existing combat nameplate resource HUD and user macro data stay unchanged.
 - **Sprint 2 acceptance:** detect trained ranks and learned spell ranks read-only, demonstrate per-component computations (direct hits vs DoTs/cost), optional crit estimates with explicit assumptions, optional spellbook overlay, safe fallbacks and talent change refresh. Validate actual Blizzard APIs and combat/secret restrictions before native tooltip hooks.
-- Beta distribution remains tag-only and deliberate; this optional feature is not contained in standard Base+Macros and should not trigger another CurseForge upload merely because this PR merges.
+- Beta distribution remains tag-only and deliberate; the Talent Impacts feature now belongs in the unified 0.10.1 package but should not trigger another CurseForge upload merely because this PR merges.
+
+
+## 0.10.x launch plan — unified CurseForge suite
+
+**Decision (Nov 3):** One KoolSupport CurseForge project, one installable ZIP containing Base, Macros, Support Sessions, Stealth and Afflictions (five sibling WoW AddOns directories). The previously approved `v0.10.0-rc.1-beta` stays unchanged. The next development version is `0.10.1-rc.1`; versioning stays within **0.10.x** through launch test and fixes.
+
+**Ready for CI review:** `.pkgmeta`, `scripts/check.py`, and the upstream-packager ZIP validator now assert all five roots and the vendored DoesItDie MIT license/notice. The UI remains modular rather than creating separate CurseForge pages. Existing per-character settings and macro protections are retained. Existing standalone plugin ZIP outputs can be used for *developer isolation only*.
+
+**Next (Nov 4 evening):** Install the unified development ZIP in Forever live; confirm Interface marker, five addon loads, controls in `/kool`, all class macro behavior, Druid/Rogue talent hover, nameplate secret safe-passthrough, Afflictions estimated DoTs, Support Sessions, saved settings after reload and no taint. Resolve any issues on new 0.10.x RC before manually approving a Beta tag. Only after successful tests, use GitHub's manual Publish Beta action to trigger a single CurseForge file through the already configured webhook. Do **not** automatically publish after CI merges; stable promotion also needs separate owner approval.

@@ -2,7 +2,7 @@
 ## Title: KS Stealth
 ## Notes: Optional Rogue/Feral resource HUD for visible nameplates
 ## Author: KoolSupport
-## Version: 0.10.0-rc.1
+## Version: 0.10.1-rc.1
 ## Dependencies: KoolSupport
 ## OptionalDeps: KSMacros
 Stealth.lua
