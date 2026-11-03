@@ -13,6 +13,7 @@ local function frame(kind,parent)
   function f:SetText(value)self.text=value end
   function f:SetTexture(value)self.texture=value end
   function f:Show()self.hidden=false end
+  function f:SetShown(v)self.hidden=not v end
   function f:Hide()self.hidden=true end
   function f:SetScript(name,fn)self.scripts=self.scripts or {};self.scripts[name]=fn end
   function f:RegisterEvent()end
