@@ -93,3 +93,10 @@ The built-in generic module detects one of the nine Forever class tokens with `U
 When `ScanSpellbook()` works, known active learned spells are mapped by name and required spells are checked before selecting a recommendation. When scanning fails, recommendations are labeled **Verify**, not falsely marked available. A spell icon comes from `C_Spell.GetSpellTexture(spellID)` or `GetSpellTexture(spellID)`, with class atlas fallback in the UI. Installed macros accept the resolved native icon ID or default to the secure game's question-mark icon with #showtooltip. User selection and native engine protections remain mandatory.
 
 Do not bundle optional plugins into the standard CurseForge upload. The standard upload ZIP contains only Base and KS Macros siblings. New candidate `0.10.0-rc.1` is a Beta/RC until the live Forever client and class spell names are validated. Original KS Afflictions MIT notices remain distributed unchanged.
+
+
+## KS Stealth Talent Impacts (Sprint 1, optional)
+
+`TalentImpactData.lua` is a static class-scoped Druid/Rogue Forever talent-to-ability catalog. `TalentImpactUI.lua` registers a separate read-only Talent Impacts page via Module.lua, protected by the existing `ks_stealth` module gate. Native class tokens (UnitClass second return) determine the view; unsupported classes do not receive an active list. A new default-OFF `KoolSupportDB.modules.ks_stealth.talentImpactOverlay` setting is additive and never removes unknown keys. The toggle respects existing combat setting restrictions.
+
+The page provides talent hover/click previews with spell textures when available. There is no API to scan learned talent ranks or spell ranks in this sprint, no Blizzard talent-frame hooks or spellbook mutations, and no numeric damage/crit calculation; effects are explanatory catalog text sourced from November 2026 Forever talent notes and subject to client verification. No combat secrets are passed through this UI. The KS Stealth plugin ZIP alone includes these files, while the standard Base+Macros CurseForge ZIP remains unaffected.
