@@ -44,3 +44,11 @@ KS Stealth now uses the shared `KoolSupport.BarTheme:StyleBar` palette for its c
 - Offline tests extended for defaults, invalid enums, per-unit display gating and secret-health passthrough. CI must be green.
 - Tracking engine remains untouched and credited under MIT.
 - **Remaining:** live Forever check of status-bar clipping/font visibility, client textures and nameplate layering before release.
+
+## 0.10.0-rc.1 class recommendation and publication milestone
+
+- Added 45 class-specific quality-of-life templates across nine Forever classes to the bundled generic Macro Suite, without linking to the optional Support Sessions.
+- Class/spell icons and learned spellbook readiness filtering; four tabs: Recommended, General, Custom, All. No automatic installation.
+- Kept existing native macro conflict, edit-fingerprint and combat protections. Added optional native icon support for templates.
+- Prepared software-only CurseForge description, changelog and exact two-directory standard ZIP package, alongside optional plugins.
+- **Release readiness gate remains open:** check all live client APIs and class spell names, version/Interface, hand-edited-macro protection and SavedVariables migration; current candidate is Beta/RC, not a live-verified stable release.
