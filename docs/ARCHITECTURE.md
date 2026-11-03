@@ -85,3 +85,11 @@ Version and interface `16001` are development values. Browser HTML previews are 
 - UI-only lethal indicator uses a `StatusBar` whose maximum comes directly from `UnitHealth(unit)` (may be a Forever secret), value comes from non-secret estimated DoT damage, and a `FontString`/skull anchored at the status-bar fill edge and clipped by a child frame. Do NOT compare, convert to string, branch or compute using `UnitHealth` in Lua.
 - Spell textures use supported client API where available and safely hide unavailable icons. Browser demo's direct health comparisons are **simulation only**.
 - Security, accuracy and client-release constraints from the previous sections remain in force.
+
+## Built-in KS Macros: recommended class catalogs
+
+The built-in generic module detects one of the nine Forever class tokens with `UnitClass("player")`. `ClassPresets.lua` defines five optional recommended quality-of-life templates per class; `Suite.lua` shows these under Recommended, followed by generic templates and saved drafts under separate filters. No `@focus` appears in class templates; the optional Support Sessions addon owns target-name setup and focus-based healer presets.
+
+When `ScanSpellbook()` works, known active learned spells are mapped by name and required spells are checked before selecting a recommendation. When scanning fails, recommendations are labeled **Verify**, not falsely marked available. A spell icon comes from `C_Spell.GetSpellTexture(spellID)` or `GetSpellTexture(spellID)`, with class atlas fallback in the UI. Installed macros accept the resolved native icon ID or default to the secure game's question-mark icon with #showtooltip. User selection and native engine protections remain mandatory.
+
+Do not bundle optional plugins into the standard CurseForge upload. The standard upload ZIP contains only Base and KS Macros siblings. New candidate `0.10.0-rc.1` is a Beta/RC until the live Forever client and class spell names are validated. Original KS Afflictions MIT notices remain distributed unchanged.

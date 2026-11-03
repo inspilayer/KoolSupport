@@ -9,7 +9,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
 ADDONS=ROOT/'addons'
-VERSION='0.9.0-dev'
+VERSION='0.10.0-rc.1'
 MANIFESTS={
  'KoolSupport': [],
  'KSMacros': ['KoolSupport'],
@@ -59,6 +59,7 @@ def zip_addons(name,folders):
 
 def package():
     zip_addons('KoolSupport_Base_Macros',['KoolSupport','KSMacros'])
+    zip_addons('KoolSupport_CurseForge_Standard',['KoolSupport','KSMacros'])
     zip_addons('KSSupportSessions_Plugin',['KSSupportSessions'])
     zip_addons('KSStealth_Plugin',['KSStealth'])
     zip_addons('KSAfflictions_Plugin',['KSAfflictions'])

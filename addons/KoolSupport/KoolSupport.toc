@@ -2,7 +2,7 @@
 ## Title: KoolSupport
 ## Notes: Core framework for the KoolSupport addon family (development preview)
 ## Author: KoolSupport
-## Version: 0.9.0-dev
+## Version: 0.10.0-rc.1
 ## SavedVariablesPerCharacter: KoolSupportDB
 Core.lua
 BarTheme.lua
