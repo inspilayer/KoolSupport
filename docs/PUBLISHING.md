@@ -37,3 +37,16 @@ After the reviewed commit is on main, optionally create tag v0.10.0-rc.1 and a G
 ## Rollback
 
 Disable the new addon and restore the backed-up previous addon folders and WTF SavedVariables. Do not delete macros or claim the migration is fully verified without client testing.
+
+## CurseForge built-in GitHub packaging (tagged commits only)
+
+Source Code: GitHub. Repository URL: https://github.com/inspilayer/KoolSupport
+Automatic Packaging: The packager will package any new tagged commits it sees when code is pushed.
+
+Root .pkgmeta moves the two standard addon folders out of addons/ into WoW's sibling AddOns folders, and excludes optional addons and development sources. scripts/check_curseforge_packaging.py validates the manifest, while GitHub CI uses BigWigsMods/packager@v2 with -d to build and inspect a real ZIP without publishing.
+
+Never enable Package all commits: that would generate alpha files for ordinary engineering pushes. Do not create a tag automatically after merging a PR. CurseForge treats tags containing the literal word beta as Beta; a tag named only v0.10.0-rc.1 may instead become Release. Example approved manual beta tag: v0.10.0-rc.1-beta.
+
+Before tagging, check PR CI, live Forever Interface number and a player-tested macro installation. Keep API/webhook tokens in author settings or GitHub Secrets, not source. Nothing in this change tags, uploads or publishes a file.
+
+CurseForge project visibility (unlisted vs public) is separate from packaging. Unlisted projects are still accessible to users with the link.
