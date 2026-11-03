@@ -138,3 +138,11 @@ A root .pkgmeta maps KoolSupport/addons/KoolSupport to KoolSupport and KoolSuppo
 Release governance: recommend 'tagged commits only' in CurseForge, not 'Package all commits'. Do not automatically tag merges; live Forever validation still blocks stable publication. Beta tags must contain literal beta (for example v0.10.0-rc.1-beta), because rc alone may not classify as Beta. Secrets stay outside source. Check CI and merge status in the latest main before claiming any automatic packaging works. The CurseForge project remains unlisted until the owner changes General settings.
 
 See docs/PUBLISHING.md for the end-to-end instructions. No CurseForge upload or webhook creation is made in this sprint.
+
+## One-click tag publishing workflow — 2026-11-03
+
+Added `.github/workflows/publish-beta.yml`: manual workflow_dispatch, only on main, with an explicit true/false publishing confirmation; tests and dry-run package validation must pass before it uses the job-scoped GitHub token to create an immutable versioned `vVERSION-beta` tag. It refuses duplicate tags, a moved main branch, and non-RC versions. Tag is intended to trigger CurseForge's **external GitHub push webhook**, not a secondary GitHub Actions workflow.
+
+Full pipeline: developer PR + updated handoff → CI green → merge → user configures CurseForge tagged-commits mode and GitHub webhook (secret CurseForge API token in the webhook Payload URL, NEVER in the repo) → user manually runs Publish Beta action → external CurseForge packaging → user checks file/moderation status. The GitHub connector cannot inspect or change admin webhook settings, and no CurseForge connector is installed, so external activation remains a user UI step.
+
+Never create tags automatically on merges, and do not claim that CurseForge has published the addon merely because a tag exists. GitHub release tags may be immutable after external delivery. Beta status does not replace live client validation.

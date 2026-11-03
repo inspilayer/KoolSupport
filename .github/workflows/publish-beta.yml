@@ -1,0 +1,93 @@
+name: Publish KoolSupport Beta (CurseForge tag)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_beta:
+        description: 'I approve creating a public Beta tag; CurseForge may package it if the webhook is connected.'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: koolsupport-beta-tag
+  cancel-in-progress: false
+
+jobs:
+  tag-beta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit confirmation on main
+        env:
+          CONFIRMED: ${{ inputs.confirm_beta }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != 'refs/heads/main' || "$CONFIRMED" != 'true' ]]; then
+            echo '::error::Choose main and approve Beta publishing explicitly'
+            exit 1
+          fi
+      - name: Check out main including release tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Lua for full offline test suite
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+      - name: Verify addon source, safety tests and build candidate
+        run: python3 scripts/check.py --package
+
+      - name: Validate browser preview
+        run: python3 scripts/check_preview.py
+
+      - name: Validate CurseForge packaging manifest
+        run: python3 scripts/check_curseforge_packaging.py
+
+      - name: Dry-run real CurseForge-compatible packager
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+
+      - name: Verify two-folder package from real packager
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t candidates < <(find .release -type f -name 'KoolSupport*.zip' | sort)
+          if (( ${#candidates[@]} != 1 )); then
+            echo "::error::Expected exactly one CurseForge package"
+            exit 1
+          fi
+          python3 scripts/check_curseforge_packaging.py --built-zip "${candidates[0]}"
+
+      - name: Push versioned Beta tag to GitHub
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          current="$(git rev-parse HEAD)"
+          remote_main="$(git rev-parse origin/main)"
+          if [[ "$current" != "$remote_main" ]]; then
+            echo "::error::main advanced while tests were running; retry on latest main"
+            exit 1
+          fi
+          version="$(sed -n "s/^VERSION='\([^']*\)'/\1/p" scripts/check.py)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]]; then
+            echo "::error::Only validated RC versions can create a Beta tag: $version"
+            exit 1
+          fi
+          tag="v${version}-beta"
+          if git show-ref --quiet --verify "refs/tags/$tag"; then
+            echo "::error::Tag $tag already exists; never overwrite a published tag"
+            exit 1
+          fi
+          git config user.name 'KoolSupport Release Bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$tag" -m "KoolSupport $version Beta; user-approved tag for CurseForge"
+          git push origin "refs/tags/$tag"
+          echo "### Beta tag created" >> "$GITHUB_STEP_SUMMARY"
+          echo "GitHub: $tag at $current" >> "$GITHUB_STEP_SUMMARY"
+          echo "If the external CurseForge push webhook is enabled, it can now package this tag." >> "$GITHUB_STEP_SUMMARY"
+          echo "No stable release was declared; live client validation still applies." >> "$GITHUB_STEP_SUMMARY"

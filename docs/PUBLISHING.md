@@ -50,3 +50,15 @@ Never enable Package all commits: that would generate alpha files for ordinary e
 Before tagging, check PR CI, live Forever Interface number and a player-tested macro installation. Keep API/webhook tokens in author settings or GitHub Secrets, not source. Nothing in this change tags, uploads or publishes a file.
 
 CurseForge project visibility (unlisted vs public) is separate from packaging. Unlisted projects are still accessible to users with the link.
+
+## One-click beta tagging from GitHub Actions
+
+The manual GitHub Action named **Publish KoolSupport Beta (CurseForge tag)** lives at `.github/workflows/publish-beta.yml`. It does **not** run on merges; the project owner explicitly launches it from **GitHub → Actions → Publish KoolSupport Beta (CurseForge tag) → Run workflow → main**, ticks the beta-approval checkbox, and runs it.
+
+The action runs the complete Lua test suite and offline packaging tests, dry-runs the actual BigWigs packager, validates the two-folder ZIP, checks that main did not advance during verification, and pushes exactly one immutable tag based on the tested VERSION in `scripts/check.py`, e.g. `v0.10.0-rc.1-beta`. It refuses duplicate tags and unknown/non-RC versions.
+
+**External webhook required:** In CurseForge set automatic packaging to tagged commits, save it, generate a Webhooks API token in the CurseForge account, and configure `https://github.com/inspilayer/KoolSupport/settings/hooks` with the payload URL described in the official CurseForge Automatic Packaging support guide. The URL contains a private token. Enter it **only in GitHub webhook settings**, not in documentation, a chat, code or GitHub Actions logs. Use the Push event and leave the webhook active. Verify a 2xx delivery in Recent Deliveries when the tag is pushed.
+
+GitHub's built-in `GITHUB_TOKEN` is used only to push the tag; it does not call CurseForge APIs or host secrets. GitHub Actions triggered by the resulting tag may not run due to GitHub's `GITHUB_TOKEN` recursion limitation; **the external CurseForge push webhook is the intended delivery mechanism**. Publishing still depends on webhook configuration and moderation. A green GitHub tag action alone is not proof CurseForge accepted a file.
+
+No beta tag has been pushed as part of adding this workflow. Run it only after the owner approves pre-release distribution and understands live client compatibility remains unverified.

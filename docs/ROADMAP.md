@@ -60,3 +60,7 @@ KS Stealth now uses the shared `KoolSupport.BarTheme:StyleBar` palette for its c
 - Added CI tests to validate .pkgmeta and dry-run the BigWigs packager on every PR; no uploads in CI.
 - CurseForge should be set to package tagged commits only. Beta tag names must contain beta.
 - Outstanding: live client checks, manual review of a tagged release and observation of CurseForge's real generated file. No tag created here.
+
+## Beta delivery automation (manual approval → automatic packaging)
+
+Added user-initiated GitHub Actions workflow to verify and push an immutable `vVERSION-beta` tag from main only. It does not run on normal PR merges. Requires the owner to finish the external CurseForge GitHub push webhook setup in repository Settings; verify 2xx delivery and CurseForge file status when first used. Runtime gameplay/client compatibility remains unverified until real tests are completed.
