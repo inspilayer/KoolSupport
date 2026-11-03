@@ -55,3 +55,10 @@ The bundled KS Macros module now detects the player's class and offers **five cu
 Recommended macros are **never installed automatically**. Players review, select and install them outside combat. If the spellbook is available, macros with unlearned requirements cannot be selected. Unverified spellbook states are labeled, and individual casts remain subject to the client's level/talent and secure macro restrictions.
 
 **Distribution:** [CurseForge description](docs/CURSEFORGE_DESCRIPTION.md) · [release notes](docs/RELEASE_NOTES_0.10.0-rc.1.md) · [publishing checklist](docs/PUBLISHING.md). This is a release candidate, not an assertion that a live Forever client has been tested.
+
+
+## CurseForge automatic packaging
+
+Root .pkgmeta provides a safe two-folder standard distribution for CurseForge's tag-only GitHub packager. Optional modules remain separate downloads. CI checks the configuration and runs an upstream packager dry-run; see docs/PUBLISHING.md.
+
+Select tagged commits only, not Package all commits. Include beta in a pre-release tag. This setup does not automatically tag or publish development merges.
