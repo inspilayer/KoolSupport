@@ -1,0 +1,20 @@
+# CurseForge's native GitHub tag packager: standard KoolSupport distribution only.
+# The repository is a monorepo. Preserve the two sibling AddOns directories.
+# Never bundle optional modules into the standard CurseForge project.
+package-as: KoolSupport
+enable-nolib-creation: no
+move-folders:
+    KoolSupport/addons/KSMacros: KSMacros
+    KoolSupport/addons/KoolSupport: KoolSupport
+ignore:
+    - addons/KSSupportSessions
+    - addons/KSStealth
+    - addons/KSAfflictions
+    - docs
+    - tests
+    - scripts
+    - preview
+    - legacy
+    - .github
+    - README.md
+license-output: LICENSE
