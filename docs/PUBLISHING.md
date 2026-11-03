@@ -1,5 +1,7 @@
 # KoolSupport release and publishing workflow — 0.10.x
 
+**Current engineering candidate:** `0.10.2-rc.1`. GitHub run `41723314712` already successfully created `v0.10.1-rc.1-beta`; never reuse it for the post-tag talent sprint. The next manually approved tag (after live validation) will be `v0.10.2-rc.1-beta`.
+
 ## One CurseForge listing / one ZIP
 
 KoolSupport's single CurseForge project (ID **1780256**) distributes the **entire suite** in one install. Players do not need separate CurseForge listings or downloads for Support Sessions, Stealth or Afflictions. Keep WoW's modular architecture: every `.toc` addon lives as a sibling folder directly inside `Interface/AddOns`.
@@ -20,9 +22,9 @@ Each is a loadable WoW addon with explicit dependencies; the in-game `/kool` Mod
 
 Previously published `v0.10.0-rc.1-beta` contains only Base + Macros. It stays untouched; tags and CurseForge versions are immutable checkpoints and do not retroactively pick up merged source.
 
-## Next candidate: 0.10.1-rc.1
+## Previous candidate: 0.10.1-rc.1 (already tagged)
 
-The code on main after the unified-bundle PR is intended as `0.10.1-rc.1`, **not a stable release**. Stay within 0.10.x until live Forever launch validation and fixes on or after November 4. No version tag should be pushed merely because a PR was merged; the webhook only packages tag pushes. CI alone does not prove WoW client compatibility.
+The original unified-bundle PR used `0.10.1-rc.1` and the owner has since tagged it as a Beta; **not stable**. Talent Impacts Sprints 2/3 are `0.10.2-rc.1` on the next mainline. Stay within 0.10.x until live Forever launch validation and fixes on or after November 4. No version tag should be pushed merely because a PR was merged; the webhook only packages tag pushes. CI alone does not prove WoW client compatibility.
 
 ### Pre-release smoke test
 
@@ -40,9 +42,9 @@ The code on main after the unified-bundle PR is intended as `0.10.1-rc.1`, **not
 1. In CurseForge project **1780256**, keep **Automatic Packaging: tagged commits only**, not Package all commits.
 2. Keep the existing GitHub `push` webhook active and token private. The previous Beta tag verified the delivery flow.
 3. Open `https://github.com/inspilayer/KoolSupport/actions/workflows/publish-beta.yml`.
-4. Choose **Run workflow** on `main`, tick the explicit release checkbox, and run only after launch smoke-test approval. It reruns all source checks and upstream packaging dry run and creates the new tag `v0.10.1-rc.1-beta`. The action refuses duplicates or a moved main branch.
-5. Inspect GitHub Webhook **Recent Deliveries** for the tag `refs/tags/v0.10.1-rc.1-beta` and 2xx status; then CurseForge Files for the new Beta package and moderation result.
-6. Publish `docs/RELEASE_NOTES_0.10.1-rc.1.md` and update project description from `docs/CURSEFORGE_DESCRIPTION.md` when ready. Approval and discoverability remain controlled by CurseForge.
+4. Choose **Run workflow** on `main`, tick the explicit release checkbox, and run only after launch smoke-test approval. It reruns all source checks and upstream packaging dry run and creates the next tag `v0.10.2-rc.1-beta` from the current check script. The action refuses duplicates or a moved main branch.
+5. Inspect GitHub Webhook **Recent Deliveries** for the new tag `refs/tags/v0.10.2-rc.1-beta` and 2xx status; then CurseForge Files for the new Beta package and moderation result.
+6. Publish `docs/RELEASE_NOTES_0.10.2-rc.1.md` and update project description from `docs/CURSEFORGE_DESCRIPTION.md` when ready. Approval and discoverability remain controlled by CurseForge.
 
 The GitHub `GITHUB_TOKEN` pushes the tag; the **external webhook** is the delivery path, not a recursively triggered GitHub workflow. Do not paste CurseForge API tokens into issues, documentation or chat.
 
