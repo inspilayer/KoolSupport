@@ -93,3 +93,11 @@ Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; l
 **Pending live-client smoke tests:** verify tracker startup `ADDON_LOADED`, spellcast and actual periodic damage correlation, status bar rendering of secret health, focus target, nameplates, module enable/disable, SavedVariables persistence, suspected-lethal indicator geometry, multilingual spell names and performance. Check target/focus frame anchoring and frame replacements. Disable the optional module instead of disrupting macro features if a display fails. Verify upstream MIT notices remain bundled.
 
 **Next PRs:** refine target-nameplate styling and data validity after actual WoW footage; migrate common bar options to a true shared component across KS Stealth; make browser and native visuals closer; add modular JSON profiles separately. Do not advertise production parity until actual proof exists.
+
+
+## Confirmed mainline follow-up — PR #5 and shared bars
+
+- PR #5 **merged** on 2026-11-03 as squash commit `9eff27c8f31b8d02f4879160ddfd1da89bf6437c`. GitHub Actions passed, including Lua syntax, offline mocked Afflictions and legacy tests, package validation, license checks, and upload artifact. Additional local cold-start mock loaded all vendored Locale/Tracker/Bridge Lua, handled `ADDON_LOADED`, initialized KSAfflictionsTrackerDB and returned a valid empty DoT snapshot.
+- The bundled optional KSAfflictions module is in **main**, and browser demo at `preview/KS_Afflictions_Browser_Preview.html` (simulated data, not client footage). It is still NOT a public release or verified in-game. Retain original DoesItDie MIT copyright (Joe Greive).
+- This follow-up PR changes KS Stealth to use shared `KoolSupport.BarTheme:StyleBar(bar,"bleed")` for resource HUD segments, with an isolated-test compatibility fallback. Test now asserts all ten mock combo segments use shared style. All previous secure-value and toggle rules remain unchanged.
+- Next principal engineer: verify current main/PR CI and new SHA, then smoke test KSAfflictions and KSStealth **together** in the real Forever client after launch: target, focus, several visible nameplates, resources under combat secrets, placements and persistence; observe CPU use. No automatic combat choices or health comparisons.

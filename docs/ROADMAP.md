@@ -29,3 +29,10 @@ Updated 2026-11-03. Development labels are not release promises.
 - **Browser:** standalone, offline simulated preview for options, DoT ticking, multi-nameplate rendering, lethal indicator and mock player-target selection.
 - **Tests:** new `test_afflictions.lua` includes opaque health passthrough; package script checks third-party license and creates optional ZIP. CI must pass before merge.
 - **Outstanding:** real Forever event/secret-health compatibility and DoT attribution. Validate against live targets before any release. Track defects in follow-up PRs rather than weakening the release gates.
+
+
+## Post-PR #5 shared bar polish
+
+PR #5 merged (squash `9eff27c8f31b8d02f4879160ddfd1da89bf6437c`) after passing the 0.9.0-dev CI suite and a supplementary vendor-tracker cold-boot smoke. KSAfflictions is development only; live Forever validation remains a release gate.
+
+KS Stealth now uses the shared `KoolSupport.BarTheme:StyleBar` palette for its combo-point segments, with a safe fallback for isolated mocks/clients. The visual foundation is shared; a future settings panel may expose cross-module bar presets after actual client testing.
