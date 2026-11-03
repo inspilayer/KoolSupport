@@ -9,7 +9,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
 ADDONS=ROOT/'addons'
-VERSION='0.10.1-rc.1'
+VERSION='0.10.2-rc.1'
 MANIFESTS={
  'KoolSupport': [],
  'KSMacros': ['KoolSupport'],
