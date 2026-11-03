@@ -32,9 +32,9 @@ Future KS modules                separate folders and versioned APIs
 
 Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; logical nested UI is not a nested filesystem hierarchy. Base registers pages dynamically and gates disabled modules. Disabled modules' Lua remains loaded until UI reload.
 
-## Verified source checkpoint — 2026-11-03, candidate 0.8.0-dev (this feature PR)
+## Verified mainline checkpoint — 2026-11-03, 0.8.0-dev
 
-**Important:** This section describes a new development branch until its PR is actually merged. Verify status before treating it as mainline or released code. The preceding merged mainline foundation was `0.7.0-dev` from PR #1, with handoff CI from PR #2.
+**Mainline verification:** PR #3 merged on 2026-11-03 as squash commit `a91410a276d3b0cf2385ea1e09d712f7d9d15888`. GitHub Actions (`lua` job on PR #3) passed with conclusion `success`. This is still **development**, not a published CurseForge upgrade. Always verify current main for newer commits.
 
 - Archived the exact original monolithic v0.6.4 Lua source under `legacy/v0.6.4/` **for migration reference only**, omitted from install ZIPs. Its former CurseForge submission remains under review per the user and must stay untouched.
 - Base UI now discovers registered pages, presenting Home, Modules, generic Macro Suite, Full Spellbook, Custom Builder, and optional plugin pages.
@@ -48,7 +48,7 @@ Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; l
 ## Tests that have actually run
 
 - Python `scripts/check.py --package`: validates all `.toc` manifests/source, dependencies, version labels, and builds separate ZIPs.
-- Lua syntax: 13 addon Lua files loaded for syntax verification under local `texlua` (Lua 5.3). CI intended to use `lua5.4` on GitHub Actions.
+- Lua syntax: 13 addon Lua files loaded for syntax verification under local `texlua` (Lua 5.3). GitHub Actions ran Lua 5.4 and passed for PR #3.
 - Offline mocked Lua tests: `test_core.lua`, `test_macros.lua`, `test_modular_split.lua`, `test_spellbook.lua`, `test_stealth.lua` passed in the local build. Tests cover dependency toggling, source separation, idempotent migration, macro protection, spellbook exclusions, multiple nameplate unit tokens, opaque combat resource passthrough, event cleanup, and combat setting restrictions.
 - **Not tested:** actual Forever gameplay, real client tooltips/frames, non-current-target `GetComboPoints` access, in-game native macros, savedvariable migration with a player-produced live snapshot, CurseForge approval. Treat these as release blockers.
 
@@ -70,7 +70,7 @@ Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; l
 
 ## Next sprint after this PR
 
-1. Read CI checks, PR diff and merge status; do not assume this branch is merged.
+1. Check current main SHA and newer PRs. PR #3 is merged; its 0.8.0-dev source has not been live-client validated.
 2. Use the real Forever client when accessible to test the new UI, native macros, secret values on several nameplates (including when target changes), support profiles and SavedVariables persistence.
 3. Complete parity comparison with 0.6.4 generic Custom Builder and Spellbook flyout/tooltip features without recombining Support Sessions into Macros.
 4. Validate SavedVariables migration with an actual backed-up v0.6.4 character before recommending an in-place upgrade.
