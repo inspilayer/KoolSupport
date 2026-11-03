@@ -9,7 +9,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
 ADDONS=ROOT/'addons'
-VERSION='0.10.0-rc.1'
+VERSION='0.10.1-rc.1'
 MANIFESTS={
  'KoolSupport': [],
  'KSMacros': ['KoolSupport'],
@@ -57,9 +57,23 @@ def zip_addons(name,folders):
     print('Created',dest)
     return dest
 
+def verify_unified_package(path):
+    """One CurseForge listing: all declared AddOns at the archive root."""
+    with zipfile.ZipFile(path) as archive:
+        assert archive.testzip() is None, "Corrupt standard package"
+        entries={n for n in archive.namelist() if not n.endswith('/')}
+    roots={n.split('/',1)[0] for n in entries}
+    assert roots==set(MANIFESTS), f'Unexpected roots in standard ZIP: {roots}'
+    for name in MANIFESTS:
+        assert f'{name}/{name}.toc' in entries, f'Missing {name} .toc'
+    assert 'KSAfflictions/Vendor/LICENSE' in entries, 'DoT engine license not bundled'
+    assert 'KSAfflictions/Vendor/NOTICE.md' in entries, 'DoT modification notice not bundled'
+    print('PASS unified standard ZIP: five sibling addons and vendor notices')
+
 def package():
     zip_addons('KoolSupport_Base_Macros',['KoolSupport','KSMacros'])
-    zip_addons('KoolSupport_CurseForge_Standard',['KoolSupport','KSMacros'])
+    standard=zip_addons('KoolSupport_CurseForge_Standard',list(MANIFESTS))
+    verify_unified_package(standard)
     zip_addons('KSSupportSessions_Plugin',['KSSupportSessions'])
     zip_addons('KSStealth_Plugin',['KSStealth'])
     zip_addons('KSAfflictions_Plugin',['KSAfflictions'])
