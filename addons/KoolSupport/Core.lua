@@ -2,7 +2,7 @@
 KoolSupport = KoolSupport or {}
 local KS = KoolSupport
 KS.API_VERSION = 1
-KS.VERSION = "0.7.0-dev"
+KS.VERSION = "0.8.0-dev"
 KS.modules = KS.modules or {}
 KS.moduleOrder = KS.moduleOrder or {}
 KS.pages = KS.pages or {}
@@ -114,5 +114,8 @@ SlashCmdList.KOOLSUPPORT = function(text)
   local page = (text or ""):lower():match("^%s*(.-)%s*$")
   if page == "" then page = "home" end
   if page == "builder" or page == "macros" then page = "macro_workshop" end
+  if page == "suite" then page = "macro_suite" end
+  if page == "spellbook" then page = "full_spellbook" end
+  if page == "support" or page == "setup" then page = "support_session" end
   KS:Open(page)
 end

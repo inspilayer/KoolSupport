@@ -1,79 +1,78 @@
 # KoolSupport — Principal Engineer Chat Transition
 
-**Permanent handoff URL:** `https://github.com/inspilayer/KoolSupport/blob/main/docs/CHAT-TRANSITION.md`
+**Canonical source:** `https://github.com/inspilayer/KoolSupport/blob/main/docs/CHAT-TRANSITION.md`  
+**Repository:** `inspilayer/KoolSupport`  
+**Last updated:** 2026-11-03  
+**Purpose:** reusable across versions and new ChatGPT conversations. Never create per-version transition files. Every substantive PR must update this exact path.
 
-**Repo:** `inspilayer/KoolSupport` (GitHub, private when last verified). **Updated:** 2026-11-03. **Intended to survive every version and chat.** Do not create new version-specific transition files; update **this path in every substantive PR**.
+## Startup instructions for every new engineering chat
 
-## 1. Startup contract for the next principal engineer
+1. Read this file directly from **current main** and verify the latest commit, PRs, CI, version, `.toc` manifests, and source tree. Do not assume this snapshot is current.
+2. Read `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, all relevant Lua and tests, and inspect any open PR/branch before coding.
+3. Treat the user as product owner with programming experience but limited Lua expertise. Act as principal engineer responsible for architecture, implementation, tests, packaged artifacts and risk assessment. Be candid about client-only verification.
+4. Implement changes on a feature branch and open a focused PR. Every substantive PR **must edit this handoff**, with accurate version/checkpoint, current tests, migrations, risks, and concrete next steps. CI rejects PRs that omit this document.
+5. Never silently overwrite or remove user SavedVariables, native macros, existing functionality, or the frozen CurseForge candidate. No changes to main/release unless requested or following established PR workflow.
 
-1. Read `docs/CHAT-TRANSITION.md` from current `main`; inspect newest commits/PRs and whether an open branch is ahead of main. Prefer the actual GitHub source over old conversation artifacts.
-2. Read `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, addon `.toc` manifests, relevant Lua source and tests. Confirm actual branch SHA, `.toc` interface/version and release status. Never assume the last historical version is current.
-3. Check project state and incoming user request. Explain what is verified, what is only planned, and what requires a live WoW client.
-4. Implement in a feature branch, with isolated changes and tests; include **an update to this exact handoff file in the same PR**. Summarize verification and outstanding blockers.
-5. Do not merge or release unrelated changes without a clear request. No silent destructive SavedVariables changes. Treat the owner as an experienced programmer unfamiliar with Lua and handle architectural and testing details.
+**Reusable new-chat prompt:**
 
-**Recommended new-chat prompt:**
+> Act as principal engineer for KoolSupport. Read `docs/CHAT-TRANSITION.md` from current `main` in `inspilayer/KoolSupport`; inspect the latest source, roadmap and PRs. Continue the project, preserving macro ownership protections, saved data, optional plugin dependencies, and Blizzard secure-action restrictions. I own the player vision; you own engineering, implementation, testing and packaging. Keep this handoff updated in every substantive PR.
 
-> Act as principal engineer for KoolSupport. Read `docs/CHAT-TRANSITION.md` from the current `main` branch of `inspilayer/KoolSupport`, then inspect the latest code, roadmap, open PRs, and tests. Continue our newest engineering work. Preserve SavedVariables and native macro integrity, our plugin dependency design, CurseForge submission boundaries, and Blizzard's secure-action restrictions. I own the player-facing vision; you own technical implementation, testing, packaging and practical technical judgment. Update this exact handoff in every substantive PR.
+## Product identity and approved module hierarchy
 
-## 2. Product owner and working style
-
-The product owner is a WoW player who understands software engineering, keybindings and user workflows but doesn't write Lua. Keep communication natural and collaborative. Turn examples of gameplay pain into technically sound UX. Be proactive with implementation and regression tests, but distinguish allowed macro assistance from restricted combat/input automation.
-
-**Purpose:** KoolSupport is a general-purpose WoW macro-building platform, not a keyboard-branded tool or a bot. KS Macros ships with Base. Specialized tools are independently optional. The UI should feel like a conventional fantasy WoW addon: metallic borders, dark panels, gold text, readable grouped controls, enough spacing, and a useful landing Home page. In-game UI uses actual Blizzard widgets; browser previews are only design simulations.
-
-## 3. Approved module hierarchy (authoritative)
+KoolSupport is a generic WoW macro-building platform, not a keyboard tool or multibox automation system. Built-in and optional features must be presented with conventional WoW-style UI (metallic frame, dark panels, gold labels, readable spacing); browser preview is only a mockup.
 
 ```text
-KoolSupport Base                  REQUIRED
-└── KS Macros                     BUNDLED, ON by default; generic macro creation
-    ├── KS Macro Profiles         OPTIONAL, REQUIRES Macros; JSON profile share/save/load
-    └── KS Support Sessions       OPTIONAL, REQUIRES Macros; healing/focus/follow presets
-KS Stealth                        OPTIONAL; Base required; Macros optional for templates
-Additional KS modules             separate modules with declared dependencies
+KoolSupport Base                 REQUIRED, bundled
+└── KS Macros                    REQUIRED, bundled ON by default
+    ├── KS Macro Profiles        OPTIONAL, requires Macros (not implemented yet)
+    └── KS Support Sessions      OPTIONAL, requires Macros (healing/focus/follow)
+KS Stealth                       OPTIONAL, requires Base (Macro integrations optional)
+Future KS modules                separate folders and versioned APIs
 ```
 
-User-visible nesting does not mean nested WoW addon folders: each addon uses a sibling folder and `.toc` dependencies. Class-aware support presets and supportee setup belong to KS Support Sessions, **not** the generic KS Macros product. A KS Stealth resource HUD must not depend on Macro Profiles or Support Sessions.
+Each module uses a sibling `Interface/AddOns/` folder and `.toc` dependencies; logical nested UI is not a nested filesystem hierarchy. Base registers pages dynamically and gates disabled modules. Disabled modules' Lua remains loaded until UI reload.
 
-## 4. Verified checkpoint (2026-11-03)
+## Verified source checkpoint — 2026-11-03, candidate 0.8.0-dev (this feature PR)
 
-- **GitHub connection:** `inspilayer/KoolSupport` is accessible with push permission. Its first README commit was `80ef8571316d766540a27e9736df58a856036fba`. This modular foundation is delivered by the initial Base/KS Macros PR; verify the latest merged `main` SHA from GitHub on every new chat.
-- **Dev-test note:** CI syntax-loads Lua files without executing add-on code, then runs mocked runtime tests separately.
-- **New modular foundation:** `addons/KoolSupport` (Base UI + module registry + Home/Modules) and bundled `addons/KSMacros` (initial generic workshop + draft and player-confirmed macro installer). `.toc` labels `0.7.0-dev`, interface `16001` (historical client value, not newly verified). This is **an intentionally limited development scaffold**.
-- **Scope limitation:** The modular scaffold does **not** yet have the complete monolithic Spellbook, Macro Suite, class-aware support profiles, saved draft migration, optional plugin installers, browser preview parity, or JSON profiles. Do not advertise it as the next release of v0.6.4.
-- **Earlier release checkpoint:** The separately packaged monolithic `KoolSupport_CurseForge_v0.6.4.zip` (Nov 2, 2026) was under CurseForge review per the product owner. It has Home, supportee/name setup, class support macros (Druid/Paladin/Shaman/Priest Holy/Disc), mixed Class Presets + Custom, live spellbook scanning, Custom Builder, tooltips, draft saving and safe native macro editing. **Its submitted ZIP is frozen**. The historical development source was available in `KoolSupport_v0.6.4_Development_Package.zip` in an earlier chat; it has not yet been imported into this new GitHub repo. Obtain that exact source from the owner or prior artifact, not from invented reconstructions.
-- **Old technical debt:** Monolith `.toc` version and some UI/source version labels differed; one legacy test had a hardcoded `/mnt/data/...` file path. Fix when bringing the baseline into GitHub.
+**Important:** This section describes a new development branch until its PR is actually merged. Verify status before treating it as mainline or released code. The preceding merged mainline foundation was `0.7.0-dev` from PR #1, with handoff CI from PR #2.
 
-## 5. Data integrity and secure macro governance
+- Archived the exact original monolithic v0.6.4 Lua source under `legacy/v0.6.4/` **for migration reference only**, omitted from install ZIPs. Its former CurseForge submission remains under review per the user and must stay untouched.
+- Base UI now discovers registered pages, presenting Home, Modules, generic Macro Suite, Full Spellbook, Custom Builder, and optional plugin pages.
+- **KS Macros** owns generic templates and saved drafts, learned active spellbook scanner (`C_SpellBook`), grouped command builder, and existing safe native macro installer. No supportee/healer preset UI here.
+- **KS Support Sessions**, separate optional addon `addons/KSSupportSessions`, depends on Base + Macros. Reuses actual original v0.6.4 healer templates and provides user-selected supportee, named `/focus`, `@focus` heals and `@focustarget` offense, manual follow/mobility, utility and resurrection. Delegates writing to `KSMacros:Install` and does not run gameplay commands itself.
+- **KS Stealth**, separate optional addon `addons/KSStealth`, depends only on Base, with soft Macros dependency. Has own settings and a nameplate HUD that attempts to draw 5 target-specific combo-point segments on every **visible nameplate** via `GetComboPoints("player", nameplateUnit)` -> `StatusBar:SetValue` with NO numeric comparisons in Lua. No off-screen enemy enumeration or automatic finisher choice.
+- Native macro safety: max 255-byte body, conservative 16-byte name, `#showtooltip` first, out-of-combat explicit clicks only, existing name and hand-edit ownership checks.
+- Legacy migration: `customDrafts` and `customOrder` copy into namespaced Macros storage idempotently; only trustworthy old `owned + generated` pairs become new ownership fingerprints. Support Sessions copies missing supportee/recipient/spec preferences; original root tables are retained and remain authoritative fallback for old class profile choices.
+- Distribution: standard `KoolSupport_Base_Macros_0.8.0-dev.zip`, optional `KSSupportSessions_Plugin_0.8.0-dev.zip` and `KSStealth_Plugin_0.8.0-dev.zip`, and all-module development ZIP. Do not distribute as the next CurseForge release without client validation.
 
-- The monolith saves **per-character** `KoolSupportDB`, including legacy `owned`, `generated`, `enabledProfiles`, `customEnabled`, `customDrafts`, `customOrder`, supportee name and class/spec. Never delete, replace or discard unknown keys.
-- The new scaffold creates only namespaced `KoolSupportDB.core.enabled` and `KoolSupportDB.modules.ks_macros`. **No migration has yet been performed.** Before installing it over v0.6.4, implement idempotent migrations and tests for drafts, generated macros, ownership and session preferences.
-- Macro writes only happen on explicit player interactions outside combat. On update, check existing name + previously owned body; refuse to override unrelated or manually changed macros. Validate names, 255-byte bodies and `#showtooltip` first.
-- Never automate spell selection based on health/combo points, run follow loops, broadcast a keystroke across clients, or circumvent secure APIs. Optional combat UI can show permitted information; a key press still must represent a player's choice.
-- Client-specific macro syntax (`/focus Name`, `@focus`, `@focustarget`, forms, spell names and new secret-value behavior) must be verified against WoW Forever, especially after beta changes.
+## Tests that have actually run
 
-## 6. Release/testing discipline
+- Python `scripts/check.py --package`: validates all `.toc` manifests/source, dependencies, version labels, and builds separate ZIPs.
+- Lua syntax: 13 addon Lua files loaded for syntax verification under local `texlua` (Lua 5.3). CI intended to use `lua5.4` on GitHub Actions.
+- Offline mocked Lua tests: `test_core.lua`, `test_macros.lua`, `test_modular_split.lua`, `test_spellbook.lua`, `test_stealth.lua` passed in the local build. Tests cover dependency toggling, source separation, idempotent migration, macro protection, spellbook exclusions, multiple nameplate unit tokens, opaque combat resource passthrough, event cleanup, and combat setting restrictions.
+- **Not tested:** actual Forever gameplay, real client tooltips/frames, non-current-target `GetComboPoints` access, in-game native macros, savedvariable migration with a player-produced live snapshot, CurseForge approval. Treat these as release blockers.
 
-- `python3 scripts/check.py --package` verifies manifests and files; with Lua installed it syntax-loads all Lua and runs `tests/test_core.lua` and `tests/test_macros.lua`. The dev package contains the peer directories `KoolSupport/` and `KSMacros/` only.
-- CI runs Lua 5.4 tests on pushes/PRs; Lua 5.4 is an offline approximation, **not** evidence of live Forever API compatibility. Validate native UI and macro behavior with the actual client before release.
-- Existing submitted CurseForge package remains separate and unchanged until modular migration reaches equivalent behavior and user explicitly approves publishing.
-- Keep upload ZIP free of tests, docs, browser mockups and unrelated images. Make no unsupported claims of CurseForge approval, in-game verification or automation capabilities.
-- Before a release, review current CurseForge moderation policy and Blizzard addon guidelines, inspect the exact zip, update release notes and screenshots. Browser previews must be labeled mockups.
+## Known issues / integration cautions
 
-## 7. Current engineering next steps
+- WoW Forever uses modern *secret value* restrictions. **Never** compare, count, branch on, inspect, format, stringify, or use combo points to select a protected ability in Lua. Only pass returned values into supported visual sinks. This may or may not render for non-current nameplates; add a fail-closed fallback and obtain real client evidence.
+- Nameplate iteration finds only visible `C_NamePlate` units; it is not a range/radar API. Filled pips are invisible at zero; no Lua condition reveals which enemy has points.
+- The generic builder currently has a useful grouped command palette but still needs detailed parity comparison with the archived 0.6.4 `Studio.lua` (including flyouts, advanced modifiers, and tooltip polish). The current branch is **not** a full v0.6.4 replacement.
+- Interface `16001` is the last known Forever beta marker; re-verify it with the active client before release. Spellbook API signatures and UI tooltip secrets need live testing.
+- Support Profiles include class/talent-dependent spells, not a promise every spell is learned. Their macros require explicit key presses and remain subject to native casting rules.
+- Archive `.toc`/old version strings are intentionally unchanged and do not represent the current modular dev version.
 
-1. Merge or review the initial Base/KS Macros scaffold PR after checking tests and handoff. Confirm final SHA and update checkpoint next PR if needed.
-2. Import the *verbatim* v0.6.4 development source into `legacy/v0.6.4/` (or a protected archival branch), including portable tests. Avoid mixing legacy code into the new default addon ZIP.
-3. Migrate full generic Macro Studio and Spellbook features into KSMacros with a stable macro-service API; add regression tests.
-4. Implement idempotent backward-compatible SavedVariables migrators and separate the support workflow as optional `KSSupportSessions`.
-5. Only after the foundation is stable: optional `KSMacroProfiles` JSON workflow and KS Stealth HUD.
-6. Obtain real-client verification and CurseForge review decisions before publicly shipping the modular package.
+## Engineering governance
 
-### Mainline checkpoint after the foundation PR
+- No auto-casting, unattended follow, input broadcasting, target-based finisher selection, secure API bypasses or arbitrary outside-combat gameplay effects.
+- Never delete unknown keys in `KoolSupportDB`. Test migration idempotence, old ownership records and user hand-edits before installing over v0.6.4. The old CurseForge ZIP remains untouched until explicit migration signoff.
+- Tests and source reports must use actual tool results, not optimistic claims. Add tests for new features and update both this document and roadmap on every substantive PR.
+- Keep standard install ZIP free of legacy source, screenshots, documents and tests. Optional plugins distributed separately, with dependency instructions.
 
-- PR #1 merged on 2026-11-03 with squash commit `69cb19529ec3daaddeecbed3f6dd509d6cb163b1`. The offline GitHub Actions run passed. The modular foundation is now on `main`, but it is **not** a v0.6.4 upgrade.
-- PR #2 establishes CI enforcement: every PR must modify this exact handoff path, or its verify workflow fails. This rule is about future engineering continuity; it does not change player-facing behavior or the CurseForge review artifact.
+## Next sprint after this PR
 
-## 8. Required commit/PR update format
-
-Update this document with: current branch/commit/version, what changed (and why), tests actually executed, any migration/backward compatibility impact, known problems, and precise next work. Update `docs/ROADMAP.md` if the status or dependencies change. Review PR descriptions and CI; do not treat a screenshot or source comment as production proof.
+1. Read CI checks, PR diff and merge status; do not assume this branch is merged.
+2. Use the real Forever client when accessible to test the new UI, native macros, secret values on several nameplates (including when target changes), support profiles and SavedVariables persistence.
+3. Complete parity comparison with 0.6.4 generic Custom Builder and Spellbook flyout/tooltip features without recombining Support Sessions into Macros.
+4. Validate SavedVariables migration with an actual backed-up v0.6.4 character before recommending an in-place upgrade.
+5. Add versioned JSON Macro Profiles as a separate optional child only after the shared macro APIs stabilize.
+6. Release only after user approval, live testing and a fresh CurseForge policy review.

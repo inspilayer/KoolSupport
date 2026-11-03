@@ -1,87 +1,115 @@
--- Starter generic workshop. Full legacy Spellbook and support-suite migration is a later PR.
-local KS, M = KoolSupport, KSMacros
-local function label(parent, text, x, y, width)
-  local xref = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  xref:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-  xref:SetWidth(width or 300)
-  xref:SetJustifyH("LEFT")
-  xref:SetText(text)
-  return xref
+-- Generic Custom Builder with grouped native command snippets.
+local M=KSMacros
+local CATEGORY={
+ {"Cast and targeting",{
+  {"Cast spell","/cast Spell Name"},{"Mouseover heal","/cast [@mouseover,help,nodead] Spell Name"},
+  {"Focus heal","/cast [@focus,help,nodead] Spell Name"},{"Focus enemy","/cast [@focustarget,harm,nodead] Spell Name"},
+  {"Self cast","/cast [@player] Spell Name"},{"Target cast","/cast [@target] Spell Name"},
+  {"Help/harm","/cast [help,nodead] Friendly Spell; [harm,nodead] Harmful Spell"},
+  {"Cast sequence","/castsequence reset=target Spell One, Spell Two"},
+  {"Modifier","/cast [mod:shift] Spell A; Spell B"},
+  {"Show tooltip","#showtooltip Spell Name"},
+ }},
+ {"Target controls",{
+  {"Set focus","/focus [@target,exists]"},{"Focus by name","/focus CharacterName"},
+  {"Clear focus","/clearfocus"},{"Follow focus","/follow focus"},{"Assist focus","/assist focus"},
+  {"Exact target","/targetexact CharacterName"},{"Last target","/targetlasttarget"},
+  {"Next enemy","/targetenemy"},{"Next friend","/targetfriend"},{"Clear target","/cleartarget"},
+ }},
+ {"Combat and forms",{
+  {"Stop casting","/stopcasting"},{"Stop macro","/stopmacro [@focus,noexists]"},
+  {"Start attack","/startattack [harm,nodead]"},{"Stop attack","/stopattack"},
+  {"Cancel form","/cancelform [form]"},{"Cancel aura","/cancelaura Aura Name"},
+  {"Dismount","/dismount"},{"Keep form","/cast !Toggle Spell"},
+  {"Bear/Cat","/cast [form:1] Bear Spell; [form:3] Cat Spell"},
+ }},
+ {"Items and pets",{
+  {"Use item","/use Item Name"},{"Trinket 1","/use 13"},{"Trinket 2","/use 14"},
+  {"Equip","/equip Item Name"},{"Equip slot","/equipslot 16 Item Name"},
+  {"Pet attack","/petattack [@target,harm,nodead]"},{"Pet follow","/petfollow"},
+  {"Pet passive","/petpassive"},{"Pet assist","/petassist"},
+ }},
+ {"Modifiers, ground and chat",{
+  {"At cursor","/cast [@cursor] Ground Spell"},{"At player","/cast [@player] Ground Spell"},
+  {"Alt/Ctrl","/cast [mod:alt] Spell A; [mod:ctrl] Spell B; Spell C"},
+  {"Target fallback","/cast [@mouseover,help,nodead][@focus,help,nodead][@player] Spell Name"},
+  {"Party message","/p Message"},{"Raid message","/raid Message"},
+  {"Emote","/em cheers"},{"UI script (advanced)","/run print('Macro executed')"},
+ }},
+}
+M.builderCategories=CATEGORY
+local function label(parent,text,x,y,w)
+  local t=parent:CreateFontString(nil,"OVERLAY","GameFontNormal")
+  t:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);t:SetWidth(w or 400);t:SetJustifyH("LEFT");t:SetText(text);return t
 end
-local function button(parent, text, x, y, width, callback)
-  local item = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-  item:SetSize(width or 110, 30)
-  item:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-  item:SetText(text)
-  item:SetScript("OnClick", callback)
-  return item
+local function button(parent,text,x,y,w,fn)
+  local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
+  b:SetSize(w,30);b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);b:SetText(text);b:SetScript("OnClick",fn);return b
 end
-local function field(parent, x, y, width, initial)
-  local item = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-  item:SetSize(width, 28)
-  item:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-  item:SetAutoFocus(false)
-  item:SetText(initial or "")
-  return item
+local function field(parent,x,y,w,initial,multi,height)
+  local f=CreateFrame("EditBox",nil,parent,"InputBoxTemplate")
+  f:SetSize(w,height or 27);f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
+  f:SetAutoFocus(false);f:SetText(initial or "")
+  if multi then f:SetMultiLine(true);f:SetTextInsets(9,9,9,9) end
+  return f
 end
 
 function M.BuildWorkshop(parent)
-  label(parent, "|cffffd87aKS Macros - Generic Macro Workshop|r", 20, -16, 750)
-  label(parent, "Macro name", 20, -55, 200)
-  local name = field(parent, 20, -77, 190, "KSM-New")
-  label(parent, "Spell to insert", 230, -55, 215)
-  local spell = field(parent, 230, -77, 225, "")
-  label(parent, "Click a targeting shortcut to add a cast command to the editor.", 20, -121, 720)
-  local body = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-  body:SetSize(790, 200)
-  body:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, -200)
-  body:SetAutoFocus(false)
-  body:SetMultiLine(true)
-  body:SetTextInsets(10, 10, 10, 10)
-  body:SetText("#showtooltip\n")
-  local status = label(parent, "Draft only - no in-game actions until Create / Update is clicked.", 20, -455, 790)
-  local function append(unit, relation)
-    local line = M:CastLine(spell:GetText(), unit, relation)
-    if not line then status:SetText("Enter a valid spell name first"); return end
-    body:SetText(M:NormalizeTooltip(body:GetText() .. "\n" .. line))
+  label(parent,"|cffffd87aCustom Builder|r",20,-15,730)
+  label(parent,"Macro name",20,-53,180)
+  local name=field(parent,20,-75,184,"KSM-New")
+  label(parent,"Spell (from Full Spellbook or manual)",219,-53,360)
+  local spell=field(parent,219,-75,298,M:Store().selectedSpell or "")
+  local body=field(parent,20,-245,766,"#showtooltip\n",true,175)
+  local status=label(parent,"Draft only. Installation is always a deliberate click outside combat.",20,-557,770)
+  local category=1
+  local rowButtons={}
+  local title=label(parent,"",20,-115,700)
+  local function append(snippet)
+    local selected=spell:GetText() or ""
+    if selected~="" then snippet=snippet:gsub("Spell Name",selected) end
+    body:SetText(M:NormalizeTooltip(body:GetText().."\n"..snippet))
   end
-  button(parent, "Focus heal", 20, -155, 115, function() append("focus", "help") end)
-  button(parent, "Focus enemy", 145, -155, 120, function() append("focustarget", "harm") end)
-  button(parent, "Mouseover", 275, -155, 115, function() append("mouseover", "help") end)
-  button(parent, "Self", 400, -155, 90, function() append("player", nil) end)
-  button(parent, "Target", 500, -155, 105, function() append("target", nil) end)
-  button(parent, "Save draft", 20, -410, 140, function()
-    local ok, why = M:SaveDraft(name:GetText(), body:GetText())
-    status:SetText(ok and "Draft saved per character" or why)
-  end)
-  button(parent, "Create / Update", 180, -410, 165, function()
-    local ok, why = M:Install(name:GetText(), body:GetText())
-    status:SetText(ok and "Native character macro updated; open /macro to bind it" or why)
-  end)
-  button(parent, "New", 360, -410, 100, function()
-    name:SetText("KSM-New")
-    spell:SetText("")
-    body:SetText("#showtooltip\n")
-    status:SetText("New draft")
-  end)
-  local data = M:Store()
-  local selected = 1
-  local function loadDraft()
-    local key = data.draftOrder[selected]
-    if key and data.drafts[key] then
-      name:SetText(key)
-      body:SetText(data.drafts[key])
-      status:SetText("Loaded saved draft " .. selected .. "/" .. #data.draftOrder)
-    else
-      status:SetText("No saved drafts")
+  local function render()
+    local group=CATEGORY[category]
+    title:SetText(group[1].."  ("..category.."/"..#CATEGORY..")")
+    for i,item in ipairs(rowButtons) do
+      local command=group[2][i]
+      item:SetShown(command~=nil)
+      if command then
+        item:SetText(command[1])
+        item:SetScript("OnClick",function()append(command[2])end)
+      end
     end
   end
-  button(parent, "Previous draft", 480, -410, 125, function()
-    selected = math.max(1, selected - 1)
-    loadDraft()
+  for i=1,10 do
+    local col=(i-1)%5
+    local row=math.floor((i-1)/5)
+    rowButtons[i]=button(parent,"",20+col*154,-142-row*39,146,function()end)
+  end
+  button(parent,"< Category",552,-99,105,function()category=(category-2)%#CATEGORY+1;render()end)
+  button(parent,"Category >",665,-99,105,function()category=category%#CATEGORY+1;render()end)
+  label(parent,"255-byte native macro limit. #showtooltip is normalized to line 1.",20,-222,745)
+  button(parent,"Save Draft",20,-460,130,function()
+    local ok,why=M:SaveDraft(name:GetText(),body:GetText())
+    status:SetText(ok and "Saved per character. Open Macro Suite to include it." or why)
   end)
-  button(parent, "Next draft", 615, -410, 125, function()
-    selected = math.min(#data.draftOrder, selected + 1)
-    loadDraft()
+  button(parent,"Create / Update",161,-460,155,function()
+    local ok,why=M:Install(name:GetText(),body:GetText())
+    status:SetText(ok and "Native macro created/updated. Drag it from /macro." or why)
   end)
+  button(parent,"New Draft",327,-460,115,function()
+    name:SetText("KSM-New");spell:SetText("");body:SetText("#showtooltip\n");status:SetText("New draft")
+  end)
+  local data=M:Store()
+  local draftIndex=1
+  local function openDraft()
+    local key=data.draftOrder[draftIndex]
+    if key and data.drafts[key] then
+      name:SetText(key);body:SetText(data.drafts[key]);status:SetText("Loaded "..key)
+    else status:SetText("No saved drafts") end
+  end
+  button(parent,"Prev draft",456,-460,129,function()draftIndex=math.max(1,draftIndex-1);openDraft()end)
+  button(parent,"Next draft",595,-460,129,function()draftIndex=math.min(#data.draftOrder,draftIndex+1);openDraft()end)
+  render()
 end

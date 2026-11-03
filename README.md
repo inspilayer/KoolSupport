@@ -1,45 +1,37 @@
 # KoolSupport
 
-**Modular World of Warcraft macro workshop** — a development project for WoW Forever.
+**A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-KoolSupport is becoming a modular addon platform: **Base + KS Macros** ship together. Macro Profiles and Support Sessions are optional Macros plugins; KS Stealth is a separate optional plugin. Everything generates **user-triggered native macros**; it does not bot, broadcast inputs between clients, or automatically decide combat actions.
+Development package **0.8.0-dev**. The monolithic v0.6.4 CurseForge-review package is not modified or replaced.
 
-**Current GitHub milestone:** `0.7.0-dev` *modular foundation*, not a full replacement for the monolithic v0.6.4 CurseForge-review build. Do **not** install it over a v0.6.4 character without first backing up SavedVariables and completing the future migration. The v0.6.4 submitted package is unchanged.
+## Modules
 
-## Install the development foundation
+| Component | Install | What it does |
+| --- | --- | --- |
+| **KoolSupport Base** | Included | Home, navigation, settings, module manager |
+| **KS Macros** | Included and on by default | Generic Macro Suite, Full Spellbook, Custom Builder |
+| **KS Support Sessions** | Optional | Healer class presets, named focus, heals, battle rez, follow/assist |
+| **KS Stealth** | Optional | Rogue/Feral combo-point UI on visible nameplates |
+| **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
-The package created by `python3 scripts/check.py --package` contains these sibling folders:
+Each component is a sibling addon directory in `Interface/AddOns/`; optional addons declare dependencies on the components they require. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`).
 
-```text
-Interface/AddOns/
-  KoolSupport/     # Base registry, Home and Module Manager
-  KSMacros/        # Bundled generic macro workshop
-```
+The standard download includes Base and Macros; plugins have separate ZIPs. See [architecture](docs/ARCHITECTURE.md) for dependencies and download variants.
 
-Both are enabled by default; `KSMacros.toc` declares `## Dependencies: KoolSupport`. When installed on a supported client, use `/kool` to open the Home window or `/kool macros` to open the basic workshop.
+## Developer setup
 
-This early workshop supports name/spell entry, common target shortcuts, editable macro text, saved drafts, and manual create/update with ownership protection. The full v0.6.4 macros feature set has **not yet been migrated**.
-
-## Source layout
-
-- `addons/KoolSupport` — shared Base, API v1 and WoW UI
-- `addons/KSMacros` — bundled generic Macros module
-- `docs/ARCHITECTURE.md` — approved dependencies, persistence and security boundaries
-- `docs/ROADMAP.md` — exact stage status and upcoming migrations
-- `docs/CHAT-TRANSITION.md` — **canonical principal engineer handoff, updated every substantive PR**
-- `tests/` — Lua mocked-runtime tests
-- `scripts/check.py` — syntax checks and distributable ZIP generation
-
-## Verify locally
+Run:
 
 ```shell
 python3 scripts/check.py --package
 ```
 
-With a Lua interpreter installed (`lua` or `lua5.4`), the script checks Lua compilation and runs runtime tests. CI also runs these checks. This is offline test coverage, not evidence of Forever client compatibility.
+CI uses Lua 5.4 for syntax and mocked runtime tests. `texlua` can run them locally. Output under `dist/` is an installable development package, **not** proof of live-client functionality.
 
-## Engineering workflow
+## Security and player control
 
-All code changes should use a branch + PR and update **[docs/CHAT-TRANSITION.md](docs/CHAT-TRANSITION.md)** in that same PR. Consult its startup steps before editing. The main branch and handoff are the source of truth, not an earlier chat or an unrelated zip.
+The addon only **writes ordinary user-triggered WoW macros** after an explicit click outside combat. It does not cast spells, automate rotations, choose finishers from combo points, broadcast keys, or control other clients. KS Stealth only renders client-provided data; it does not infer enemies or read secret combat values in Lua. Existing native macros edited by a user are protected from automatic overwrite.
 
-Project owner: WoW player with programming knowledge; engineering decisions, Lua implementation, testing and release hygiene belong with the principal engineer.
+## Principal engineer handoff
+
+**[docs/CHAT-TRANSITION.md](docs/CHAT-TRANSITION.md) is canonical and must change in every substantive PR**. Read it on the current main branch before further work. See [roadmap](docs/ROADMAP.md) for migration gates and [archived monolithic source](legacy/v0.6.4/) for the previous release candidate. The archived source is never included in install ZIPs.
