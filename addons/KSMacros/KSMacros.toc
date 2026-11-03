@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: KS Macros
+## Notes: Bundled macro workshop (requires KoolSupport Base)
+## Author: KoolSupport
+## Version: 0.7.0-dev
+## Dependencies: KoolSupport
+Engine.lua
+Workshop.lua
+Module.lua
