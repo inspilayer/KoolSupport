@@ -38,7 +38,7 @@ Write and edit native macros using organized inserts for targeting, mouseover co
 
 **KS Support Sessions** (requires Base + Macros): Class-aware focus-target healing, utility, resurrection, follow and assist macro templates. These are separate from the generic class recommendations. They require player key presses and do not control another game client.
 
-**KS Stealth** (requires Base): Rogue/Feral combo-point indicators on visible nameplates when the client exposes supported data, plus an **opt-in** Druid/Rogue Talent Impacts browser (talent → affected abilities; no live rank or damage calculation yet). No automated finisher selection.
+**KS Stealth** (requires Base): Rogue/Feral combo-point indicators on visible nameplates when the client exposes supported data, plus an **opt-in** Druid/Rogue Talent Impacts browser covering 6 Druid and 10 Rogue talents. The browser can read trained talent ranks and learned spell ranks (when Forever APIs permit), show supported cost reductions and **normalized damage examples**, and optionally append read-only KS notes to spell tooltips. Crit illustrations are optional and are not guaranteed real hit values. No automated finisher selection.
 
 **KS Afflictions** (requires Base): Configurable target, focus, and visible-nameplate DoT estimates, Modern KS styling, spell indicators, and an optional estimated lethal display. Integrates a modified MIT-licensed tracking engine from DoesItDie by Joe Greive, with the original copyright/license retained. Damage estimates are not guaranteed kills.
 
