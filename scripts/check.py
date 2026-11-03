@@ -9,12 +9,13 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
 ADDONS=ROOT/'addons'
-VERSION='0.8.0-dev'
+VERSION='0.9.0-dev'
 MANIFESTS={
  'KoolSupport': [],
  'KSMacros': ['KoolSupport'],
  'KSSupportSessions': ['KoolSupport','KSMacros'],
  'KSStealth': ['KoolSupport'],
+ 'KSAfflictions': ['KoolSupport'],
 }
 
 def verify():
@@ -33,6 +34,9 @@ def verify():
     assert 'KS.VERSION = "'+VERSION+'"' in (ADDONS/'KoolSupport/Core.lua').read_text(encoding='utf8')
     for file in ADDONS.rglob('*.lua'):
         assert '\x00' not in file.read_text(encoding='utf8'),f'NUL in {file}'
+    assert (ADDONS/'KSAfflictions/Vendor/LICENSE').is_file(), 'Missing upstream license'
+    tracker=(ADDONS/'KSAfflictions/Vendor/Tracker.lua').read_text(encoding='utf8')
+    assert 'KSAfflictionsTrackerDB' in tracker and 'SLASH_DOESITDIE1' not in tracker
     lua=shutil.which('lua5.4') or shutil.which('lua') or shutil.which('texlua')
     if lua:
         syntax=(ROOT/'scripts/lua_syntax.lua')
@@ -57,7 +61,8 @@ def package():
     zip_addons('KoolSupport_Base_Macros',['KoolSupport','KSMacros'])
     zip_addons('KSSupportSessions_Plugin',['KSSupportSessions'])
     zip_addons('KSStealth_Plugin',['KSStealth'])
-    zip_addons('KoolSupport_All_Modules_Development',['KoolSupport','KSMacros','KSSupportSessions','KSStealth'])
+    zip_addons('KSAfflictions_Plugin',['KSAfflictions'])
+    zip_addons('KoolSupport_All_Modules_Development',['KoolSupport','KSMacros','KSSupportSessions','KSStealth','KSAfflictions'])
 
 if __name__=='__main__':
     verify()

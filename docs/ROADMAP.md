@@ -20,3 +20,12 @@ Updated 2026-11-03. Development labels are not release promises.
 4. Confirm migration on a copy of real v0.6.4 SavedVariables and test manual edits/non-owned macro name conflicts.
 5. Add KS Macro Profiles only after the core APIs stabilize.
 6. Keep handoff, roadmap, release notes, and packaging current with each substantive PR.
+
+
+## New 0.9.0-dev development sprint — KS Afflictions
+
+- **Implemented on feature branch:** optional `KSAfflictions` addon with the modified upstream MIT DoT/tick engine, KS-native target/focus/nameplate bars, basic toggles, size/offset controls, native tooltip data, and optional lethal indicator.
+- **Shared UI:** Base `BarTheme.lua` defines bar palette; no duplicate standalone DoesItDie UI or /did commands.
+- **Browser:** standalone, offline simulated preview for options, DoT ticking, multi-nameplate rendering, lethal indicator and mock player-target selection.
+- **Tests:** new `test_afflictions.lua` includes opaque health passthrough; package script checks third-party license and creates optional ZIP. CI must pass before merge.
+- **Outstanding:** real Forever event/secret-health compatibility and DoT attribution. Validate against live targets before any release. Track defects in follow-up PRs rather than weakening the release gates.

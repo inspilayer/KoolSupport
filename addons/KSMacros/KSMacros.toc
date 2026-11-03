@@ -2,7 +2,7 @@
 ## Title: KS Macros
 ## Notes: Bundled generic Macro Suite, Full Spellbook and Custom Builder
 ## Author: KoolSupport
-## Version: 0.8.0-dev
+## Version: 0.9.0-dev
 ## Dependencies: KoolSupport
 Engine.lua
 Spellbook.lua

@@ -61,3 +61,18 @@ Events: `NAME_PLATE_UNIT_ADDED`, `NAME_PLATE_UNIT_REMOVED`, `UNIT_COMBO_POINTS`,
 - `KoolSupport_All_Modules_Development_0.8.0-dev.zip` — test bundle only.
 
 Version and interface `16001` are development values. Browser HTML previews are mockups. The old v0.6.4 CurseForge submission must not be modified or replaced until the user explicitly authorizes a tested upgrade. Offline tests aren't proof of Forever client compatibility. Maintain `docs/CHAT-TRANSITION.md` **in every substantive PR**.
+
+
+## KS Afflictions: optional MIT-licensed DoT module (0.9.0-dev)
+
+`KSAfflictions/` is an **independent optional sibling** that hard-depends only on KoolSupport Base. It bundles a *modified tracking-only* slice of [DoesItDie](https://github.com/swirllyman/DoesItDie) (Joe Greive, MIT) under `Vendor/`; license notice in `Vendor/LICENSE`, modifications in `Vendor/NOTICE.md`. No separate DoesItDie installation is needed.
+
+- Vendor tracking reads casts, `UNIT_COMBAT` ticks and estimates future remaining DoT damage. It does not automatically cast a spell or claim mathematically certain lethal outcomes.
+- Vendor Options, standalone nameplate/frame displays, textures, slash commands and experimental probes are **not bundled**. `TrackerBridge.lua` replaces display hooks and the module renders its own KS-styled bars.
+- `KSAfflictionsTrackerDB` is the tracker-only SavedVariables store, deliberately distinct from `DoesItDieDB`; per-character UI preferences use `KoolSupportDB.modules.ks_afflictions`, without changing legacy keys.
+- Optional target/focus/nameplate displays show health and the remaining DoT estimate side-by-side; nameplates are limited to *visible* unit tokens. The optional lethal icon uses only statusbar fill/clipping geometry. No comparing, formatting, subtracting or branching on secret health in Lua.
+- `KoolSupport.BarTheme` is the shared statusbar palette. Modules may reuse it; KS Afflictions does not depend on KS Macros or KS Stealth.
+- Independent module toggles hide the UI; Lua already loaded by WoW stays loaded until reload.
+- Browser simulation is demonstrative only; demo health and damage are fabricated test values, and its lethal visualization is ordinary JavaScript rather than client-side secret-value UI machinery.
+
+**Release gate:** live test DoT attribution (especially combo finishers), focus, multi-nameplate behavior, secret-value drawing and layered icon geometry. No CurseForge release of 0.9.0-dev is authorized.

@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Development package **0.8.0-dev**. The monolithic v0.6.4 CurseForge-review package is not modified or replaced.
+Development package **0.9.0-dev**. The monolithic v0.6.4 CurseForge-review package is not modified or replaced.
 
 ## Modules
 
@@ -35,3 +35,14 @@ The addon only **writes ordinary user-triggered WoW macros** after an explicit c
 ## Principal engineer handoff
 
 **[docs/CHAT-TRANSITION.md](docs/CHAT-TRANSITION.md) is canonical and must change in every substantive PR**. Read it on the current main branch before further work. See [roadmap](docs/ROADMAP.md) for migration gates and [archived monolithic source](legacy/v0.6.4/) for the previous release candidate. The archived source is never included in install ZIPs.
+
+
+## KS Afflictions — optional DoT tracking module (0.9.0-dev)
+
+The optional **KS Afflictions** module bundles a modified MIT-licensed tracking engine from [DoesItDie](https://github.com/swirllyman/DoesItDie) by Joe Greive. It provides KS-style **target, focus and visible-nameplate** DoT damage bars, DoT labels, spell-school colors, and an optional *estimated lethal* indicator. It requires KoolSupport Base only; it does not need DoesItDie installed separately or KS Macros.
+
+Install `KSAfflictions/` alongside `KoolSupport/` and use `/kool afflictions`. Standard Base + Macros stays bundled; optional add-ons remain independently installable. The third-party license is at `addons/KSAfflictions/Vendor/LICENSE` and its modification notice at `addons/KSAfflictions/Vendor/NOTICE.md`.
+
+**Status:** development only; first game-client validation still required. Secret health values go directly into UI widgets; no automatic spell choices or protected actions. The browser demo uses simulated encounters and is never represented as genuine game footage.
+
+**License:** KoolSupport now uses MIT; see [LICENSE](LICENSE). Vendored DoesItDie retains its original author notice.

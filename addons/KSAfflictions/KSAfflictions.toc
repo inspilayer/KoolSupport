@@ -1,0 +1,21 @@
+## Interface: 16001
+## Title: KS Afflictions
+## Notes: Player DoT estimates, target/focus/nameplate bars, and shared KoolSupport styling.
+## Author: InspiLayer; tracking engine by Joe Greive (MIT)
+## Version: 0.9.0-dev
+## Dependencies: KoolSupport
+## SavedVariables: KSAfflictionsTrackerDB
+
+Vendor/Locale.lua
+Vendor/Locale_deDE.lua
+Vendor/Locale_esES.lua
+Vendor/Locale_frFR.lua
+Vendor/Locale_koKR.lua
+Vendor/Locale_ptBR.lua
+Vendor/Locale_zhCN.lua
+Vendor/Tracker.lua
+TrackerBridge.lua
+Afflictions.lua
+Renderer.lua
+UI.lua
+Module.lua
