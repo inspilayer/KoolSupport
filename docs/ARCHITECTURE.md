@@ -1,6 +1,6 @@
 # KoolSupport modular architecture
 
-Updated 2026-11-03 — current development checkpoint **0.8.0-dev**. This is not a released replacement for monolithic v0.6.4.
+Updated 2026-11-03 — current candidate **0.10.1-rc.1**. Already-approved 0.10.0 Beta remains immutable; live Forever verification is still required before a stable release.
 
 ## Physical dependency graph
 
@@ -8,10 +8,11 @@ Updated 2026-11-03 — current development checkpoint **0.8.0-dev**. This is not
 KoolSupport/                       required Base + UI shell
 KSMacros/                          required, ships with Base (`## Dependencies: KoolSupport`)
 KSSupportSessions/                 optional (`## Dependencies: KoolSupport, KSMacros`)
-KSStealth/                         optional (`## Dependencies: KoolSupport`, `## OptionalDeps: KSMacros`)
+KSStealth/                         included, player-toggleable (`## Dependencies: KoolSupport`, `## OptionalDeps: KSMacros`)
+KSAfflictions/                     included, player-toggleable (`## Dependencies: KoolSupport`)
 ```
 
-All `.toc` directories are siblings within `Interface/AddOns`, never nested. Package the standard Base download with `KoolSupport` and `KSMacros` together. Optional addons have separate ZIPs and are hidden/disabled in the Base module manager when not installed or switched off. Loaded Lua does not unload without `/reload`.
+All `.toc` directories are siblings within `Interface/AddOns`, never nested. CurseForge's single standard package includes **all five sibling addon folders together**. Their runtime enablement is still controlled through the Base Module Manager, and dependencies are enforced. Standalone developer ZIPs are for isolated smoke tests, not separate CurseForge projects. Loaded Lua does not unload without `/reload`.
 
 ## Ownership
 
@@ -92,11 +93,18 @@ The built-in generic module detects one of the nine Forever class tokens with `U
 
 When `ScanSpellbook()` works, known active learned spells are mapped by name and required spells are checked before selecting a recommendation. When scanning fails, recommendations are labeled **Verify**, not falsely marked available. A spell icon comes from `C_Spell.GetSpellTexture(spellID)` or `GetSpellTexture(spellID)`, with class atlas fallback in the UI. Installed macros accept the resolved native icon ID or default to the secure game's question-mark icon with #showtooltip. User selection and native engine protections remain mandatory.
 
-Do not bundle optional plugins into the standard CurseForge upload. The standard upload ZIP contains only Base and KS Macros siblings. New candidate `0.10.0-rc.1` is a Beta/RC until the live Forever client and class spell names are validated. Original KS Afflictions MIT notices remain distributed unchanged.
+The previous approved `0.10.0-rc.1-beta` *did* bundle only Base and Macros. Starting with 0.10.1-rc.1, the new unified standard zip deliberately includes Base, Macros, Support Sessions, Stealth and Afflictions as five siblings in one CurseForge listing. Remain on the Beta/RC line until live Forever class/spell validation. Original KS Afflictions MIT notices remain distributed unchanged.
 
 
 ## KS Stealth Talent Impacts (Sprint 1, optional)
 
 `TalentImpactData.lua` is a static class-scoped Druid/Rogue Forever talent-to-ability catalog. `TalentImpactUI.lua` registers a separate read-only Talent Impacts page via Module.lua, protected by the existing `ks_stealth` module gate. Native class tokens (UnitClass second return) determine the view; unsupported classes do not receive an active list. A new default-OFF `KoolSupportDB.modules.ks_stealth.talentImpactOverlay` setting is additive and never removes unknown keys. The toggle respects existing combat setting restrictions.
 
-The page provides talent hover/click previews with spell textures when available. There is no API to scan learned talent ranks or spell ranks in this sprint, no Blizzard talent-frame hooks or spellbook mutations, and no numeric damage/crit calculation; effects are explanatory catalog text sourced from November 2026 Forever talent notes and subject to client verification. No combat secrets are passed through this UI. The KS Stealth plugin ZIP alone includes these files, while the standard Base+Macros CurseForge ZIP remains unaffected.
+The page provides talent hover/click previews with spell textures when available. There is no API to scan learned talent ranks or spell ranks in this sprint, no Blizzard talent-frame hooks or spellbook mutations, and no numeric damage/crit calculation; effects are explanatory catalog text sourced from November 2026 Forever talent notes and subject to client verification. No combat secrets are passed through this UI. The 0.10.1 candidate's single CurseForge package contains this Talent Impacts UI as part of the bundled Stealth sibling folder; it remains opt-in and read-only.
+
+
+## 0.10.1-rc.1 unified distribution contract (supersedes earlier packaging checkpoints)
+
+The package-as `KoolSupport` CurseForge project **1780256** ships one ZIP with exactly `KoolSupport/`, `KSMacros/`, `KSSupportSessions/`, `KSStealth/` and `KSAfflictions/` at the root. The GitHub tag packager applies root `.pkgmeta` `move-folders` for all five directories. `scripts/check_curseforge_packaging.py` and the upstream packager dry-run assert manifests, namespaced folders, vendor licensing and no development files. `scripts/check.py --package` independently constructs and verifies the same unified folder topology.
+
+Runtime modules keep `.toc` dependency declarations and optional in-game enable/disable controls; do not collapse source into one loader file or remove persistence. `KoolSupportDB` and `KSAfflictionsTrackerDB` schemas are preserved. New files are not added to the already published `v0.10.0-rc.1-beta` tag. The manually initiated next `v0.10.1-rc.1-beta` is contingent on player validation in Forever on November 4, 2026, and separate owner approval. No PR merge triggers a CurseForge submission.
