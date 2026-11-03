@@ -36,3 +36,11 @@ Updated 2026-11-03. Development labels are not release promises.
 PR #5 merged (squash `9eff27c8f31b8d02f4879160ddfd1da89bf6437c`) after passing the 0.9.0-dev CI suite and a supplementary vendor-tracker cold-boot smoke. KSAfflictions is development only; live Forever validation remains a release gate.
 
 KS Stealth now uses the shared `KoolSupport.BarTheme:StyleBar` palette for its combo-point segments, with a safe fallback for isolated mocks/clients. The visual foundation is shared; a future settings panel may expose cross-module bar presets after actual client testing.
+
+## Visual-style sprint — Modern KS default
+
+- Native KS Afflictions gets selectable Modern KS (default), Classic WoW and Minimal layouts; 4 lethal indicator modes (DIES/skull/both/off); 4 DoT palettes; spell icons; per-frame lethal alerts; size and visibility toggles.
+- Browser-only offline simulator updated for matching controls, colors and mock nameplates; simulated lethal checks are not proof of WoW API behavior.
+- Offline tests extended for defaults, invalid enums, per-unit display gating and secret-health passthrough. CI must be green.
+- Tracking engine remains untouched and credited under MIT.
+- **Remaining:** live Forever check of status-bar clipping/font visibility, client textures and nameplate layering before release.
