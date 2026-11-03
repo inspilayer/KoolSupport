@@ -42,7 +42,7 @@ Write and edit native macros using organized inserts for targeting, mouseover co
 
 **KS Afflictions** (requires Base): Configurable target, focus, and visible-nameplate DoT estimates, Modern KS styling, spell indicators, and an optional estimated lethal display. Integrates a modified MIT-licensed tracking engine from DoesItDie by Joe Greive, with the original copyright/license retained. Damage estimates are not guaranteed kills.
 
-The planned JSON-sharing KS Macro Profiles extension is not included. The already-approved 0.10.0-rc.1-beta package contained Base + Macros only; the five-module suite is the upcoming 0.10.1-rc.1 candidate, not yet published.
+The planned JSON-sharing KS Macro Profiles extension is not included. The historical 0.10.0-rc.1-beta package contained Base + Macros only. The five-module suite was tagged as v0.10.1-rc.1-beta; Talent Impacts Sprints 2/3 are the next 0.10.2 candidate.
 
 ## Installation
 
@@ -57,6 +57,6 @@ No separate CurseForge project or download is needed for an optional module. The
 
 ## Compatibility and safety
 
-Next candidate 0.10.1-rc.1 targets World of Warcraft: Forever and remains 0.10.x Beta until launch-client validation. Lua syntax, mocked macro installation, module dependencies and packaging are tested, but live-client verification is still required. Native commands and spell names may differ between game builds. KoolSupport creates ordinary game macros; it does not cast spells automatically, control another client, broadcast input, select combat abilities based on health or combo points, or bypass protected actions.
+Next candidate 0.10.2-rc.1 targets World of Warcraft: Forever and remains 0.10.x Beta until launch-client validation. Lua syntax, mocked macro installation, module dependencies and packaging are tested, but live-client verification is still required. Native commands and spell names may differ between game builds. KoolSupport creates ordinary game macros; it does not cast spells automatically, control another client, broadcast input, select combat abilities based on health or combo points, or bypass protected actions.
 
 **License:** MIT. Third-party source retains its original notices. Source and issue tracker: https://github.com/inspilayer/KoolSupport
