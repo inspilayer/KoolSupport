@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Development candidate **0.10.2-rc.1** (0.10.x Beta line). The approved 0.10.0-rc.1-beta and the already-tagged v0.10.1-rc.1-beta remain untouched. One CurseForge listing will include the entire suite after live Forever checks.
+Current CurseForge-approved Beta: **v0.10.2-rc.1-beta** (November 4, 2026; owner-confirmed). It contains the unified five-module suite. Earlier 0.10.0 and 0.10.1 Beta tags remain untouched. **Approval is not live Forever gameplay validation**; launch-client checks are still pending.
 
 ## Modules
 

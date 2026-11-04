@@ -1,10 +1,10 @@
 # KoolSupport 0.10.2-rc.1 — Talent Impacts Sprints 2/3
 
-**Status:** Beta candidate for post-2026-11-04 Forever live testing. NOT a published CurseForge release by this PR.
+**Status:** `v0.10.2-rc.1-beta` approved on CurseForge November 4, 2026 (confirmed by project owner). Live Forever launch-client testing is still pending; distribution approval is not gameplay verification.
 
 ## Single-download suite
 
-Continues unified `KoolSupport` CurseForge package (project 1780256): KoolSupport Base, KS Macros, KS Support Sessions, KS Stealth and KS Afflictions as five sibling Interface/AddOns directories. The current `v0.10.1-rc.1-beta` tag remains unchanged.
+Continues unified `KoolSupport` CurseForge package (project 1780256): KoolSupport Base, KS Macros, KS Support Sessions, KS Stealth and KS Afflictions as five sibling Interface/AddOns directories. The earlier `v0.10.1-rc.1-beta` tag remains unchanged; the new `v0.10.2-rc.1-beta` tag has been created and approved for distribution.
 
 ## New in Talent Impacts
 
@@ -21,4 +21,4 @@ Continues unified `KoolSupport` CurseForge package (project 1780256): KoolSuppor
 
 No automatic casts, gameplay decisions, target data, secret health/combo calculations, secure UI edits or user macro overwrites. All new preferences default OFF and coexist with prior SavedVariables. Keep five-folder CurseForge packaging and upstream MIT notice intact.
 
-Automated Lua, mocked API/unit/UI tests and packager dry-run must pass before merge; real Forever testing of traits, spellbook, tooltip hooks, combat lockdown, 16001 Interface and persistence on Nov 4 is still required. No stable tag or public upload is implied. Once the owner explicitly approves a new Beta, use the manually initiated GitHub Publish Beta workflow to create `v0.10.2-rc.1-beta`.
+Automated Lua, mocked API/unit/UI tests and packager dry-run must pass before merge; real Forever testing of traits, spellbook, tooltip hooks, combat lockdown, 16001 Interface and persistence on Nov 4 is still required. No stable tag or public upload is implied. Do not recreate or move the already-published `v0.10.2-rc.1-beta` tag. Fixes must use a new version and a separately approved release. The source remains subject to live testing.

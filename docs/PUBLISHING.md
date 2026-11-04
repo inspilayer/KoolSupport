@@ -1,6 +1,6 @@
 # KoolSupport release and publishing workflow — 0.10.x
 
-**Current engineering candidate:** `0.10.2-rc.1`. GitHub run `41723314712` already successfully created `v0.10.1-rc.1-beta`; never reuse it for the post-tag talent sprint. The next manually approved tag (after live validation) will be `v0.10.2-rc.1-beta`.
+**Current CurseForge-approved Beta:** `v0.10.2-rc.1-beta` (owner-confirmed November 4, 2026). GitHub Publish Beta run `41826003702` succeeded after run `41818111040` encountered a transient GitHub Internal Server Error pushing the tag. Live Forever launch-client validation remains pending. **Do not rerun this release or overwrite its immutable tag.** Any post-launch fix requires a new version and separate approval.
 
 ## One CurseForge listing / one ZIP
 
@@ -37,13 +37,13 @@ The original unified-bundle PR used `0.10.1-rc.1` and the owner has since tagged
 7. Test KS Afflictions actual DoT tick attribution, target/focus/nameplate display, lethal clipping, UI styles, vendor tracker SavedVariables and changes under `/reload`. If display/API fails, disable the affected module.
 8. Report Lua errors, screenshot actual Forever UI, check combat lockdown and no automated casts or targeting. Test a safe rollback using the backed-up addon and WTF folders.
 
-### Manual publish after approval
+### Manual publish workflow for a FUTURE version (0.10.2 already tagged)
 
 1. In CurseForge project **1780256**, keep **Automatic Packaging: tagged commits only**, not Package all commits.
 2. Keep the existing GitHub `push` webhook active and token private. The previous Beta tag verified the delivery flow.
 3. Open `https://github.com/inspilayer/KoolSupport/actions/workflows/publish-beta.yml`.
-4. Choose **Run workflow** on `main`, tick the explicit release checkbox, and run only after launch smoke-test approval. It reruns all source checks and upstream packaging dry run and creates the next tag `v0.10.2-rc.1-beta` from the current check script. The action refuses duplicates or a moved main branch.
-5. Inspect GitHub Webhook **Recent Deliveries** for the new tag `refs/tags/v0.10.2-rc.1-beta` and 2xx status; then CurseForge Files for the new Beta package and moderation result.
+4. Choose **Run workflow** on `main`, tick the explicit release checkbox, and run only after launch smoke-test approval. It reruns all source checks and upstream packaging dry run and creates a NEW versioned tag from a version-bumped check script after approval; do not reuse 0.10.2. The action refuses duplicates or a moved main branch.
+5. Inspect GitHub Webhook **Recent Deliveries** for the new version's tag and 2xx status; then CurseForge Files for the new Beta package and moderation result.
 6. Publish `docs/RELEASE_NOTES_0.10.2-rc.1.md` and update project description from `docs/CURSEFORGE_DESCRIPTION.md` when ready. Approval and discoverability remain controlled by CurseForge.
 
 The GitHub `GITHUB_TOKEN` pushes the tag; the **external webhook** is the delivery path, not a recursively triggered GitHub workflow. Do not paste CurseForge API tokens into issues, documentation or chat.
