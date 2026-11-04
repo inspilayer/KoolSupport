@@ -1,62 +1,61 @@
-# KoolSupport
+# KoolSupport — Macro Workshop for World of Warcraft: Forever
 
-**Class-aware macro workshop for World of Warcraft: Forever.**
+**Less time writing macros. More time playing.**
 
-KoolSupport provides an in-game interface for creating, previewing, and installing native World of Warcraft macros. The single CurseForge install bundles KoolSupport Base, KS Macros, KS Support Sessions, KS Stealth and KS Afflictions. The modules retain separate in-game controls; macro installation always requires an explicit player action outside combat.
+KoolSupport is an in-game macro workshop with class-aware suggestions, a spellbook browser, a custom builder, and optional combat-information displays. **One CurseForge install includes the entire five-module suite.** Use the in-game Module Manager to choose the tools you want.
 
-## Class-aware recommended macros
+KoolSupport helps you **create and understand ordinary WoW macros**. It does not cast spells or control your character for you.
 
-The Macro Suite detects the player's class and presents five optional quality-of-life templates for each of the nine Forever classes:
+## Make the macros you actually want
 
-- **Druid:** Shapeshifting, mouseover healing, and Entangling Roots.
-- **Hunter:** Pet controls, Hunter's Mark, Mend Pet, and ranged utility.
-- **Mage:** Polymorph, Counterspell, Remove Lesser Curse, and Arcane Intellect.
-- **Paladin:** Mouseover healing, blessings, and Hammer of Justice.
-- **Priest:** Mouseover heals, Power Word: Shield, dispels, and buffs.
-- **Rogue:** Stealth, Sap, Kick, Blind, and a manual builder/finisher modifier.
-- **Shaman:** Healing, Purge, Earth Shock, and Ghost Wolf.
-- **Warlock:** DoT application, Fear, Death Coil, and pet support.
-- **Warrior:** Charge, Taunt, Sunder Armor, Pummel, and Intercept.
+- **45 class-aware recommendations:** Five optional quality-of-life macro ideas for each of Forever's nine classic classes — Druid, Hunter, Mage, Paladin, Priest, Rogue, Shaman, Warlock, and Warrior. The Macro Suite displays recommendations for your character's class.
+- **Macro Suite:** Browse **Recommended**, **General**, **Custom**, and **All**. Preview the actual macro text, select what you want, and install on your own terms.
+- **Full Spellbook:** Browse learned, active spells when Forever's spellbook API makes them available. Use a spell as the starting point for a macro.
+- **Custom Builder:** Write your own macros with helpers for mouseover/focus targets, modifiers, casting, stopcasting, items, equipment, pets, forms, and more. Save drafts to revisit them later.
+- **Safer installs:** Explicit out-of-combat installation, native macro name/255-byte-body checks, slot preflight, and protections against overwriting unrelated or manually changed macros. No surprise macro creation on login.
 
-Recommended, General, Custom, and All filters let players browse templates and saved drafts. Learned spells use their game-provided spell icons when available; class icons provide a fallback. If the learned-spell API is accessible, templates requiring unlearned spells are marked unavailable. When spellbook data is unavailable, templates are marked unverified rather than incorrectly asserting the spell is learned. **No templates install automatically.**
+Suggested macros may still require particular talents, learned spells, stances, pets, or other game conditions; KoolSupport marks unverified spell availability rather than inventing it.
 
-Talent, stance, level, pet, cooldown, resource, and range restrictions still apply.
+## Five modules. One download.
 
-## Macro Suite
+**KoolSupport Base**  
+The main window, Home, Module Manager, shared styling, and read-only **Launch Checks** for addon/API availability.
 
-Review the commands and notes for each template, select the macros you want, and explicitly install the selection outside combat. The installer validates macro names and the native 255-byte limit, checks available slots, and refuses to replace unrelated or manually changed macros.
+**KS Macros**  
+The Macro Suite, class recommendations, Full Spellbook, Custom Builder, saved drafts, and native macro installation.
 
-## Full Spellbook
+**KS Support Sessions**  
+Optional healing and utility templates for player-selected support targets: named focus, focus-target healing, assist, follow, and resurrection where appropriate. Actions happen **only when you press the macro**. This module requires KS Macros.
 
-Browse the character's learned active spells when the supported Forever spellbook API is available. Select a spell to begin a custom macro draft. Passive and future spells are excluded when reported by the API.
+**KS Stealth**  
+Optional Rogue/Feral combo-point bars for visible nameplates **when client APIs expose the data**. It also contains **Talent Impacts**, an opt-in, read-only Druid/Rogue talent browser with six curated Druid talents and ten Rogue talents. Where available, it shows trained ranks, affected spells, learned spell ranks, documented cost changes, and optional spell-tooltip annotations. Damage examples use a **normalized 100-point baseline**; optional 200%-crit illustrations are educational examples, not your live damage. Talent Impacts and tooltip annotations are off by default.
 
-## Custom Macro Builder
+**KS Afflictions**  
+Optional target, focus, and visible-nameplate DoT tracking and estimated damage indicators. Choose **Modern KS**, **Classic WoW**, or **Minimal** styling, plus DoT colors and optional **DIES/skull** estimated-lethal markers. Estimates are not guaranteed kills. Tracking is adapted from **DoesItDie by Joe Greive (MIT)**, with its license and attribution included.
 
-Write and edit native macros using organized inserts for targeting, mouseover conditions, focus, modifiers, stopcasting, form cancellation, spell casting, cast sequences, pet controls, items, equipment, and chat commands. Saved drafts can be included in the Macro Suite. The editor keeps #showtooltip on the first line and validates macro length.
+The modules share one installation but have separate in-game controls. Disabling an optional module hides its features; fully unloading its Lua may require a UI reload. **No extra CurseForge downloads are required.**
 
-## Included optional modules — one download
+## Quick start
 
-**KS Support Sessions** (requires Base + Macros): Class-aware focus-target healing, utility, resurrection, follow and assist macro templates. These are separate from the generic class recommendations. They require player key presses and do not control another game client.
+1. Install **KoolSupport** once with CurseForge, selecting **WoW Forever**.
+2. Open the game and type **`/kool`**.
+3. Visit **Modules** to configure Support Sessions, Stealth, and Afflictions.
+4. Open **Macro Suite** to review recommendations or **Custom Builder** to make your own.
+5. Preview and explicitly install selected macros **outside combat**.
+6. Open WoW's **`/macro`** window and drag the resulting macros onto your action bars.
 
-**KS Stealth** (requires Base): Rogue/Feral combo-point indicators on visible nameplates when the client exposes supported data, plus an **opt-in** Druid/Rogue Talent Impacts browser covering 6 Druid and 10 Rogue talents. The browser can read trained talent ranks and learned spell ranks (when Forever APIs permit), show supported cost reductions and **normalized damage examples**, and optionally append read-only KS notes to spell tooltips. Crit illustrations are optional and are not guaranteed real hit values. No automated finisher selection.
+You can also use **`/kool suite`**, **`/kool spellbook`**, and **`/kool builder`**.
 
-**KS Afflictions** (requires Base): Configurable target, focus, and visible-nameplate DoT estimates, Modern KS styling, spell indicators, and an optional estimated lethal display. Integrates a modified MIT-licensed tracking engine from DoesItDie by Joe Greive, with the original copyright/license retained. Damage estimates are not guaranteed kills.
+## Beta status and compatibility
 
-The planned JSON-sharing KS Macro Profiles extension is not included. The historical 0.10.0-rc.1-beta package contained Base + Macros only. The five-module suite was tagged as v0.10.1-rc.1-beta; Talent Impacts Sprints 2/3 are the next 0.10.2 candidate.
+**Current release: 0.10.2-rc.1-beta (approved on CurseForge, November 4, 2026).**
 
-## Installation
+The suite has passed automated Lua/mock testing and CurseForge packaging checks, but **live Forever launch-client validation is still pending**. Spellbook, talent, tooltip, nameplate, and combat-value APIs can differ across client builds. If the client does not expose an expected value, the affected feature should report unavailable/unverified information rather than make it up.
 
-1. Install KoolSupport once through CurseForge. It places all five folders as siblings directly inside Interface/AddOns.
-2. Enable KoolSupport and KS Macros. Support Sessions, Stealth and Afflictions are included and can be individually enabled or disabled in the in-game Module Manager.
-3. Enter /kool to open the workshop.
-4. Open Macro Suite to browse recommended, generic, and saved custom macros.
-5. Select and review macros, then use Install selected outside combat.
-6. Open /macro and drag created macros onto an action bar.
+For first-run troubleshooting, use **`/kool` → Launch Checks**, and enable Lua error messages with **`/console scriptErrors 1`**. When reporting a problem, include your game build, class, KoolSupport version, and any error text. If an optional display behaves unexpectedly, disable that module until it is fixed.
 
-No separate CurseForge project or download is needed for an optional module. The in-game Module Manager controls each optional module while preserving saved preferences.
+KoolSupport does **not** automate healing, follow loops, rotations, combat-state-based finisher selection, key broadcasting, multi-client control, or protected game actions. All native macros are player-triggered.
 
-## Compatibility and safety
+**Coming later:** KS Macro Profiles for versioned sharing/import of custom macro collections (not included in 0.10.2).
 
-Next candidate 0.10.2-rc.1 targets World of Warcraft: Forever and remains 0.10.x Beta until launch-client validation. Lua syntax, mocked macro installation, module dependencies and packaging are tested, but live-client verification is still required. Native commands and spell names may differ between game builds. KoolSupport creates ordinary game macros; it does not cast spells automatically, control another client, broadcast input, select combat abilities based on health or combo points, or bypass protected actions.
-
-**License:** MIT. Third-party source retains its original notices. Source and issue tracker: https://github.com/inspilayer/KoolSupport
+**Open-source / MIT:** [GitHub source, documentation, and issues](https://github.com/inspilayer/KoolSupport). Third-party DoesItDie credits and license remain in the package.
