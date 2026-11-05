@@ -115,3 +115,11 @@ Next engineering hardening sprint: test and strengthen migration/idempotency and
 - Add a CI-run Lua cold boot that loads the entire one-project package in **actual five .toc file order**, including Afflictions vendor locales/tracker/bridge, using a single fake WoW runtime.
 - Assert four module registrations, all pages, optional module toggles, dependence of Support Sessions on Macros, vendor namespace, no macro writes at load, and preservation of unrecognized player and tracker SavedVariables.
 - Ensure both mock test CI and the upstream CurseForge five-folder dry-run pass before merge. This reduces pre-launch integration risk but does not validate live game behavior.
+
+
+## Post-launch 0.10.3 RC: movable KS Afflictions Target/Focus HUDs (November 5)
+
+- User-visible defect: Target DoTs appears in a prominent gameplay area with no way to drag it (observed on a real Forever screenshot). Approved `v0.10.2-rc.1-beta` is immutable and is not modified.
+- Implementation: left-drag each unit HUD **title** outside combat; save separate screen offsets per character in `KoolSupportDB.modules.ks_afflictions.hudPositions`; reset Target and Focus independently in the KS Afflictions settings. The original unit-frame anchors remain defaults until manually moved. Nameplate HUDs remain anchored and non-draggable.
+- Scope: display geometry and controls only. Tracking, secret-health passthrough, no automation, preserved previous saved preferences and third-party MIT engine remain unchanged. Unit HUDs are parented to `UIParent` and clamped to screen.
+- Release: new `0.10.3-rc.1` development candidate only; CI mocks cannot prove exact Forever frame-scale or tooltip behavior. Test both drag handles, client reload persistence, combat lockout, target switching, UI scaling and reset in Forever before any new Beta tag (explicit owner approval required).

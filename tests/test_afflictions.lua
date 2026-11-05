@@ -20,7 +20,11 @@ local function mk()
  function f:SetSize(w,h)self.width=w;self.height=h end
  function f:SetHeight(v)self.height=v end
  function f:SetPoint(...)self.point={...}end
- function f:ClearAllPoints()end
+ function f:ClearAllPoints()self.point=nil end
+ function f:GetCenter()return self.centerX or 960,self.centerY or 540 end
+ function f:GetEffectiveScale()return self.effectiveScale or 1 end
+ function f:StartMoving()self.moving=true end
+ function f:StopMovingOrSizing()self.moving=false end
  function f:SetAllPoints()end
  function f:SetStatusBarTexture()end
  function f:SetStatusBarColor(...)self.color={...}end
@@ -31,8 +35,9 @@ local function mk()
  function f:Hide()self.hidden=true end
  function f:SetShown(x)self.hidden=not x end
  function f:SetScale(scale)self.scale=scale end
+ function f:EnableMouse(value)self.mouseEnabled=value end
  function f:RegisterEvent()end
- function f:SetScript()end
+ function f:SetScript(event,handler)self.scripts=self.scripts or {};self.scripts[event]=handler end
  function f:CreateTexture()return mk()end
  function f:CreateFontString()return mk()end
  function f:GetStatusBarTexture()return mk()end
@@ -116,6 +121,50 @@ assert(A:ChangeSetting("lethalTarget",false))
 assert(A.huds.target.lethalClip.hidden==true)
 assert(A.plates[plate].lethalClip.hidden==false)
 assert(A:ChangeSetting("lethalTarget",true))
+
+-- Independent, per-character Target/Focus dragging. Never move nameplate HUDs.
+local target=A.huds.target
+local focus=A.huds.focus
+assert(target.dragHandle and focus.dragHandle,"Both unit HUDs need a drag title")
+assert(not A.plates[plate].dragHandle,"Nameplates must not be draggable")
+assert(target.point[1]=="TOP" and target.point[2]==TargetFrame,"Existing default target anchor preserved")
+assert(not A:HUDPosition("target"),"Default is not written until the user moves it")
+target.dragHandle.scripts.OnDragStart()
+assert(target.moving,"User drag should start outside combat")
+target.centerX=1075
+target.centerY=585
+target.dragHandle.scripts.OnDragStop()
+assert(not target.moving)
+assert(A:HUDPosition("target").x==115 and A:HUDPosition("target").y==45)
+assert(target.point[1]=="CENTER" and target.point[2]==UIParent)
+assert(target.point[4]==115 and target.point[5]==45)
+assert(not A:HUDPosition("focus"),"Target and Focus must not share positions")
+local saved=KoolSupportDB.modules.ks_afflictions.hudPositions.target
+A:RefreshAll()
+assert(A:HUDPosition("target")==saved,"Frequent refresh must preserve saved HUD position")
+-- Simulate reloading the renderer while retaining per-character SavedVariables.
+A.huds.target=nil
+local restored=A:EnsureUnit("target")
+assert(restored.point[1]=="CENTER" and restored.point[4]==115 and restored.point[5]==45,
+  "A fresh HUD must restore the stored position")
+combat=true
+restored.dragHandle.scripts.OnDragStart()
+assert(not restored.moving,"Drag must not start in combat")
+restored.dragHandle.scripts.OnDragStop()
+assert(A:HUDPosition("target")==saved,"Combat cannot overwrite position")
+assert(not A:ResetHUDPosition("target"),"Reset is blocked in combat")
+combat=false
+assert(A:ResetHUDPosition("target"))
+assert(not A:HUDPosition("target"))
+assert(restored.point[1]=="TOP" and restored.point[2]==TargetFrame)
+assert(not A:SaveHUDPosition("nameplate1",restored),"Nameplates cannot save screen positions")
+assert(A:ResetHUDPosition("focus"),"Focus reset works independently")
+-- Malformed saved positions fail closed without crashing or changing root keys.
+KoolSupportDB.modules.ks_afflictions.hudPositions.target={x=0/0,y=400}
+assert(not A:HUDPosition("target"))
+A:AnchorUnitHUD("target",restored)
+assert(restored.point[1]=="TOP")
+KoolSupportDB.modules.ks_afflictions.hudPositions.target=nil
 
 assert(A:ChangeSetting("nameplates",false))
 assert(A.plates[plate].hidden)
