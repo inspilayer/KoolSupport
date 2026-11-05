@@ -5,7 +5,7 @@ KSAfflictions = KSAfflictions or {}
 local A = KSAfflictions
 A.API_VERSION = 1
 -- All new installs use Modern KS, retaining the old display keys for upgrades.
-A.DEFAULTS = { target=true, focus=true, nameplates=true, lethal=true,
+A.DEFAULTS = { target=true, focus=true, nameplates=true, lethal=true, onFrame=false,
   schoolColors=true, showLabels=true, showIcons=true, scale=1, height=15, offsetY=7,
   style="modern", lethalMode="dies", dotColor="purple",
   lethalTarget=true, lethalFocus=true, lethalNameplates=true }
