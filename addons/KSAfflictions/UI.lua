@@ -20,7 +20,7 @@ end
 function A.BuildPage(parent)
   A:Store()
   label(parent,"|cffffd87aKS Afflictions|r  — Visual Style",20,-15,760,"GameFontNormalLarge")
-  label(parent,"Modern KS is the default. Customize your DoT bars without changing damage tracking.",20,-46,775)
+  label(parent,"Use compact overlays on target/focus health bars, or keep movable panels. Tracking is unchanged.",20,-46,775)
   local status=label(parent,"",20,-575,770,"GameFontHighlightSmall")
   local redrawers={}
   local function refresh()
@@ -100,7 +100,13 @@ function A.BuildPage(parent)
     local ok,why=A:ResetHUDPosition("focus")
     status:SetText(ok and "Focus DoTs moved back to its default anchor." or tostring(why))
   end)
-  label(parent,"Drag either DoTs title bar to move it (outside combat).",333,-551,440,"GameFontHighlightSmall")
+  local compact=button(parent,"",333,-543,221,function()
+    choose("onFrame",not A:Store().onFrame)
+  end)
+  redrawers[#redrawers+1]=function()
+    compact:SetText("Simplified / On-frame: "..(A:Store().onFrame and "ON" or "OFF"))
+  end
+  label(parent,"Target + Focus only; if no compatible health bar is found, use the movable HUD.",562,-544,217,"GameFontHighlightSmall")
   refresh()
   label(parent,"|cff9fb4adEstimated damage ≠ guaranteed kill. Protected health stays in WoW StatusBars.|r",20,-604,780,"GameFontHighlightSmall")
 end

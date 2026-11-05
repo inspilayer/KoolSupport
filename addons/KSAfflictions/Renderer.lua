@@ -76,6 +76,66 @@ local function makeHUD(parent,small)
 end
 A.huds=A.huds or {}
 A.plates=A.plates or {}
+A.onFrameHUDs=A.onFrameHUDs or {}
+
+-- Read-only discovery of stock unit-frame health StatusBars. Forever builds and
+-- UI skins may expose different structures; never infer a bar from a plain Frame.
+-- No Blizzard frame properties, secure regions, or original health values change.
+local function statusBar(candidate)
+  if not candidate or type(candidate.GetObjectType)~="function" then return nil end
+  local ok,kind=pcall(candidate.GetObjectType,candidate)
+  return ok and kind=="StatusBar" and candidate or nil
+end
+function A:ResolveUnitHealthBar(unit)
+  if unit~="target" and unit~="focus" then return nil end
+  local root=unit=="target" and TargetFrame or FocusFrame
+  if not root then return nil end
+  local named=unit=="target" and TargetFrameHealthBar or FocusFrameHealthBar
+  local content=root.TargetFrameContent or root.FocusFrameContent
+  local main=content and (content.TargetFrameContentMain or content.FocusFrameContentMain)
+  local container=main and main.HealthBarsContainer
+  return statusBar(named) or statusBar(root.healthbar) or statusBar(root.healthBar)
+    or statusBar(root.HealthBar) or statusBar(container and container.HealthBar)
+    or statusBar(container)
+end
+
+-- A narrow, noninteractive overlay on Blizzard's EXISTING health bar. Never
+-- reparent, resize, recolor, or replace the original health StatusBar.
+function A:EnsureOnFrame(unit,native)
+  if not native then return nil end
+  local h=self.onFrameHUDs[unit]
+  if h then
+    if h.nativeBar~=native then
+      if KoolSupport:IsInCombat() then h:Hide();return nil end
+      h:ClearAllPoints()
+      h:SetAllPoints(native)
+      h.nativeBar=native
+    end
+    return h
+  end
+  if KoolSupport:IsInCombat() then return nil end
+  h=CreateFrame("Frame",nil,UIParent)
+  h:SetAllPoints(native)
+  h:EnableMouse(false)
+  local level=type(native.GetFrameLevel)=="function" and native:GetFrameLevel()
+  if type(level)=="number" then h:SetFrameLevel(level+4) end
+  h.nativeBar=native
+  h.dot=bar(h,"dot")
+  h.dot:SetPoint("BOTTOMLEFT",h,"BOTTOMLEFT",0,0)
+  h.dot:SetPoint("BOTTOMRIGHT",h,"BOTTOMRIGHT",0,0)
+  h.dot:SetHeight(4)
+  h.icons={}
+  for i=1,3 do
+    local icon=h:CreateTexture(nil,"OVERLAY")
+    icon:SetSize(13,13)
+    icon:SetPoint("BOTTOMLEFT",h,"TOPLEFT",(i-1)*15,2)
+    icon:Hide()
+    h.icons[i]=icon
+  end
+  lethalWidget(h)
+  self.onFrameHUDs[unit]=h
+  return h
+end
 
 function A:AnchorUnitHUD(unit,h)
   if unit~="target" and unit~="focus" then return end
@@ -170,6 +230,35 @@ local function spellTexture(dot)
   if ok and texture then return texture end
   return nil
 end
+function A:PaintOnFrame(h,unit)
+  local dots,total=self:Snapshot(unit)
+  local db=self:Store()
+  local red,green,blue=self:DotColor(dots[1] and dots[1].school)
+  h.dot:SetStatusBarColor(red,green,blue,.94)
+  -- Protected/secret health flows ONLY to WoW StatusBar setters. The estimate
+  -- is from our owned DoT tracker; never compare it with UnitHealth in Lua.
+  local ok=pcall(function()
+    h.dot:SetMinMaxValues(0,UnitHealthMax(unit))
+    h.dot:SetValue(total)
+    h.lethal:SetMinMaxValues(0,UnitHealth(unit))
+    h.lethal:SetValue(total)
+  end)
+  if not ok then h:Hide();return end
+  for i,icon in ipairs(h.icons) do
+    local dot=dots[i]
+    local texture=dot and db.showIcons and spellTexture(dot)
+    if texture then icon:SetTexture(texture);icon:Show() else icon:Hide() end
+  end
+  local allowed=h.lethalAvailable and #dots>0 and self:LethalOn(unit)
+  local mode=db.lethalMode
+  h.lethalClip:SetShown(allowed)
+  h.lethalWord:SetShown(allowed and (mode=="dies" or mode=="both"))
+  h.lethalIcon:SetShown(allowed and (mode=="skull" or mode=="both"))
+  h.lethalWord:ClearAllPoints()
+  h.lethalWord:SetPoint("RIGHT",h.lethal:GetStatusBarTexture(),"RIGHT",mode=="both" and -22 or -1,0)
+  h:Show()
+end
+
 function A:Paint(h,unit)
   local dots,total=self:Snapshot(unit)
   local db=self:Store()
@@ -220,11 +309,24 @@ function A:RefreshAll()
   local db=self:Store()
   local enabled=KoolSupport:IsModuleEnabled("ks_afflictions")
   for _,unit in ipairs(UNITS) do
-    local h=self:EnsureUnit(unit)
-    if enabled and db[unit] and type(UnitExists)=="function" and UnitExists(unit) then
-      h:SetScale(db.scale)
-      self:Paint(h,unit)
-    else h:Hide() end
+    local visible=enabled and db[unit] and type(UnitExists)=="function" and UnitExists(unit)
+    local existing=self.onFrameHUDs[unit]
+    local native=visible and db.onFrame and self:ResolveUnitHealthBar(unit) or nil
+    local overlay=native and self:EnsureOnFrame(unit,native) or nil
+    if overlay and (not native.IsShown or native:IsShown()) then
+      local legacy=self.huds[unit]
+      if legacy then legacy:Hide() end
+      self:PaintOnFrame(overlay,unit)
+    else
+      if existing then existing:Hide() end
+      -- Some client skins do not expose a standard health StatusBar. Keep the
+      -- existing movable HUD available rather than silently losing DoT data.
+      local h=self:EnsureUnit(unit)
+      if visible then
+        h:SetScale(db.scale)
+        self:Paint(h,unit)
+      else h:Hide() end
+    end
   end
   local seen={}
   if enabled and db.nameplates and C_NamePlate and C_NamePlate.GetNamePlates then
@@ -244,6 +346,7 @@ function A:RefreshAll()
 end
 function A:HideAll()
   for _,h in pairs(self.huds) do h:Hide() end
+  for _,h in pairs(self.onFrameHUDs) do h:Hide() end
   for _,h in pairs(self.plates) do h:Hide() end
 end
 function A:Enable() self:RefreshAll() end

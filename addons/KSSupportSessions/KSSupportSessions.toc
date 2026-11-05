@@ -2,7 +2,7 @@
 ## Title: KS Support Sessions
 ## Notes: Optional focus-based support, healing and utility macro presets
 ## Author: KoolSupport
-## Version: 0.10.3-rc.1
+## Version: 0.10.4-rc.1
 ## Dependencies: KoolSupport, KSMacros
 Profiles.lua
 Session.lua

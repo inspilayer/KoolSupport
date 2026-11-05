@@ -14,8 +14,8 @@ local secret=setmetatable({},{
  __eq=function()error("secret health compared")end,
  __tostring=function()error("secret health formatted")end,
 })
-local function mk()
- local f={hidden=false}
+local function mk(kind)
+ local f={hidden=false,kind=kind or "Frame"}
  local function stub()end
  function f:SetSize(w,h)self.width=w;self.height=h end
  function f:SetHeight(v)self.height=v end
@@ -25,7 +25,8 @@ local function mk()
  function f:GetEffectiveScale()return self.effectiveScale or 1 end
  function f:StartMoving()self.moving=true end
  function f:StopMovingOrSizing()self.moving=false end
- function f:SetAllPoints()end
+ function f:SetAllPoints(anchor)self.allPoints=anchor end
+ function f:GetObjectType()return self.kind end
  function f:SetStatusBarTexture()end
  function f:SetStatusBarColor(...)self.color={...}end
  function f:SetMinMaxValues(min,max)self.min=min;self.max=max end
@@ -46,15 +47,17 @@ local function mk()
   return nil
  end})
 end
-CreateFrame=function()return mk()end
+CreateFrame=function(kind)return mk(kind)end
 UIParent=mk();TargetFrame=mk();FocusFrame=mk()
+TargetFrameHealthBar=mk("StatusBar");FocusFrameHealthBar=mk("StatusBar")
 UnitHealth=function()return secret end
 UnitHealthMax=function()return secret end
 UnitExists=function()return true end
 GetTime=function()return 100 end
 local plate=mk();plate.namePlateUnitToken="nameplate1"
 C_NamePlate={GetNamePlates=function()return {plate}end}
-local dots={{name="Rip",school=1,expiresAt=110,damage=600}}
+local dots={{name="Rip",spellID=1234,school=1,expiresAt=110,damage=600}}
+C_Spell={GetSpellTexture=function(id) if id==1234 then return "Interface\\\\Icons\\\\Ability_GhoulFrenzy" end end}
 local ns={db={},tracking={housekeep=function()end},
  dotBreakdownForUnit=function(unit)
   assert(unit=="target" or unit=="focus" or unit=="nameplate1")
@@ -166,6 +169,43 @@ A:AnchorUnitHUD("target",restored)
 assert(restored.point[1]=="TOP")
 KoolSupportDB.modules.ks_afflictions.hudPositions.target=nil
 
+-- Opt-in simplified overlay attaches to stock target/focus health bars without modifying them.
+assert(not A:Store().onFrame,"New and upgraded characters keep movable panels by default")
+assert(A:ChangeSetting("onFrame",true))
+local onTarget=A.onFrameHUDs.target
+local onFocus=A.onFrameHUDs.focus
+assert(onTarget and onFocus,"Both unit health bars get independent overlays")
+assert(onTarget.allPoints==TargetFrameHealthBar and onFocus.allPoints==FocusFrameHealthBar)
+assert(not A.onFrameHUDs.nameplate1,"Nameplate HUDs stay independent")
+assert(onTarget.dot.value==600 and onTarget.dot.max==secret,"Estimated damage uses a separate StatusBar with opaque health max")
+assert(onTarget.lethal.max==secret,"Opaque health is passed through without comparing")
+assert(not onTarget.lethalClip.hidden and not onTarget.lethalWord.hidden)
+assert(not onTarget.icons[1].hidden and onTarget.icons[2].hidden)
+assert(A.huds.target.hidden and A.huds.focus.hidden,"On-frame replaces bulky unit panels")
+assert(not A.plates[plate].hidden,"Nameplate options stay unchanged")
+assert(TargetFrameHealthBar.value==nil and FocusFrameHealthBar.value==nil,
+  "Never modify Blizzard health-bar values")
+assert(A:ChangeSetting("showIcons",false))
+assert(onTarget.icons[1].hidden,"On-frame icons honor existing settings")
+assert(A:ChangeSetting("showIcons",true))
+assert(A:ChangeSetting("target",false))
+assert(onTarget.hidden,"Turning Target off hides only its overlay")
+assert(not onFocus.hidden,"Focus remains visible")
+assert(A:ChangeSetting("target",true))
+-- A client with no known Focus health StatusBar must retain the movable HUD.
+FocusFrameHealthBar=nil
+A:RefreshAll()
+assert(onFocus.hidden and not A.huds.focus.hidden,"Missing native bar gracefully falls back")
+FocusFrameHealthBar=mk("StatusBar")
+A:RefreshAll()
+assert(onFocus.allPoints==FocusFrameHealthBar and A.huds.focus.hidden,
+  "Recovered native bar restores the compact display")
+assert(A:ChangeSetting("onFrame",false))
+assert(onTarget.hidden and onFocus.hidden,"Legacy mode hides both new overlays")
+assert(not A.huds.target.hidden and not A.huds.focus.hidden,"Legacy panels remain intact")
+combat=true
+assert(not A:ChangeSetting("onFrame",true),"Combat must block mode changes")
+combat=false
 assert(A:ChangeSetting("nameplates",false))
 assert(A.plates[plate].hidden)
 print("PASS afflictions: vendor bridge, values, secret sinks, settings, nameplates, module")
