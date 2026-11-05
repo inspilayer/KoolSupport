@@ -35,6 +35,7 @@ local function mk()
  function f:Hide()self.hidden=true end
  function f:SetShown(x)self.hidden=not x end
  function f:SetScale(scale)self.scale=scale end
+ function f:EnableMouse(value)self.mouseEnabled=value end
  function f:RegisterEvent()end
  function f:SetScript(event,handler)self.scripts=self.scripts or {};self.scripts[event]=handler end
  function f:CreateTexture()return mk()end
