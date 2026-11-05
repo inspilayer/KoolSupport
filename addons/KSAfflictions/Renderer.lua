@@ -76,13 +76,70 @@ local function makeHUD(parent,small)
 end
 A.huds=A.huds or {}
 A.plates=A.plates or {}
+
+function A:AnchorUnitHUD(unit,h)
+  if unit~="target" and unit~="focus" then return end
+  local pos=self:HUDPosition(unit)
+  h:ClearAllPoints()
+  if pos then
+    h:SetPoint("CENTER",UIParent,"CENTER",pos.x,pos.y)
+  else
+    -- Preserve the original anchoring until the player chooses a position.
+    local anchor=unit=="target" and TargetFrame or FocusFrame
+    if anchor then h:SetPoint("TOP",anchor,"BOTTOM",0,unit=="target" and -14 or -16)
+    else h:SetPoint("CENTER",UIParent,"CENTER",unit=="target" and 170 or -170,-150) end
+  end
+end
 function A:EnsureUnit(unit)
   if self.huds[unit] then return self.huds[unit] end
-  local anchor=unit=="target" and TargetFrame or FocusFrame
-  local h=makeHUD(anchor or UIParent,false)
-  if anchor then h:SetPoint("TOP",anchor,"BOTTOM",0,unit=="target" and -14 or -16)
-  else h:SetPoint("CENTER",UIParent,"CENTER",unit=="target" and 170 or -170,-150) end
+  -- Parent to UIParent so the player can move these independently of
+  -- Blizzard's target/focus frames. Nameplate HUDs are never draggable.
+  local h=makeHUD(UIParent,false)
+  h:SetMovable(true)
+  h:SetClampedToScreen(true)
+  h:SetUserPlaced(false)
   h.label:SetText(unit=="target" and "Target DoTs" or "Focus DoTs")
+  local grip=CreateFrame("Frame",nil,h)
+  grip:SetPoint("TOPLEFT",h,"TOPLEFT",0,0)
+  grip:SetSize(220,21)
+  grip:EnableMouse(true)
+  grip:RegisterForDrag("LeftButton")
+  local dragging=false
+  grip:SetScript("OnDragStart",function()
+    if KoolSupport:IsInCombat() then return end
+    -- Convert any default unit-frame anchor to a free screen anchor before
+    -- moving. Keep the same visible position to avoid a first-drag jump.
+    local cx,cy=h:GetCenter()
+    local ux,uy=UIParent:GetCenter()
+    local uiScale=UIParent:GetEffectiveScale()
+    local frameScale=h:GetEffectiveScale()
+    if type(cx)~="number" or type(cy)~="number" or
+       type(ux)~="number" or type(uy)~="number" or
+       type(uiScale)~="number" or uiScale<=0 or
+       type(frameScale)~="number" or frameScale<=0 then return end
+    h:ClearAllPoints()
+    h:SetPoint("CENTER",UIParent,"CENTER",cx*frameScale/uiScale-ux,cy*frameScale/uiScale-uy)
+    dragging=true
+    h:StartMoving()
+  end)
+  grip:SetScript("OnDragStop",function()
+    if not dragging then return end
+    dragging=false
+    h:StopMovingOrSizing()
+    h:SetUserPlaced(false)
+    local ok=self:SaveHUDPosition(unit,h)
+    self:AnchorUnitHUD(unit,h)
+  end)
+  grip:SetScript("OnEnter",function(self)
+    if not GameTooltip then return end
+    GameTooltip:SetOwner(self,"ANCHOR_CURSOR")
+    GameTooltip:AddLine("Drag to move "..(unit=="target" and "Target DoTs" or "Focus DoTs"))
+    GameTooltip:AddLine("Left-drag the title outside combat; position saves per character.",.8,.8,.8,true)
+    GameTooltip:Show()
+  end)
+  grip:SetScript("OnLeave",function()if GameTooltip then GameTooltip:Hide() end end)
+  h.dragHandle=grip
+  self:AnchorUnitHUD(unit,h)
   self.huds[unit]=h
   return h
 end
