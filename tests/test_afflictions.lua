@@ -14,6 +14,8 @@ local secret=setmetatable({},{
  __eq=function()error("secret health compared")end,
  __tostring=function()error("secret health formatted")end,
 })
+local uiButtons={}
+local uiLabels={}
 local function mk(kind)
  local f={hidden=false,kind=kind or "Frame"}
  local function stub()end
@@ -40,14 +42,22 @@ local function mk(kind)
  function f:RegisterEvent()end
  function f:SetScript(event,handler)self.scripts=self.scripts or {};self.scripts[event]=handler end
  function f:CreateTexture()return mk()end
- function f:CreateFontString()return mk()end
+ function f:CreateFontString()
+  local item=mk("FontString")
+  uiLabels[#uiLabels+1]=item
+  return item
+ end
  function f:GetStatusBarTexture()return mk()end
  return setmetatable(f,{__index=function(_,key)
   if type(key)=="string" and (key:match("^Set") or key:match("^Get") or key:match("^Register") or key:match("^Clear")) then return stub end
   return nil
  end})
 end
-CreateFrame=function(kind)return mk(kind)end
+CreateFrame=function(kind)
+ local item=mk(kind)
+ if kind=="Button" then uiButtons[#uiButtons+1]=item end
+ return item
+end
 UIParent=mk();TargetFrame=mk();FocusFrame=mk()
 TargetFrameHealthBar=mk("StatusBar");FocusFrameHealthBar=mk("StatusBar")
 UnitHealth=function()return secret end
@@ -208,4 +218,52 @@ assert(not A:ChangeSetting("onFrame",true),"Combat must block mode changes")
 combat=false
 assert(A:ChangeSetting("nameplates",false))
 assert(A.plates[plate].hidden)
-print("PASS afflictions: vendor bridge, values, secret sinks, settings, nameplates, module")
+
+-- Settings page regression: simplify is prominent, not hidden in the bottom row.
+-- Test actual button callbacks as well as coordinates inside the Base 824x605 pane.
+local before=#uiButtons
+local beforeLabels=#uiLabels
+A.BuildPage(mk())
+local function findButton(term)
+ for i=before+1,#uiButtons do
+  local b=uiButtons[i]
+  if type(b.text)=="string" and b.text:find(term,1,true) then return b end
+ end
+ return nil
+end
+local modeButton=findButton("Simplified / On-frame: OFF")
+assert(modeButton,"The simplified mode toggle must exist and be discoverable")
+assert(modeButton.point[4]==20 and modeButton.point[5]==-109,
+  "The on-frame toggle must appear near the top of the settings page")
+assert(findButton("Appearance & Colors") and findButton("Visibility & Position"),
+  "Both settings tabs must be visible")
+assert(findButton("Reset Target") and findButton("Reset Focus"),
+  "Position reset controls must stay available in the second tab")
+for i=before+1,#uiButtons do
+ local b=uiButtons[i]
+ if b.point and b.point[1]=="TOPLEFT" and b.width and b.height then
+  local x,y=b.point[4],b.point[5]
+  assert(x>=0 and x+b.width<=824,"Settings button overflows content pane horizontally")
+  assert(y<=0 and y-b.height>=-605,"Settings button overflows content pane vertically")
+ end
+end
+for i=beforeLabels+1,#uiLabels do
+ local item=uiLabels[i]
+ if item.point and item.point[1]=="TOPLEFT" then
+  local x,y=item.point[4],item.point[5]
+  assert(x>=0 and x<=824 and y<=0 and y>=-590,
+    "Settings label falls outside available content")
+ end
+end
+modeButton.scripts.OnClick()
+assert(A:Store().onFrame and modeButton.text=="Simplified / On-frame: ON")
+local advanced=findButton("Visibility & Position")
+advanced.scripts.OnClick()
+assert(advanced.text:find("> ",1,true)==1,
+  "Visibility / Position tab must visibly indicate its selected state")
+modeButton.scripts.OnClick()
+assert(not A:Store().onFrame and modeButton.text=="Simplified / On-frame: OFF",
+  "On-frame mode must be toggleable even while advanced settings are selected")
+assert(findButton("Appearance & Colors").scripts.OnClick,
+  "Appearance tab callback must remain interactive")
+print("PASS afflictions: vendor bridge, values, secret sinks, settings, nameplates, mode tab layout")
