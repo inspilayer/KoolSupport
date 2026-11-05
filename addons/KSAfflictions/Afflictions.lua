@@ -25,6 +25,56 @@ function A:Store()
   for k,v in pairs(self.DEFAULTS) do if mine[k]==nil then mine[k]=v end end
   return mine
 end
+-- Per-character screen positions are separate from nameplate offsets and DoT data.
+-- Only Target/Focus HUDs can be moved. Never read secret combat values.
+local function validPosition(pos)
+  return type(pos)=="table" and type(pos.x)=="number" and type(pos.y)=="number"
+    and pos.x==pos.x and pos.y==pos.y
+    and math.abs(pos.x)<10000 and math.abs(pos.y)<10000
+end
+function A:HUDPosition(unit)
+  if unit~="target" and unit~="focus" then return nil end
+  local positions=self:Store().hudPositions
+  if type(positions)~="table" then return nil end
+  local pos=positions[unit]
+  return validPosition(pos) and pos or nil
+end
+function A:SaveHUDPosition(unit,frame)
+  if unit~="target" and unit~="focus" then return false,"Unsupported HUD" end
+  if KoolSupport:IsInCombat() then return false,"Move HUDs outside combat" end
+  if not frame or not UIParent then return false,"HUD unavailable" end
+  local cx,cy=frame:GetCenter()
+  local ux,uy=UIParent:GetCenter()
+  local uiScale=UIParent:GetEffectiveScale()
+  local frameScale=frame:GetEffectiveScale()
+  if type(cx)~="number" or type(cy)~="number" or
+     type(ux)~="number" or type(uy)~="number" or
+     type(uiScale)~="number" or uiScale<=0 or
+     type(frameScale)~="number" or frameScale<=0 then
+    return false,"HUD geometry unavailable"
+  end
+  -- Convert the frame's scaled screen position into UIParent coordinates.
+  local x=cx*frameScale/uiScale-ux
+  local y=cy*frameScale/uiScale-uy
+  local pos={x=math.floor(x+.5),y=math.floor(y+.5)}
+  if not validPosition(pos) then return false,"HUD position invalid" end
+  local db=self:Store()
+  if type(db.hudPositions)~="table" then db.hudPositions={} end
+  db.hudPositions[unit]=pos
+  return true
+end
+function A:ResetHUDPosition(unit)
+  if unit~="target" and unit~="focus" then return false,"Unsupported HUD" end
+  if KoolSupport:IsInCombat() then return false,"Reset HUDs outside combat" end
+  local db=self:Store()
+  if type(db.hudPositions)=="table" then db.hudPositions[unit]=nil end
+  if self.huds and self.huds[unit] and self.AnchorUnitHUD then
+    self:AnchorUnitHUD(unit,self.huds[unit])
+  end
+  if self.RefreshAll then self:RefreshAll() end
+  return true
+end
+
 function A:TrackerReady()
   return ns.db~=nil and type(ns.dotBreakdownForUnit)=="function"
 end
