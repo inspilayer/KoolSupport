@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Current CurseForge-approved Beta: **v0.10.2-rc.1-beta** (November 4, 2026; owner-confirmed). Source candidate **0.10.3-rc.1** adds movable KS Afflictions Target/Focus HUDs; it is not yet published. It contains the unified five-module suite. Earlier 0.10.0 and 0.10.1 Beta tags remain untouched. **Approval is not live Forever gameplay validation**; launch-client checks are still pending.
+Current CurseForge-approved Beta: **v0.10.2-rc.1-beta** (November 4, 2026; owner-confirmed). Source candidate **0.10.4-rc.1** adds opt-in Simplified / On-frame KS Afflictions Target/Focus health-bar overlays; it is not yet published. The previously tagged 0.10.3 adds movable Target/Focus HUDs. It contains the unified five-module suite. Earlier 0.10.0 and 0.10.1 Beta tags remain untouched. **Approval is not live Forever gameplay validation**; launch-client checks are still pending.
 
 ## Modules
 
