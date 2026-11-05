@@ -38,7 +38,7 @@ assert(loadfile("addons/KoolSupport/Core.lua"))()
 assert(loadfile("addons/KoolSupport/Diagnostics.lua"))()
 assert(loadfile("addons/KoolSupport/UI.lua"))()
 local KS=KoolSupport
-assert(KS.VERSION=="0.10.3-rc.1")
+assert(KS.VERSION=="0.10.4-rc.1")
 KS:RegisterModule({id="ks_macros",title="KS Macros",apiVersion=1,defaultEnabled=true})
 KS:RegisterModule({id="ks_support_sessions",title="KS Support Sessions",apiVersion=1,defaultEnabled=true,requires={"ks_macros"}})
 KS:RegisterModule({id="ks_stealth",title="KS Stealth",apiVersion=1,defaultEnabled=true})
