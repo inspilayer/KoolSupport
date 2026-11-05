@@ -136,7 +136,7 @@ target.dragHandle.scripts.OnDragStop()
 assert(not target.moving)
 assert(A:HUDPosition("target").x==115 and A:HUDPosition("target").y==45)
 assert(target.point[1]=="CENTER" and target.point[2]==UIParent)
-assert(target.point[5]==115 and target.point[6]==45)
+assert(target.point[4]==115 and target.point[5]==45)
 assert(not A:HUDPosition("focus"),"Target and Focus must not share positions")
 local saved=KoolSupportDB.modules.ks_afflictions.hudPositions.target
 A:RefreshAll()
@@ -144,7 +144,7 @@ assert(A:HUDPosition("target")==saved,"Frequent refresh must preserve saved HUD 
 -- Simulate reloading the renderer while retaining per-character SavedVariables.
 A.huds.target=nil
 local restored=A:EnsureUnit("target")
-assert(restored.point[1]=="CENTER" and restored.point[5]==115 and restored.point[6]==45,
+assert(restored.point[1]=="CENTER" and restored.point[4]==115 and restored.point[5]==45,
   "A fresh HUD must restore the stored position")
 combat=true
 restored.dragHandle.scripts.OnDragStart()
