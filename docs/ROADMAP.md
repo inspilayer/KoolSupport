@@ -123,3 +123,12 @@ Next engineering hardening sprint: test and strengthen migration/idempotency and
 - Implementation: left-drag each unit HUD **title** outside combat; save separate screen offsets per character in `KoolSupportDB.modules.ks_afflictions.hudPositions`; reset Target and Focus independently in the KS Afflictions settings. The original unit-frame anchors remain defaults until manually moved. Nameplate HUDs remain anchored and non-draggable.
 - Scope: display geometry and controls only. Tracking, secret-health passthrough, no automation, preserved previous saved preferences and third-party MIT engine remain unchanged. Unit HUDs are parented to `UIParent` and clamped to screen.
 - Release: new `0.10.3-rc.1` development candidate only; CI mocks cannot prove exact Forever frame-scale or tooltip behavior. Test both drag handles, client reload persistence, combat lockout, target switching, UI scaling and reset in Forever before any new Beta tag (explicit owner approval required).
+
+
+## 0.10.4 RC — opt-in simplified in-frame Target/Focus DoT mode
+
+User reference from November 5 shows a health bar with purple estimated-DoT portion, spell icons above and a green `DIES` label beside it. A player should be able to choose `Simplified / On-frame` in KS Afflictions settings rather than reserve screen space for the separate draggable panel.
+
+- **Done in source candidate:** `onFrame=false` per character until explicitly enabled. Resolve existing Target/Focus StatusBars through classic/modern built-in names, anchor separate mouse-transparent overlays, add a thin estimated DoT strip, up to 3 spell icons and the existing secret-safe lethal indicator, with explicit fallback to the movable panel when native bars are unavailable. Keep nameplates unchanged; native frame sizes, values and status bars are never modified.
+- **Regression:** mocked health is opaque; only child StatusBars receive its values, existing native health bar does not. Toggle, missing bar fallback and swapping to another bar are covered; prior SavedVariables remain unaltered.
+- **Still to validate in game:** native bar paths in Forever and with client UI addons; overlays do not suppress stock health text or click functionality; toggles and combat restrictions work; `/reload` persists preference; DIES clipping behaves as intended; high-contrast placement, focus and target alignment. Prior `v0.10.3-rc.1-beta` is tagged and immutable. No publishing without separate explicit approval.
