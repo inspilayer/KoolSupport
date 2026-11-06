@@ -49,7 +49,7 @@ UISpecialFrames={}
 local sentinel={preserved=true}
 KoolSupportDB={untouched=sentinel}
 KSAfflictionsTrackerDB={untouched=sentinel}
-local addons={"KoolSupport","KSMacros","KSSupportSessions","KSStealth","KSAfflictions"}
+local addons={"KoolSupport","KSMacros","KSSupportSessions","KSStealth","KSAfflictions","KSCampfireChat"}
 local ns={}
 local manifests={}
 local function loadAddon(addon)
@@ -71,22 +71,27 @@ end
 for _,name in ipairs(addons)do loadAddon(name)end
 local K=KoolSupport
 assert(K.API_VERSION==1)
-assert(K.VERSION=="0.10.4-rc.1")
+assert(K.VERSION=="0.10.5-rc.1")
 assert(K.BarTheme and K.CollectLaunchChecks)
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
- K.modules.ks_stealth and K.modules.ks_afflictions)
-assert(#K.moduleOrder==4,"exactly four independently managed child modules")
+ K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat)
+assert(#K.moduleOrder==5,"exactly five independently managed child modules")
 for _,id in ipairs({"home","modules","launch_checks","macro_suite","full_spellbook",
- "macro_workshop","support_session","stealth","stealth_talents","afflictions"}) do
+ "macro_workshop","support_session","stealth","stealth_talents","afflictions","campfire_chat"}) do
  assert(K.pages[id] and K:CanOpenPage(id),"page must be registered: "..id)
 end
 assert(K:GetModule("ks_support_sessions").requires[1]=="ks_macros")
 assert(K:GetModule("ks_stealth").requires[1]==nil)
 assert(K:GetModule("ks_afflictions").requires[1]==nil)
+assert(K:GetModule("ks_campfire_chat").requires[1]==nil)
+assert(K:CanOpenPage("campfire_chat"))
 assert(ns.locale and ns.tracking and ns.display,"vendored Locale, Tracker and Bridge must share namespace")
 assert(type(ns.tracking.housekeep)=="function")
 assert(KoolSupportDB.untouched==sentinel and KSAfflictionsTrackerDB.untouched==sentinel)
 assert(createdMacros==0)
+assert(KSCampfireChat.CAMPFIRE_SPELL_ID==1283391)
+-- A cold load must never publish a story.
+assert(KSCampfireChat.lastSent==nil)
 -- Optional modules are installed together but independent at runtime.
 assert(K:SetModuleEnabled("ks_stealth",false))
 assert(not K:CanOpenPage("stealth_talents"))
