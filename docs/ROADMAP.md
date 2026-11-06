@@ -139,3 +139,13 @@ User reference from November 5 shows a health bar with purple estimated-DoT port
 - User screenshot confirms 0.10.3 in-game, so it cannot show 0.10.4's new simplified toggle. The initial 0.10.4 toggle was also visually buried near the bottom of a crowded Afflictions page.
 - Move the ON/OFF toggle to the first-screen Target & Focus section with two tabs: Appearance & Colors, Visibility & Position. Retain scale/height/nameplate offsets, resets, existing style/color/lethal settings, and saved HUD behavior.
 - Offline acceptance: each clickable UI control stays within Base's 824x605 content size; default tab, tab switching and direct on-frame toggle callback work. Live: screenshot both tabs at player UI scale, verify no cutoffs, then test in-frame rendering and fallback before approving another Beta.
+
+
+## 0.10.5 RC — Campfire Chat (November 6, 2026)
+
+**Owner-approved feature request**: Add a fun, random and wholesome optional Campfire Chat module to the one KoolSupport suite. Four player-clicked categories: Joke, Spooky, Ramble and Edgy Joke. The module must speak in nearby `/say` only while the player's `Campfire Nearby` buff is present.
+
+- **Implementation:** six-folder packaging, independent `KSCampfireChat` module, live module/page gating, four clearly described buttons, original content (16 short, chat-safe, locally curated entries each, 64 total), shuffle bag, no-repeat behavior, 8-second cooldown, direct click only, buff spell ID 1283391, modern and legacy aura fallbacks, and no automatic channel broadcasts.
+- **Defensive rules:** fail closed on unavailable or secret aura data; no client-wide chat monitoring, external services, timers, bots, macros, unattended or multi-client activity. Never bypass protected outdoor chat APIs. Do not create more than one `SAY` line per click.
+- **Testing:** offline runtime tests for exact buff detection, unavailable API, wrong buff, no-sends on load/events, SAY-only, 240-byte maximum, cooldown, no repeats, module disabled, native GUI, and the six-folder packager. CI and manual inspection before merge.
+- **Unfinished client gate:** test the player-buff API and click-to-SAY under current Forever game rules, especially with a real campfire and a second nearby player; observe /say throttling and buff disappearance. No new tag, public upload or stable claim without explicit approval. Tagged 0.10.4 is immutable.
