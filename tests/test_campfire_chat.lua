@@ -103,9 +103,10 @@ for n=1,#A.lines.joke do
  seen[line]=true
  clock=clock+10
 end
+local previous=A.lastChoice.joke
 local ok,nextLine=A:Tell("joke")
-assert(ok and nextLine~=A.lines.joke[A.lastChoice.joke+0] or ok,
-  "Reshuffling must not error")
+assert(ok and nextLine~=A.lines.joke[previous],
+  "The first story in a refreshed bag must differ from the last one")
 -- Ensure every successful request sends exactly once with no queued output.
 assert(#calls==1+#A.lines.joke+1)
 for _,entry in ipairs(calls) do
