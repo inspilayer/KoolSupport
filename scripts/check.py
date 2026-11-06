@@ -9,13 +9,14 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
 ADDONS=ROOT/'addons'
-VERSION='0.10.4-rc.1'
+VERSION='0.10.5-rc.1'
 MANIFESTS={
  'KoolSupport': [],
  'KSMacros': ['KoolSupport'],
  'KSSupportSessions': ['KoolSupport','KSMacros'],
  'KSStealth': ['KoolSupport'],
  'KSAfflictions': ['KoolSupport'],
+ 'KSCampfireChat': ['KoolSupport'],
 }
 
 def verify():
@@ -68,7 +69,7 @@ def verify_unified_package(path):
         assert f'{name}/{name}.toc' in entries, f'Missing {name} .toc'
     assert 'KSAfflictions/Vendor/LICENSE' in entries, 'DoT engine license not bundled'
     assert 'KSAfflictions/Vendor/NOTICE.md' in entries, 'DoT modification notice not bundled'
-    print('PASS unified standard ZIP: five sibling addons and vendor notices')
+    print('PASS unified standard ZIP: six sibling addons and vendor notices')
 
 def package():
     zip_addons('KoolSupport_Base_Macros',['KoolSupport','KSMacros'])
@@ -77,7 +78,8 @@ def package():
     zip_addons('KSSupportSessions_Plugin',['KSSupportSessions'])
     zip_addons('KSStealth_Plugin',['KSStealth'])
     zip_addons('KSAfflictions_Plugin',['KSAfflictions'])
-    zip_addons('KoolSupport_All_Modules_Development',['KoolSupport','KSMacros','KSSupportSessions','KSStealth','KSAfflictions'])
+    zip_addons('KSCampfireChat_Plugin',['KSCampfireChat'])
+    zip_addons('KoolSupport_All_Modules_Development',list(MANIFESTS))
 
 if __name__=='__main__':
     verify()

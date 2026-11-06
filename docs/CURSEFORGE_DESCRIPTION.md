@@ -59,3 +59,8 @@ KoolSupport does **not** automate healing, follow loops, rotations, combat-state
 **Coming later:** KS Macro Profiles for versioned sharing/import of custom macro collections (not included in 0.10.2).
 
 **Open-source / MIT:** [GitHub source, documentation, and issues](https://github.com/inspilayer/KoolSupport). Third-party DoesItDie credits and license remain in the package.
+
+
+## Campfire Chat — planned for 0.10.5 Beta, not in older files
+
+**Campfire Chat** is an included, individually toggleable sixth module in the **0.10.5 development candidate**. Find the `Campfire Chat` page in `/kool`, then click **Joke**, **Spooky**, **Ramble**, or **Edgy Joke** to share one random, locally curated line in nearby `/say`. 64 original options (16 per category) avoid repetition until exhausted. Edgy Joke means cheeky tavern humor rather than insults toward real-world groups. Chat is gated by the actual player **Campfire Nearby** buff, with an 8-second click cooldown; there are no automatic broadcasts or queued messages. Real Forever chat-client validation and a separately approved 0.10.5 tag remain necessary before this can be advertised as already released.
