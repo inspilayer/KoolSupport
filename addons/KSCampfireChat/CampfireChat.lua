@@ -32,7 +32,10 @@ function A:CampfireNearby()
   end
   -- Classic/Forever-compatible fallback. Ignore malformed/secret aura fields
   -- and fail CLOSED if no available API confirms the exact buff.
-  for _,fn in ipairs({UnitBuff,UnitAura}) do
+  local legacy={}
+  if type(UnitBuff)=="function" then legacy[#legacy+1]=UnitBuff end
+  if type(UnitAura)=="function" then legacy[#legacy+1]=UnitAura end
+  for _,fn in ipairs(legacy) do
     if type(fn)=="function" then
       for i=1,60 do
         local ok,name,id=pcall(function()
@@ -99,7 +102,7 @@ function A:Tell(category)
   -- Pick only after every permission, buff, and rate-limit preflight passes.
   local message=self:Pick(category)
   if type(message)~="string" or #message==0 or #message>240 or
-     message:find("[\r\n%%c]") then
+     message:find("%c") then
     return false,"Invalid campfire story; nothing was sent."
   end
   -- MUST be called synchronously inside a hardware click handler, not a timer
