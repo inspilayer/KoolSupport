@@ -9,13 +9,14 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
 ADDONS=ROOT/'addons'
-VERSION='0.10.4-rc.1'
+VERSION='0.10.5-rc.1'
 MANIFESTS={
  'KoolSupport': [],
  'KSMacros': ['KoolSupport'],
  'KSSupportSessions': ['KoolSupport','KSMacros'],
  'KSStealth': ['KoolSupport'],
  'KSAfflictions': ['KoolSupport'],
+ 'KSCampfireChat': ['KoolSupport'],
 }
 
 def verify():
