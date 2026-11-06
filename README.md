@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Current CurseForge-approved Beta: **v0.10.2-rc.1-beta** (November 4, 2026; owner-confirmed). Source candidate **0.10.4-rc.1** adds opt-in Simplified / On-frame KS Afflictions Target/Focus health-bar overlays; it is not yet published. The previously tagged 0.10.3 adds movable Target/Focus HUDs. It contains the unified five-module suite. Earlier 0.10.0 and 0.10.1 Beta tags remain untouched. **Approval is not live Forever gameplay validation**; launch-client checks are still pending.
+Last verified public GitHub Beta tag: **v0.10.4-rc.1-beta** (publishing workflow succeeded November 6, 2026; CurseForge moderation not independently checked). New source candidate **0.10.5-rc.1** adds Campfire Chat as an optional sixth module. Previous tags remain immutable; gameplay/client validation is required before stable release.
 
 ## Modules
 
@@ -13,11 +13,12 @@ Current CurseForge-approved Beta: **v0.10.2-rc.1-beta** (November 4, 2026; owner
 | **KS Support Sessions** | Included; player-toggleable | Healer class presets, named focus, heals, battle rez, follow/assist |
 | **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point UI on visible nameplates |
 | **KS Afflictions** | Included; player-toggleable | DoT impact estimates and KS visual options (MIT DoesItDie engine) |
+| **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
 Each component is a sibling addon directory in `Interface/AddOns/`; CurseForge installs the suite as one project and the in-game Module Manager controls the optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`).
 
-The **single standard CurseForge ZIP now contains all five addon folders**: KoolSupport, KSMacros, KSSupportSessions, KSStealth and KSAfflictions. Developer-only individual ZIPs still exist for isolated testing, not separate CurseForge pages. See [architecture](docs/ARCHITECTURE.md).
+The **next standard CurseForge ZIP (0.10.5 candidate) contains six addon folders**: KoolSupport, KSMacros, KSSupportSessions, KSStealth, KSAfflictions and KSCampfireChat. Developer-only individual ZIPs still exist for isolated testing, not separate CurseForge pages. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
@@ -63,3 +64,7 @@ Recommended macros are **never installed automatically**. Players review, select
 Root .pkgmeta provides a verified five-folder unified distribution for CurseForge's tag-only GitHub packager. Optional modules are included in the same download and controlled in-game. CI checks the configuration and runs an upstream packager dry-run; see docs/PUBLISHING.md.
 
 Select tagged commits only, not Package all commits. Include beta in a pre-release tag. Merging code does **not** publish to CurseForge. After November 4 live testing, the next manually approved candidate tag is `v0.10.2-rc.1-beta`. We stay on 0.10.x until validation.
+
+## Campfire Chat — 0.10.5 candidate
+
+Included in the same package as a separate optional module, **Campfire Chat** provides four player-clicked nearby `/say` categories: Joke, Spooky, Ramble and Edgy Joke. It has **64 original, curated, short stories** (16 per category), shuffles until each category is exhausted, and never uses remote services, other players' chat content or automatic message schedules. Exactly one short message is attempted per direct click; a **Campfire Nearby** player buff (Forever spell 1283391) is required, with fallbacks for Forever's modern/legacy aura APIs. If the aura is unavailable or the game rejects chat, nothing is queued. An eight-second local cooldown discourages chat spam. Test aura recognition and /say hardware-click rules in the real client before Beta publishing.
