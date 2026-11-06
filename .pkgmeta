@@ -1,4 +1,4 @@
-# One KoolSupport CurseForge project / one installable ZIP / five sibling WoW addons.
+# One KoolSupport CurseForge project / one installable ZIP / six sibling WoW addons.
 # Optional in the game UI does NOT require a separate CurseForge project.
 package-as: KoolSupport
 enable-nolib-creation: no
@@ -8,6 +8,7 @@ move-folders:
     KoolSupport/addons/KSSupportSessions: KSSupportSessions
     KoolSupport/addons/KSStealth: KSStealth
     KoolSupport/addons/KSAfflictions: KSAfflictions
+    KoolSupport/addons/KSCampfireChat: KSCampfireChat
 ignore:
     - docs
     - tests
