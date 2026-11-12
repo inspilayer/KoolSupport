@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: KS Threat
+## Notes: Lightweight, tank-first four-state threat colors for Blizzard enemy nameplates.
+## Author: InspiLayer
+## Version: 0.10.6-rc.1
+## Dependencies: KoolSupport
+
+Threat.lua
+UI.lua
+Module.lua
