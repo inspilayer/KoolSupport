@@ -2,7 +2,7 @@
 ## Title: KS Campfire Chat
 ## Notes: Player-triggered campfire tales, jokes, and rambles.
 ## Author: InspiLayer
-## Version: 0.10.5-rc.1
+## Version: 0.10.6-rc.1
 ## Dependencies: KoolSupport
 
 Content.lua
