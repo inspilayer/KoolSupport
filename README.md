@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last verified public GitHub Beta tag: **v0.10.4-rc.1-beta** (publishing workflow succeeded November 6, 2026; CurseForge moderation not independently checked). New source candidate **0.10.5-rc.1** adds Campfire Chat as an optional sixth module. Previous tags remain immutable; gameplay/client validation is required before stable release.
+Last verified public GitHub Beta tag: **v0.10.4-rc.1-beta** (publishing workflow succeeded November 6, 2026; CurseForge moderation not independently checked). The prior 0.10.5-rc.1 Beta tag remains immutable. New source candidate **0.10.6-rc.1** adds optional KS Threat as the seventh module. Previous tags remain immutable; gameplay/client validation is required before stable release.
 
 ## Modules
 
@@ -68,3 +68,7 @@ Select tagged commits only, not Package all commits. Include beta in a pre-relea
 ## Campfire Chat — 0.10.5 candidate
 
 Included in the same package as a separate optional module, **Campfire Chat** provides four player-clicked nearby `/say` categories: Joke, Spooky, Ramble and Edgy Joke. It has **64 original, curated, short stories** (16 per category), shuffles until each category is exhausted, and never uses remote services, other players' chat content or automatic message schedules. Exactly one short message is attempted per direct click; a **Campfire Nearby** player buff (Forever spell 1283391) is required, with fallbacks for Forever's modern/legacy aura APIs. If the aura is unavailable or the game rejects chat, nothing is queued. An eight-second local cooldown discourages chat spam. Test aura recognition and /say hardware-click rules in the real client before Beta publishing.
+
+## KS Threat — 0.10.6 development candidate
+
+The optional seventh module KS Threat adds tank-oriented, categorical threat colors to Blizzard enemy nameplate health bars: red (aggro status 3), pink (2), violet (1), and purple (0). It is disabled by default for each character; enable it in /kool > Modules, then open KS Threat. It is a small visual layer, not a replacement for Blizzard nameplates, cast bars, KS Afflictions or KS Stealth. It never modifies native health bar values or original colors. Only hostile, engaged enemies are colored by default; disable that restriction on the module page if desired. If Forever reports threat as secret or the health bar cannot be located safely, the original Blizzard colors remain visible. Exact hidden threat percentages are not invented. This is an unpublished source candidate, not the existing 0.10.5 Beta.
