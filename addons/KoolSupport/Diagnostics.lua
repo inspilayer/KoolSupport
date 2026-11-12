@@ -8,6 +8,7 @@ local NAMES={
  {"KSStealth","KS Stealth","ks_stealth"},
  {"KSAfflictions","KS Afflictions","ks_afflictions"},
  {"KSCampfireChat","Campfire Chat","ks_campfire_chat"},
+ {"KSThreat","KS Threat","ks_threat"},
 }
 local function available(fn) return type(fn)=="function" end
 local function addonLoaded(name)
