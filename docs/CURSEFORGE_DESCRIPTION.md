@@ -64,3 +64,7 @@ KoolSupport does **not** automate healing, follow loops, rotations, combat-state
 ## Campfire Chat — planned for 0.10.5 Beta, not in older files
 
 **Campfire Chat** is an included, individually toggleable sixth module in the **0.10.5 development candidate**. Find the `Campfire Chat` page in `/kool`, then click **Joke**, **Spooky**, **Ramble**, or **Edgy Joke** to share one random, locally curated line in nearby `/say`. 64 original options (16 per category) avoid repetition until exhausted. Edgy Joke means cheeky tavern humor rather than insults toward real-world groups. Chat is gated by the actual player **Campfire Nearby** buff, with an 8-second click cooldown; there are no automatic broadcasts or queued messages. Real Forever chat-client validation and a separately approved 0.10.5 tag remain necessary before this can be advertised as already released.
+
+## Planned addition — KS Threat (0.10.6 candidate, NOT yet published)
+
+A lightweight optional tank threat overlay for Blizzard enemy nameplates: red = holding aggro; pink = high contested threat; violet = some threat; purple = little/no threat. Works as an extra visual layer rather than replacing health bars, casts or nameplates. Off by default per character, with a combat-only setting. Unsupported or secret threat states leave original Blizzard nameplate colors intact. This seventh module will be included in the same KoolSupport ZIP after live Forever testing and a separately approved future release.
