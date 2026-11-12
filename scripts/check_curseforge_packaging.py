@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the single-project CurseForge ZIP: all six sibling WoW addon folders.
+"""Validate the single-project CurseForge ZIP: all seven sibling WoW addon folders.
 
 Run without arguments for static .pkgmeta validation. Pass --built-zip to
 inspect the real packager output (CI uses BigWigsMods/packager@v2 -d).
@@ -10,7 +10,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / ".pkgmeta"
-ADDONS = ("KoolSupport", "KSMacros", "KSSupportSessions", "KSStealth", "KSAfflictions", "KSCampfireChat")
+ADDONS = ("KoolSupport", "KSMacros", "KSSupportSessions", "KSStealth", "KSAfflictions", "KSCampfireChat", "KSThreat")
 
 def fields(text):
     current = None
@@ -44,7 +44,7 @@ def validate_meta():
     assert meta["license-output"] == "LICENSE"
     expected = {f"KoolSupport/addons/{name}": name for name in ADDONS}
     assert dict(meta["move-folders"]) == expected, (
-        "All six modules must be placed at sibling Interface/AddOns paths"
+        "All seven modules must be placed at sibling Interface/AddOns paths"
     )
     ignored = set(meta["ignore"])
     required = {"docs", "tests", "scripts", "preview", "legacy", ".github", "README.md"}
@@ -56,7 +56,7 @@ def validate_meta():
     vendor = ROOT / "addons" / "KSAfflictions" / "Vendor"
     assert (vendor / "LICENSE").is_file(), "Missing DoesItDie MIT license"
     assert (vendor / "NOTICE.md").is_file(), "Missing DoesItDie modification notice"
-    print("PASS CurseForge .pkgmeta: single project, all 6 sibling modules, dev files excluded")
+    print("PASS CurseForge .pkgmeta: single project, all 7 sibling modules, dev files excluded")
 
 def validate_zip(path):
     with zipfile.ZipFile(path) as package:
@@ -82,7 +82,7 @@ def validate_zip(path):
     assert "KSAfflictions/Vendor/LICENSE" in names
     assert "KSAfflictions/Vendor/NOTICE.md" in names
     assert not any("/addons/" in n or n.startswith(("addons/", "docs/", "tests/")) for n in names)
-    print(f"PASS CurseForge packager dry run: {len(names)} files in 6 sibling addon directories")
+    print(f"PASS CurseForge packager dry run: {len(names)} files in 7 sibling addon directories")
     print(path)
 
 if __name__ == "__main__":
