@@ -116,7 +116,9 @@ end
 function A:PaintPlate(plate)
  if not KoolSupport:IsModuleEnabled("ks_threat") then self:HidePlate(plate);return end
  local unit=plate and plate.namePlateUnitToken
- local state=self:ThreatState(unit)
+ local safeUnit,known=safeValue(unit)
+ if not known then self:HidePlate(plate);return end
+ local state=self:ThreatState(safeUnit)
  if state==nil then self:HidePlate(plate);return end
  local native=self:HealthBar(plate)
  if not native then self:HidePlate(plate);return end
@@ -163,7 +165,10 @@ for _,event in ipairs({
 }) do driver:RegisterEvent(event) end
 driver:SetScript("OnEvent",function(_,event,unit)
  -- Only refresh for nameplate units. A missing unit is a global update.
- if (event=="UNIT_THREAT_LIST_UPDATE" or event=="UNIT_THREAT_SITUATION_UPDATE")
-    and type(unit)=="string" and not unit:match("^nameplate%d+$") then return end
+ if event=="UNIT_THREAT_LIST_UPDATE" or event=="UNIT_THREAT_SITUATION_UPDATE" then
+  local token,known=safeValue(unit)
+  if not known then return end
+  if type(token)=="string" and not token:match("^nameplate%d+$") then return end
+ end
  A:RefreshAll()
 end)
