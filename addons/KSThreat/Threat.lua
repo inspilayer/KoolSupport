@@ -163,12 +163,8 @@ for _,event in ipairs({
  "UNIT_THREAT_LIST_UPDATE","UNIT_THREAT_SITUATION_UPDATE",
  "NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED",
 }) do driver:RegisterEvent(event) end
-driver:SetScript("OnEvent",function(_,event,unit)
- -- Only refresh for nameplate units. A missing unit is a global update.
- if event=="UNIT_THREAT_LIST_UPDATE" or event=="UNIT_THREAT_SITUATION_UPDATE" then
-  local token,known=safeValue(unit)
-  if not known then return end
-  if type(token)=="string" and not token:match("^nameplate%d+$") then return end
- end
+driver:SetScript("OnEvent",function()
+ -- Some clients emit threat updates for "target" rather than nameplateN.
+ -- Refresh only currently visible plates; never poll on every rendered frame.
  A:RefreshAll()
 end)
