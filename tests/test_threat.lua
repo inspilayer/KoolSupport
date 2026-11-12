@@ -84,6 +84,15 @@ assert(overlay.value==secret and overlay.max==secret,"Opaque health passes ONLY 
 assert(native.value==nil and native.color==nil and native.min==nil,
  "Threat overlay must not mutate Blizzard's native health bar")
 assert(overlay.mouse==false and not overlay.hidden)
+local driver
+for _,frame in ipairs(frames) do
+ if frame.events and frame.events.UNIT_THREAT_LIST_UPDATE then driver=frame;break end
+end
+assert(driver and driver.events.NAME_PLATE_UNIT_ADDED and driver.events.PLAYER_REGEN_DISABLED)
+state=2
+driver.scripts.OnEvent(driver,"UNIT_THREAT_LIST_UPDATE","target")
+assert(overlay.color[1]==A.COLORS[2][1],
+ "Some Forever clients report threat changes for target, not nameplate token")
 for i=0,3 do
  state=i
  A:RefreshAll()
