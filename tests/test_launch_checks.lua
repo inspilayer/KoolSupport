@@ -6,7 +6,7 @@ InCombatLockdown=function() return false end
 local toc=16001
 GetBuildInfo=function()return "11.2",12345,"Nov 3",toc end
 local loaded={
- KoolSupport=true,KSMacros=true,KSSupportSessions=true,KSStealth=true,KSAfflictions=false,KSCampfireChat=true,
+ KoolSupport=true,KSMacros=true,KSSupportSessions=true,KSStealth=true,KSAfflictions=false,KSCampfireChat=true,KSThreat=true,
 }
 C_AddOns={IsAddOnLoaded=function(name)return loaded[name] or false end}
 C_SpellBook={GetNumSpellBookSkillLines=function()end,GetSpellBookItemInfo=function()end}
@@ -38,14 +38,15 @@ assert(loadfile("addons/KoolSupport/Core.lua"))()
 assert(loadfile("addons/KoolSupport/Diagnostics.lua"))()
 assert(loadfile("addons/KoolSupport/UI.lua"))()
 local KS=KoolSupport
-assert(KS.VERSION=="0.10.5-rc.1")
+assert(KS.VERSION=="0.10.6-rc.1")
 KS:RegisterModule({id="ks_macros",title="KS Macros",apiVersion=1,defaultEnabled=true})
 KS:RegisterModule({id="ks_support_sessions",title="KS Support Sessions",apiVersion=1,defaultEnabled=true,requires={"ks_macros"}})
 KS:RegisterModule({id="ks_stealth",title="KS Stealth",apiVersion=1,defaultEnabled=true})
 KS:RegisterModule({id="ks_afflictions",title="KS Afflictions",apiVersion=1,defaultEnabled=true})
 KS:RegisterModule({id="ks_campfire_chat",title="Campfire Chat",apiVersion=1,defaultEnabled=true})
+KS:RegisterModule({id="ks_threat",title="KS Threat",apiVersion=1,defaultEnabled=false})
 local rows=KS:CollectLaunchChecks()
-assert(#rows==12,"build + 6 modules + 5 capability checks")
+assert(#rows==13,"build + 7 addons + 5 capability checks")
 local map={}
 for _,r in ipairs(rows)do map[r.id]=r end
 assert(map.interface.status=="MATCH")
@@ -53,6 +54,7 @@ assert(map.KoolSupport.status=="ENABLED","base must not require module registry"
 assert(map.KSMacros.status=="ENABLED")
 assert(map.KSAfflictions.status=="MISSING")
 assert(map.KSCampfireChat.status=="ENABLED")
+assert(map.KSThreat.status=="OFF")
 assert(map.traits.status=="PRESENT")
 assert(map.spellbook.status=="PRESENT")
 assert(map.tooltip.status=="PRESENT")
@@ -71,7 +73,7 @@ rows=KS:CollectLaunchChecks()
 for _,r in ipairs(rows)do if r.id=="spellbook" then assert(r.status=="UNAVAILABLE") end end
 -- API detection does not read any combat resources, even in combat.
 InCombatLockdown=function()return true end
-assert(#KS:CollectLaunchChecks()==12)
+assert(#KS:CollectLaunchChecks()==13)
 assert(KS:CanOpenPage("launch_checks"))
 local parent=frame()
 KS.pages.launch_checks.build(parent)
