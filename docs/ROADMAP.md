@@ -149,3 +149,11 @@ User reference from November 5 shows a health bar with purple estimated-DoT port
 - **Defensive rules:** fail closed on unavailable or secret aura data; no client-wide chat monitoring, external services, timers, bots, macros, unattended or multi-client activity. Never bypass protected outdoor chat APIs. Do not create more than one `SAY` line per click.
 - **Testing:** offline runtime tests for exact buff detection, unavailable API, wrong buff, no-sends on load/events, SAY-only, 240-byte maximum, cooldown, no repeats, module disabled, native GUI, and the six-folder packager. CI and manual inspection before merge.
 - **Unfinished client gate:** test the player-buff API and click-to-SAY under current Forever game rules, especially with a real campfire and a second nearby player; observe /say throttling and buff disappearance. No new tag, public upload or stable claim without explicit approval. Tagged 0.10.4 is immutable.
+
+## 0.10.6 RC — Lightweight tank nameplate threat colors (November 11, 2026)
+
+User wants a minimal enemy health-bar threat modifier, avoiding ThreatPlates. Four categorical tank colors run from red when securely holding aggro, through pink and violet, to purple with little/no threat. This is not a smooth numeric gradient because Forever can conceal exact threat percentages.
+
+Implementation: an optional KS Threat seventh sibling addon, disabled per character by default, with combat-only and purple-zero options. Resolve default enemy nameplate health StatusBars and overlay with a noninteractive health-synchronized display; leave Blizzard's original health/statusbar untouched. Detect status via guarded UnitThreatSituation calls; never inspect protected/secret threat numbers or perform arithmetic on secret health. Hide overlay if required APIs or native bars are missing. Event-driven, no perpetual frame polling.
+
+Offline acceptance: colors for status 0–3; hostile/engaged controls; secret-value fallbacks; native bar unmodified; transitions, nameplate removal, disabled module, saved data unchanged, seven-addon packaging and cold boot. Live gate: test Druid tank on several mobs, gains/losses, combat entry/exit, threat-state mapping, target text and KS Afflictions/Stealth compatibility. No owner-approved release or tag yet.

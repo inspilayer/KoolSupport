@@ -49,7 +49,7 @@ UISpecialFrames={}
 local sentinel={preserved=true}
 KoolSupportDB={untouched=sentinel}
 KSAfflictionsTrackerDB={untouched=sentinel}
-local addons={"KoolSupport","KSMacros","KSSupportSessions","KSStealth","KSAfflictions","KSCampfireChat"}
+local addons={"KoolSupport","KSMacros","KSSupportSessions","KSStealth","KSAfflictions","KSCampfireChat","KSThreat"}
 local ns={}
 local manifests={}
 local function loadAddon(addon)
@@ -71,11 +71,11 @@ end
 for _,name in ipairs(addons)do loadAddon(name)end
 local K=KoolSupport
 assert(K.API_VERSION==1)
-assert(K.VERSION=="0.10.5-rc.1")
+assert(K.VERSION=="0.10.6-rc.1")
 assert(K.BarTheme and K.CollectLaunchChecks)
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
- K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat)
-assert(#K.moduleOrder==5,"exactly five independently managed child modules")
+ K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat)
+assert(#K.moduleOrder==6,"exactly six independently managed child modules")
 for _,id in ipairs({"home","modules","launch_checks","macro_suite","full_spellbook",
  "macro_workshop","support_session","stealth","stealth_talents","afflictions","campfire_chat"}) do
  assert(K.pages[id] and K:CanOpenPage(id),"page must be registered: "..id)
@@ -84,6 +84,12 @@ assert(K:GetModule("ks_support_sessions").requires[1]=="ks_macros")
 assert(K:GetModule("ks_stealth").requires[1]==nil)
 assert(K:GetModule("ks_afflictions").requires[1]==nil)
 assert(K:GetModule("ks_campfire_chat").requires[1]==nil)
+assert(K:GetModule("ks_threat").requires[1]==nil)
+assert(not K:IsModuleEnabled("ks_threat"),"Threat module must be opt in")
+assert(not K:CanOpenPage("ks_threat"),"Opt-in module page hidden until enabled")
+assert(K:SetModuleEnabled("ks_threat",true))
+assert(K:CanOpenPage("ks_threat"))
+assert(K:SetModuleEnabled("ks_threat",false))
 assert(K:CanOpenPage("campfire_chat"))
 assert(ns.locale and ns.tracking and ns.display,"vendored Locale, Tracker and Bridge must share namespace")
 assert(type(ns.tracking.housekeep)=="function")

@@ -29,7 +29,7 @@ local function buildHome(parent)
   button(parent, "Full Spellbook", 246, -122, 190, function() KS:ShowPage("full_spellbook") end)
   button(parent, "Custom Builder", 456, -122, 190, function() KS:ShowPage("macro_workshop") end)
   button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
-  label(parent, "One CurseForge package includes all six modules. Optional features are controlled in Modules.", 20, -227, 775)
+  label(parent, "One CurseForge package includes all seven modules. Optional features are controlled in Modules.", 20, -227, 775)
   label(parent, MUTED .. "0.10.x Beta candidate: launch-client verification required before stable.|r", 20, -270, 760)
 end
 local function buildModules(parent)
@@ -71,7 +71,7 @@ end
 local function redrawNavigation()
   if not navigation then return end
   for _, item in pairs(navButtons) do item:Hide() end
-  local ordered = {"home", "modules", "launch_checks", "campfire_chat", "macro_suite", "full_spellbook", "macro_workshop", "support_session", "stealth"}
+  local ordered = {"home", "modules", "launch_checks", "ks_threat", "campfire_chat", "macro_suite", "full_spellbook", "macro_workshop", "support_session", "stealth"}
   local seen = {}
   local index = 0
   local function addPage(id)
