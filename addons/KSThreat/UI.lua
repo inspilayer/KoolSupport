@@ -65,6 +65,5 @@ function A.BuildPage(parent)
   details:SetText(second)
  end
  button(parent,"Diagnose visible plates",20,-493,293,inspect)
- label(parent,MUTED.."If no enemies are visible, enable enemy nameplates (V) and check during a pull.",20,-599,770,"GameFontHighlightSmall")
  inspect()
 end
