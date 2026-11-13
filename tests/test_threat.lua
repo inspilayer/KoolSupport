@@ -88,7 +88,8 @@ local driver
 for _,frame in ipairs(frames) do
  if frame.events and frame.events.UNIT_THREAT_LIST_UPDATE then driver=frame;break end
 end
-assert(driver and driver.events.NAME_PLATE_UNIT_ADDED and driver.events.PLAYER_REGEN_DISABLED)
+assert(driver and driver.events.NAME_PLATE_UNIT_ADDED and driver.events.PLAYER_REGEN_DISABLED
+ and driver.events.UNIT_HEALTH and driver.events.UNIT_MAXHEALTH)
 state=2
 driver.scripts.OnEvent(driver,"UNIT_THREAT_LIST_UPDATE","target")
 assert(overlay.color[1]==A.COLORS[2][1],
