@@ -79,6 +79,17 @@ toc:close()
 for module,count in pairs(counts) do
  assert(count>0,"Unified TOC omitted all Lua from "..module)
 end
+-- The vendored Afflictions tracker is now owned by the single KoolSupport
+-- physical addon, so it must initialize on ADDON_LOADED("KoolSupport")
+-- rather than the old sibling-addon name "KSAfflictions".
+local trackerInitialized=false
+for _,frame in ipairs(fns) do
+ if frame.events and frame.events.ADDON_LOADED and type(frame.OnEvent)=="function" then
+  frame.OnEvent(frame,"ADDON_LOADED","KoolSupport")
+  if ns.db==KSAfflictionsTrackerDB then trackerInitialized=true end
+ end
+end
+assert(trackerInitialized,"Afflictions tracker must initialize in the new host addon namespace")
 local K=KoolSupport
 assert(K.API_VERSION==1)
 assert(K.VERSION=="0.10.8-rc.1")
