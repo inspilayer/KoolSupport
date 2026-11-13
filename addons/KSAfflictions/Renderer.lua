@@ -396,36 +396,44 @@ local function ensureCurve(record,total)
   record.curveCutoff=cutoff
   return curve
 end
+A.minimalReasons=A.minimalReasons or {}
+function A:NoteMinimalReason(unit,reason)
+  if type(unit)=="string" and (unit=="target" or unit=="focus" or
+    unit:match("^nameplate%d+$")) then
+    self.minimalReasons[unit]=reason
+  end
+end
 function A:PaintMinimal(cache,key,native,unit)
   local record=cache[key]
   if not nativeVisible(native) or not unit then
+    self:NoteMinimalReason(unit,"native_bar_unavailable")
     hideMinimal(record)
     return
   end
   local total,reason=self:LethalEvidence(unit)
   if not total then
-    self.lastMinimalReason=reason or "untrusted_estimate"
+    self:NoteMinimalReason(unit,reason or "untrusted_estimate")
     hideMinimal(record)
     return
   end
   if type(UnitHealth)~="function" or type(issecretvalue)~="function" then
-    self.lastMinimalReason="health_api_unavailable"
+    self:NoteMinimalReason(unit,"health_api_unavailable")
     hideMinimal(record)
     return
   end
   local ok,health=pcall(UnitHealth,unit)
-  if not ok then self.lastMinimalReason="health_unavailable";hideMinimal(record);return end
+  if not ok then self:NoteMinimalReason(unit,"health_unavailable");hideMinimal(record);return end
   local checked,secret=pcall(issecretvalue,health)
-  if not checked then self.lastMinimalReason="health_unavailable";hideMinimal(record);return end
+  if not checked then self:NoteMinimalReason(unit,"health_unavailable");hideMinimal(record);return end
   if not secret then
     -- Arithmetic/branching only on a proven nonsecret numeric value.
     if type(health)~="number" or health~=health or health<=0 or total<health then
-      self.lastMinimalReason="not_lethal"
+      self:NoteMinimalReason(unit,"not_lethal")
       hideMinimal(record)
       return
     end
     record=self:EnsureMinimal(cache,key,native)
-    if not record then self.lastMinimalReason="unsupported_frame";return end
+    if not record then self:NoteMinimalReason(unit,"unsupported_frame");return end
     local painted=pcall(record.word.SetTextColor,record.word,.83,1,.84,1)
     if not painted then hideMinimal(record);return end
     record.mode="readable"
@@ -433,22 +441,22 @@ function A:PaintMinimal(cache,key,native,unit)
     -- A supported native widget evaluates SECRET health without inspecting,
     -- comparing, formatting, logging or transferring it into addon arithmetic.
     record=self:EnsureMinimal(cache,key,native)
-    if not record then self.lastMinimalReason="unsupported_frame";return end
+    if not record then self:NoteMinimalReason(unit,"unsupported_frame");return end
     local curve=ensureCurve(record,total)
     if not curve then
-      self.lastMinimalReason="secret_curve_unavailable"
+      self:NoteMinimalReason(unit,"secret_curve_unavailable")
       hideMinimal(record)
       return
     end
     local evaluated,r,g,b,a=pcall(curve.EvaluateUnpacked,curve,health)
     if not evaluated then
-      self.lastMinimalReason="secret_curve_rejected"
+      self:NoteMinimalReason(unit,"secret_curve_rejected")
       hideMinimal(record)
       return
     end
     local painted=pcall(record.word.SetTextColor,record.word,r,g,b,a)
     if not painted then
-      self.lastMinimalReason="secret_text_rejected"
+      self:NoteMinimalReason(unit,"secret_text_rejected")
       hideMinimal(record)
       return
     end
@@ -456,7 +464,7 @@ function A:PaintMinimal(cache,key,native,unit)
   end
   record.unit=unit
   record.active=true -- eligible for refresh, NOT a Lua assertion of secret lethality
-  self.lastMinimalReason=record.mode
+  self:NoteMinimalReason(unit,record.mode)
   record.frame:Show()
 end
 function A:AnyMinimalShown()
