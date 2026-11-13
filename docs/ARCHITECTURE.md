@@ -1,6 +1,6 @@
 # KoolSupport modular architecture
 
-Updated 2026-11-03 — current candidate **0.10.1-rc.1**. Already-approved 0.10.0 Beta remains immutable; live Forever verification is still required before a stable release.
+Updated November 13, 2026 — candidate 0.10.8 consolidates the installed AddOns folder; historical architecture notes below remain for previously published versions.
 
 ## Physical dependency graph
 
@@ -144,3 +144,16 @@ Preflight wrappers for native `GetMacroIndexByName`, `GetMacroBody`, and `GetNum
 ## 0.10.6 candidate — KS Threat
 
 A seventh sibling addon, addons/KSThreat, depends only on KoolSupport Base. Module ID ks_threat, page ks_threat, OFF by default per character. Color states: 3 red (aggro), 2 pink (contested), 1 violet (low), 0 purple (none/very low). The threat situation, hostility, engaged status, and nameplate unit token are guarded against secret values; hidden or unsupported values fail closed. UnitHealth and UnitHealthMax are passed directly to the addon's own StatusBar setters and never compared, formatted, or evaluated. An independent mouse-transparent StatusBar follows a recognized native enemy health bar, retaining its underlying layout, data, labels, cast bar and saved settings; the original bar is never changed. No background OnUpdate polling: only nameplate, threat and combat events. Independent of KS Afflictions and KS Stealth; actual client layering must be verified. No new tag or CurseForge release.
+
+
+## 0.10.8 RC — single physical KoolSupport addon (authoritative, Nov 13 2026)
+
+The older sibling-addon topology documented above is valid for tags through 0.10.6 but is intentionally superseded in 0.10.8. **New installed topology:** one `Interface/AddOns/KoolSupport/KoolSupport.toc` with Base + all six optional Lua groups under `Interface/AddOns/KoolSupport/Modules/<module>/`. No other separately loadable TOCs are shipped. The in-game `KoolSupport:RegisterModule` registry, dependency requirements, default-off KS Threat and saved per-character module preferences work unchanged; disabling a module hides its page/active behavior but Lua remains loaded until a reload. In the source repository, module files remain under `addons/<module>` so individual offline tests can isolate them.
+
+`.pkgmeta` moves `KoolSupport/addons/KoolSupport` to `KoolSupport` and the other `KoolSupport/addons/<module>` directories to `KoolSupport/Modules/<module>`, excluding each child .toc to avoid accidental discovery. `KoolSupport.toc` explicitly lists every module Lua in the preserved dependency and locale/tracker order. Python development packages use exactly that same mapping. CI validates source-to-TOC order, one-root standard ZIP, and a real BigWigs/CurseForge dry-run ZIP.
+
+**Critical migration:** WoW stores SavedVariables in a file associated with the loading addon's *folder name*. `KoolSupportDB` is per-character and retains its `KoolSupport` host, so it should persist. `KSAfflictionsTrackerDB` is account-wide, previously written by `KSAfflictions.toc` to `WTF/Account/<account>/SavedVariables/KSAfflictions.lua`. It is now declared in the unified `KoolSupport.toc` and written under `KoolSupport.lua`. To preserve history, back up and copy the old file to `KoolSupport.lua` when that destination does not exist, or carefully merge the tracker variable without overwriting other data when it does. No automatic read of the old file is possible from the new WoW addon; neither original file nor in-game DB is deleted by the package.
+
+Before extracting the one-folder ZIP, remove the six *old top-level* module addon directories after backing them up. Otherwise WoW may load old and new code and raise duplicate module registration errors. They are now nested inside KoolSupport/Modules, not discoverable as separate AddOns. Do not overwrite or delete any WTF files by default. The vendor MIT license/notice remains under Modules/KSAfflictions/Vendor.
+
+**Runtime namespace:** WoW passes the single addon name `KoolSupport` and shared table `ns` to every Lua in the unified TOC. This lets the vendored tracker handle `ADDON_LOADED('KoolSupport')` correctly. The unified boot regression emulates this shared namespace; earlier per-module namespace tests remain for isolated engine behavior.
