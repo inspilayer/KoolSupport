@@ -2,7 +2,7 @@
 ## Title: KS Threat
 ## Notes: Lightweight, tank-first four-state threat colors for Blizzard enemy nameplates.
 ## Author: InspiLayer
-## Version: 0.10.9-rc.1
+## Version: 0.10.9-rc.2
 ## Dependencies: KoolSupport
 
 Threat.lua
