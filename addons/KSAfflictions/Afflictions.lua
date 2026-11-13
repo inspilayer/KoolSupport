@@ -4,12 +4,13 @@ local _, ns = ...
 KSAfflictions = KSAfflictions or {}
 local A = KSAfflictions
 A.API_VERSION = 1
--- All new installs use Modern KS, retaining the old display keys for upgrades.
-A.DEFAULTS = { target=true, focus=true, nameplates=true, lethal=true, onFrame=false,
+-- Centered DIES is the default; historical visual preferences are retained.
+A.DEFAULTS = { target=true, focus=true, nameplates=true, lethal=true, onFrame=false, displayMode="centered",
   schoolColors=true, showLabels=true, showIcons=true, scale=1, height=15, offsetY=7,
   style="modern", lethalMode="dies", dotColor="purple",
   lethalTarget=true, lethalFocus=true, lethalNameplates=true }
 A.ENUMS = {
+  displayMode={centered=true,onframe=true,panels=true},
   style={modern=true,classic=true,minimal=true},
   lethalMode={dies=true,skull=true,both=true,off=true},
   dotColor={purple=true,gold=true,red=true,school=true}
@@ -22,6 +23,23 @@ function A:Store()
   db.modules = db.modules or {}
   db.modules.ks_afflictions = db.modules.ks_afflictions or {}
   local mine = db.modules.ks_afflictions
+  -- There was no explicit mode key before 0.10.9: onFrame=false was written
+  -- automatically even for users who never chose it. Preserve detectable
+  -- deliberate advanced choices, and migrate default-equivalent saves to DIES.
+  if mine.displayMode==nil then
+    local advanced=mine.style~=nil and mine.style~="modern"
+      or (mine.dotColor~=nil and mine.dotColor~="purple")
+      or (mine.lethalMode~=nil and mine.lethalMode~="dies")
+      or (mine.showIcons==false or mine.showLabels==false)
+      or (mine.scale~=nil and mine.scale~=1)
+      or (mine.height~=nil and mine.height~=15)
+      or (mine.offsetY~=nil and mine.offsetY~=7)
+      or (type(mine.hudPositions)=="table"
+          and (mine.hudPositions.target~=nil or mine.hudPositions.focus~=nil))
+    if mine.onFrame==true then mine.displayMode="onframe"
+    elseif advanced then mine.displayMode="panels"
+    else mine.displayMode="centered" end
+  end
   for k,v in pairs(self.DEFAULTS) do if mine[k]==nil then mine[k]=v end end
   return mine
 end
@@ -86,6 +104,60 @@ function A:Snapshot(unit)
   if not ok or type(dots)~="table" or type(total)~="number" then return {},0 end
   return dots,total
 end
+
+-- Strict visibility decision for the text-only display. A clipping StatusBar
+-- cannot reliably convert secret health into an exact Lua-visible Boolean.
+-- We NEVER compare secret values, and we NEVER assume that a partial fill is
+-- lethal. Secret/unsupported health therefore results in no label.
+local function readable(value)
+  if type(issecretvalue)~="function" then return false end
+  local ok,hidden=pcall(issecretvalue,value)
+  return ok and hidden==false
+end
+local function knownCall(fn,...)
+  if type(fn)~="function" then return nil,false end
+  local ok,value=pcall(fn,...)
+  if not ok or not readable(value) then return nil,false end
+  return value,true
+end
+local function finiteNumber(n)
+  return type(n)=="number" and n==n and n>=0 and n<math.huge
+end
+function A:ConfirmedLethal(unit)
+  if unit~="target" and unit~="focus"
+    and (type(unit)~="string" or not unit:match("^nameplate%d+$")) then return false end
+  if not self:TrackerReady() or not self:LethalOn(unit) then return false end
+  local exists,valid=knownCall(UnitExists,unit)
+  if not valid or exists~=true then return false end
+  local hostile,hostileKnown=knownCall(UnitCanAttack,"player",unit)
+  if not hostileKnown or hostile~=true then return false end
+  if type(ns.tracking)~="table" or type(ns.tracking.unitKey)~="function" then return false end
+  local key,keyKnown=knownCall(ns.tracking.unitKey,unit)
+  if not keyKnown or type(key)~="string" or key=="" then return false end
+  -- The vendor's secret-GUID fallback "target" must never identify a focus/plate.
+  if key=="target" and unit~="target" then return false end
+  local dots,total=self:Snapshot(unit)
+  if #dots==0 or not readable(total) or not finiteNumber(total) or total<=0 then return false end
+  local now,timeKnown=knownCall(GetTime)
+  if not timeKnown or not finiteNumber(now) then return false end
+  local sum=0
+  for _,dot in ipairs(dots) do
+    if type(dot)~="table" or dot.provisional
+      or not readable(dot.damage) or not finiteNumber(dot.damage)
+      or not readable(dot.expiresAt) or not finiteNumber(dot.expiresAt)
+      or dot.expiresAt<=now then return false end
+    sum=sum+dot.damage
+  end
+  if not finiteNumber(sum) or math.abs(sum-total)>0.01 then return false end
+  local health,healthKnown=knownCall(UnitHealth,unit)
+  if not healthKnown or not finiteNumber(health) or health<=0 then return false end
+  local after,afterKnown=knownCall(ns.tracking.unitKey,unit)
+  if not afterKnown or after~=key then return false end
+  -- Only nonsecret health reaches the comparison. It is deliberately NOT
+  -- attempted for secret health even if a StatusBar might visually clamp.
+  return total>=health
+end
+
 function A:ChangeSetting(key,value)
   if KoolSupport:IsInCombat() then return false,"Change display settings outside combat" end
   if self.DEFAULTS[key]==nil then return false,"Unknown option" end
@@ -99,7 +171,11 @@ function A:ChangeSetting(key,value)
   elseif key=="height" then value=math.max(9,math.min(25,value))
   elseif key=="offsetY" then value=math.max(-20,math.min(50,value))
   end
-  self:Store()[key]=value
+  local mine=self:Store()
+  mine[key]=value
+  -- Backward-compatible old toggle for callers that still use onFrame.
+  if key=="onFrame" then mine.displayMode=value and "onframe" or "panels" end
+  if key=="displayMode" then mine.onFrame=(value=="onframe") end
   if self.RefreshAll then self:RefreshAll() end
   return true
 end
