@@ -284,4 +284,16 @@ A:RefreshAll()
 assert(target.frame.hidden and focus.frame.hidden and lethalPlate.frame.hidden)
 assert(KSThreat.plates[plateA].overlay==threatOverlay and not threatOverlay.hidden)
 assert(KSStealth.plates[plateB].holder==stealthOverlay and not stealthOverlay.hidden)
+-- An explicit diagnostic must expose the independent tracker estimate and a
+-- categorical protected-health state, NEVER the secret HP value itself.
+health.target=secret
+local report=A:DiagnosticLine("target")
+assert(report:find("HP secret",1,true) and report:find("estimated 600",1,true))
+assert(report:find("gate ready",1,true))
+assert(not report:find("guid-",1,true),"Do not print internal creature identifiers")
+assert(A:DiagnosticLine("player")=="invalid unit")
+UnitIsDeadOrGhost=function()return true end
+local total,reason=A:LethalEvidence("target")
+assert(total==nil and reason=="dead_unit","Known dead units cannot show DIES")
+
 print("PASS centered DIES: migration, attribution, secrets, expiry, healing, bars, event/compatibility")
