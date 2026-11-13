@@ -61,7 +61,9 @@ CreateFrame=function(kind)
 end
 UIParent=mk();TargetFrame=mk();FocusFrame=mk()
 TargetFrameHealthBar=mk("StatusBar");FocusFrameHealthBar=mk("StatusBar")
-UnitHealth=function()return secret end
+local readableHealth=secret
+UnitHealth=function()return readableHealth end
+UnitCanAttack=function(_,unit)return true end
 UnitHealthMax=function()return secret end
 UnitExists=function()return true end
 GetTime=function()return 100 end
@@ -69,7 +71,7 @@ local plate=mk();plate.namePlateUnitToken="nameplate1"
 C_NamePlate={GetNamePlates=function()return {plate}end}
 local dots={{name="Rip",spellID=1234,school=1,expiresAt=110,damage=600}}
 C_Spell={GetSpellTexture=function(id) if id==1234 then return "Interface\\\\Icons\\\\Ability_GhoulFrenzy" end end}
-local ns={db={},tracking={housekeep=function()end},
+local ns={db={},tracking={housekeep=function()end,unitKey=function(unit)return "guid-"..unit end},
  dotBreakdownForUnit=function(unit)
   assert(unit=="target" or unit=="focus" or unit=="nameplate1")
   return dots,600
@@ -120,20 +122,31 @@ A:RefreshAll()
 assert(A.huds.target.health.value==secret,"secret must pass untouched to StatusBar")
 assert(A.huds.target.dot.value==600)
 assert(A.plates[plate].dot.value==600)
-assert(A.huds.target.lethalWord.hidden==false,"DIES text should be active")
-assert(A.huds.target.lethalIcon.hidden==true,"skull hidden in DIES mode")
-assert(A.plates[plate].lethalWord.hidden==false,"nameplate DIES enabled by default")
+assert(A.huds.target.lethalWord.hidden==true,
+  "Legacy displays must never show DIES for secret health")
+assert(A.plates[plate].lethalWord.hidden==true)
+readableHealth=400
+A:RefreshAll()
+assert(not A.huds.target.lethalWord.hidden,
+  "Readably lethal estimate should enable legacy DIES")
+assert(A.huds.target.lethalWord.point[1]=="CENTER" and
+  A.huds.target.lethalWord.point[2]==A.huds.target.health,
+  "Panel DIES should be centered on its own health bar, not off to the right")
+assert(not A.plates[plate].lethalWord.hidden and
+  A.plates[plate].lethalWord.point[2]==A.plates[plate].health,
+  "Legacy nameplate alert stays centered on its own health bar")
+assert(A.huds.target.lethalIcon.hidden)
 assert(A:ChangeSetting("lethalMode","skull"))
-assert(A.huds.target.lethalWord.hidden==true)
-assert(A.huds.target.lethalIcon.hidden==false)
+assert(A.huds.target.lethalWord.hidden)
+assert(not A.huds.target.lethalIcon.hidden)
 assert(A:ChangeSetting("lethalMode","both"))
-assert(A.huds.target.lethalWord.hidden==false and A.huds.target.lethalIcon.hidden==false)
+assert(not A.huds.target.lethalWord.hidden and not A.huds.target.lethalIcon.hidden)
 assert(A:ChangeSetting("lethalMode","off"))
-assert(A.huds.target.lethalClip.hidden==true,"off must hide the lethal clip")
+assert(A.huds.target.lethalWord.hidden and A.huds.target.lethalIcon.hidden)
 assert(A:ChangeSetting("lethalMode","dies"))
 assert(A:ChangeSetting("lethalTarget",false))
-assert(A.huds.target.lethalClip.hidden==true)
-assert(A.plates[plate].lethalClip.hidden==false)
+assert(A.huds.target.lethalWord.hidden)
+assert(not A.plates[plate].lethalWord.hidden)
 assert(A:ChangeSetting("lethalTarget",true))
 
 -- Independent, per-character Target/Focus dragging. Never move nameplate HUDs.
@@ -189,8 +202,10 @@ assert(onTarget and onFocus,"Both unit health bars get independent overlays")
 assert(onTarget.allPoints==TargetFrameHealthBar and onFocus.allPoints==FocusFrameHealthBar)
 assert(not A.onFrameHUDs.nameplate1,"Nameplate HUDs stay independent")
 assert(onTarget.dot.value==600 and onTarget.dot.max==secret,"Estimated damage uses a separate StatusBar with opaque health max")
-assert(onTarget.lethal.max==secret,"Opaque health is passed through without comparing")
-assert(not onTarget.lethalClip.hidden and not onTarget.lethalWord.hidden)
+assert(not onTarget.lethalWord.hidden,"Verified readable lethal estimate should show DIES")
+assert(onTarget.lethalWord.point[1]=="CENTER" and
+  onTarget.lethalWord.point[2]==onTarget,
+  "On-frame alert must be centered INSIDE the native health-bar overlay")
 assert(not onTarget.icons[1].hidden and onTarget.icons[2].hidden)
 assert(A.huds.target.hidden and A.huds.focus.hidden,"On-frame replaces bulky unit panels")
 assert(not A.plates[plate].hidden,"Nameplate options stay unchanged")
