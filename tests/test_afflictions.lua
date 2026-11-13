@@ -66,6 +66,7 @@ UnitHealth=function()return readableHealth end
 UnitCanAttack=function(_,unit)return true end
 UnitHealthMax=function()return secret end
 UnitExists=function()return true end
+UnitIsDeadOrGhost=function()return false end
 GetTime=function()return 100 end
 local plate=mk();plate.namePlateUnitToken="nameplate1"
 C_NamePlate={GetNamePlates=function()return {plate}end}
