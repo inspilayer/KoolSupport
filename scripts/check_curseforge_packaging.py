@@ -77,6 +77,10 @@ def validate_zip(path):
     expected = mapping()
     extras = names - expected
     allowed_extras = {'KoolSupport/LICENSE', 'KoolSupport/CHANGELOG.md'}
+    # The upstream packager emits one project LICENSE into every destination
+    # moved by move-folders, including nested module directories. This is
+    # expected, safe and helps retain license information for each module.
+    allowed_extras.update(f'KoolSupport/Modules/{module}/LICENSE' for module in MODULES)
     assert expected.issubset(names), f'Missing packaged files: {sorted(expected - names)}'
     assert extras.issubset(allowed_extras), f'Unexpected packager extras: {sorted(extras)}'
     assert {n.split('/', 1)[0] for n in names} == {'KoolSupport'}, 'Only one AddOns root is permitted'
