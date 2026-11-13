@@ -36,6 +36,7 @@ local function mk(kind)
  function f:SetMinMaxValues(min,max)self.min=min;self.max=max end
  function f:SetValue(value)self.value=value end
  function f:SetText(t)self.text=t end
+ function f:SetAlpha(v)self.alpha=v end
  function f:SetChecked(v)self.checked=v end
  function f:GetChecked()return self.checked end
  function f:Show()self.hidden=false end
