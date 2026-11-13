@@ -68,7 +68,8 @@ TargetFrameHealthBar=mk("StatusBar");FocusFrameHealthBar=mk("StatusBar")
 local readableHealth=secret
 UnitHealth=function()return readableHealth end
 UnitCanAttack=function(_,unit)return true end
-UnitHealthMax=function()return secret end
+local readableMax=secret
+UnitHealthMax=function()return readableMax end
 UnitExists=function()return true end
 UnitIsDeadOrGhost=function()return false end
 GetTime=function()return 100 end
@@ -130,39 +131,40 @@ assert(A.plates[plate].dot.value==600)
 assert(A.huds.target.lethalWord.hidden==true,
   "Legacy displays must never show DIES for secret health")
 assert(A.plates[plate].lethalWord.hidden==true)
--- Legacy advanced modes must use the SAME opaque native alpha path as
--- DIES-only when Forever protects enemy health.
-CreateColor=function(r,g,b,a)return {r=r,g=g,b=b,a=a} end
+-- Legacy panels / on-frame use native UnitHealthPercent curve; direct
+-- Curve:EvaluateUnpacked(secret health) would be rejected in real Forever.
+readableMax=1000
+A:RefreshAll() -- capture max while public
+assert(A:KnownMax("target")==1000 and A:KnownMax("nameplate1")==1000)
+readableMax=secret -- simulate entering combat with secret max and HP
 Enum={LuaCurveType={Step="STEP"}}
 local nativeHiddenHealth=300
-C_CurveUtil={CreateColorCurve=function()
+local lastNativeAlpha=0
+local alphaObject=setmetatable({},{__lt=function()error("secret alpha inspected")end})
+C_CurveUtil={CreateCurve=function()
  local curve={points={}}
  function curve:SetType(t)self.kind=t end
- function curve:AddPoint(x,color)self.points[#self.points+1]={x=x,color=color} end
- function curve:EvaluateUnpacked(hp)
-  assert(rawequal(hp,secret),"Secret must flow untouched into native curve")
-  assert(#self.points==3 and self.points[1].color.a==0,
-   "Zero health must always hide a DIES label")
-  local color=nativeHiddenHealth==0 and self.points[1].color
-    or (nativeHiddenHealth<self.points[3].x and self.points[2].color
-      or self.points[3].color)
-  return color.r,color.g,color.b,color.a
- end
+ function curve:AddPoint(x,y)self.points[#self.points+1]={x=x,y=y}end
+ function curve:Evaluate()error("Do not evaluate secret input in addon Lua")end
  return curve
 end}
+UnitHealthPercent=function(unit,predicted,curve)
+ assert(predicted==false and #curve.points==3 and curve.kind=="STEP")
+ local pct=nativeHiddenHealth/1000
+ lastNativeAlpha=pct<curve.points[2].x and curve.points[1].y
+  or (pct<curve.points[3].x and curve.points[2].y or curve.points[3].y)
+ return alphaObject
+end
 A:RefreshAll()
 assert(not A.huds.target.lethalWord.hidden and not A.plates[plate].lethalWord.hidden,
- "Legacy panel/nameplate alerts must accept native secret colors")
-assert(A.huds.target.lethalWord.color==nil or A.huds.target.lethalWord.color[4]~=nil)
--- A real native widget may carry secret color values, so only the mock's
--- internal calculated alpha is visible to this test.
+ "Legacy nameplate/target alerts must accept native secret percent")
+assert(A.huds.target.lethalWord.alpha==alphaObject and lastNativeAlpha==1)
 nativeHiddenHealth=1000
 A:RefreshAll()
-assert(not A.huds.target.lethalWord.hidden,
- "The client, not Lua, decides secret-health alpha")
+assert(lastNativeAlpha==0,"Native evaluator hides nonlethal HP")
 C_CurveUtil=nil
 A:RefreshAll()
-assert(A.huds.target.lethalWord.hidden,"Without native support fail closed")
+assert(A.huds.target.lethalWord.hidden,"Without safe native support, fail closed")
 readableHealth=400
 A:RefreshAll()
 assert(not A.huds.target.lethalWord.hidden,
