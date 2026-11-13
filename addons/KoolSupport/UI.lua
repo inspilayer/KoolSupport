@@ -2,6 +2,7 @@
 local KS = KoolSupport
 local window, content, pageWidgets, currentPage, navigation
 local navButtons = {}
+local openGroup=nil
 local GOLD = "|cffffd87a"
 local MUTED = "|cff9fb4ad"
 
@@ -29,8 +30,8 @@ local function buildHome(parent)
   button(parent, "Full Spellbook", 246, -122, 190, function() KS:ShowPage("full_spellbook") end)
   button(parent, "Custom Builder", 456, -122, 190, function() KS:ShowPage("macro_workshop") end)
   button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
-  label(parent, "One CurseForge package includes all seven modules. Optional features are controlled in Modules.", 20, -227, 775)
-  label(parent, MUTED .. "0.10.x Beta candidate: launch-client verification required before stable.|r", 20, -270, 760)
+  label(parent, "One install folder with six independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
+  label(parent, MUTED .. "Development build. In-game verification is required before a public release.|r", 20, -270, 760)
 end
 local function buildModules(parent)
   label(parent, GOLD .. "Module Manager|r", 20, -22, 660, "GameFontNormalLarge")
@@ -68,31 +69,83 @@ local function clearCurrent()
   if pageWidgets then pageWidgets:Hide() end
   pageWidgets = nil
 end
+-- Compact category sidebar: only the active group expands, replacing a tall
+-- stack of bulky buttons with simple text rows. Page IDs/dependencies unchanged.
+local categories={
+  {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
+  {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_talents"}},
+  {id="social",label="SOCIAL",pages={"campfire_chat"}},
+  {id="system",label="TOOLS",pages={"launch_checks"}},
+}
+local function groupForPage(id)
+  for _,group in ipairs(categories) do
+    for _,page in ipairs(group.pages) do
+      if id==page then return group.id end
+    end
+  end
+end
+local function makeNavRow(key,action)
+  local b=navButtons[key]
+  if b then return b end
+  b=CreateFrame("Button",nil,navigation)
+  b:SetSize(177,29)
+  b:EnableMouse(true)
+  local name=b:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+  name:SetPoint("LEFT",b,"LEFT",9,0)
+  name:SetWidth(165)
+  name:SetJustifyH("LEFT")
+  b:SetFontString(name)
+  b.caption=name
+  b:SetScript("OnClick",action)
+  navButtons[key]=b
+  return b
+end
 local function redrawNavigation()
   if not navigation then return end
-  for _, item in pairs(navButtons) do item:Hide() end
-  local ordered = {"home", "modules", "launch_checks", "ks_threat", "campfire_chat", "macro_suite", "full_spellbook", "macro_workshop", "support_session", "stealth"}
-  local seen = {}
-  local index = 0
-  local function addPage(id)
-    if seen[id] or not KS:CanOpenPage(id) then return end
-    local p = KS.pages[id]
+  for _,item in pairs(navButtons) do item:Hide() end
+  local y=-14
+  local used={}
+  local function drawPage(id,indent)
+    if used[id] or not KS:CanOpenPage(id) then return end
+    local p=KS.pages[id]
     if not p then return end
-    seen[id] = true
-    local y = -18 - index * 46
-    local b = navButtons[id]
-    if not b then
-      b = button(navigation, p.title, 10, y, 176, function() KS:ShowPage(id) end)
-      navButtons[id] = b
-    end
+    used[id]=true
+    local b=makeNavRow(id,function()KS:ShowPage(id)end)
     b:ClearAllPoints()
-    b:SetPoint("TOPLEFT", navigation, "TOPLEFT", 10, y)
-    b:SetText((currentPage == id and "> " or "") .. p.title)
+    b:SetPoint("TOPLEFT",navigation,"TOPLEFT",indent and 16 or 0,y)
+    b.caption:SetText((currentPage==id and GOLD or "|cffced8d3")..
+      (p.title or id).."|r")
     b:Show()
-    index = index + 1
+    y=y-31
   end
-  for _,id in ipairs(ordered) do addPage(id) end
-  for _,id in ipairs(KS.pageOrder) do addPage(id) end
+  drawPage("home")
+  drawPage("modules")
+  y=y-8
+  for _,group in ipairs(categories) do
+    local hasPages=false
+    for _,page in ipairs(group.pages) do
+      if KS:CanOpenPage(page) and KS.pages[page] then hasPages=true;break end
+    end
+    if hasPages then
+      local key="group:"..group.id
+      local b=makeNavRow(key,function()
+        openGroup=(openGroup==group.id) and nil or group.id
+        redrawNavigation()
+      end)
+      b:ClearAllPoints()
+      b:SetPoint("TOPLEFT",navigation,"TOPLEFT",0,y)
+      b.caption:SetText((openGroup==group.id and GOLD.."v " or MUTED.."> ")..group.label.."|r")
+      b:Show()
+      y=y-33
+      if openGroup==group.id then
+        for _,page in ipairs(group.pages) do drawPage(page,true) end
+        y=y-8
+      end
+    end
+  end
+  for _,id in ipairs(KS.pageOrder) do
+    if not used[id] and not groupForPage(id) then drawPage(id) end
+  end
 end
 
 function KS:RefreshUI()
@@ -102,6 +155,9 @@ function KS:ShowPage(id)
   if not self:CanOpenPage(id) then id = "home" end
   if not window then self:Open(id); return end
   currentPage = id
+  local group=groupForPage(id)
+  if group then openGroup=group
+  elseif id=="home" or id=="modules" then openGroup=nil end
   clearCurrent()
   local pane = CreateFrame("Frame", nil, content)
   pane:SetAllPoints(content)
