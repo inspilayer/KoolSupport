@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last verified public GitHub Beta tag: **v0.10.6-rc.1-beta** (publishing workflow succeeded November 6, 2026; CurseForge moderation not independently checked). The prior 0.10.5-rc.1 Beta tag remains immutable. New source candidate **0.10.6-rc.1** adds optional KS Threat as the seventh module. Previous tags remain immutable; gameplay/client validation is required before stable release.
+Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. The latest published 0.10.7 code is an **unreleased development candidate**. Source candidate **0.10.8-rc.1** changes installation packaging to a single `KoolSupport/` directory with six internal modules; prior release tags remain unchanged.
 
 ## Modules
 
@@ -16,9 +16,9 @@ Last verified public GitHub Beta tag: **v0.10.6-rc.1-beta** (publishing workflow
 | **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
-Each component is a sibling addon directory in `Interface/AddOns/`; CurseForge installs the suite as one project and the in-game Module Manager controls the optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`).
+**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All six module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`).
 
-The **next standard CurseForge ZIP (0.10.5 candidate) contains six addon folders**: KoolSupport, KSMacros, KSSupportSessions, KSStealth, KSAfflictions and KSCampfireChat. Developer-only individual ZIPs still exist for isolated testing, not separate CurseForge pages. See [architecture](docs/ARCHITECTURE.md).
+The **0.10.8 standard ZIP contains one top-level folder**, `KoolSupport`, with all six modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
@@ -61,7 +61,7 @@ Recommended macros are **never installed automatically**. Players review, select
 
 ## CurseForge automatic packaging
 
-Root .pkgmeta provides a verified five-folder unified distribution for CurseForge's tag-only GitHub packager. Optional modules are included in the same download and controlled in-game. CI checks the configuration and runs an upstream packager dry-run; see docs/PUBLISHING.md.
+Root .pkgmeta provides a single-root, six-module unified distribution for CurseForge's tag-only GitHub packager. Optional modules are included in the same download and controlled in-game. CI checks the configuration and runs an upstream packager dry-run; see docs/PUBLISHING.md.
 
 Select tagged commits only, not Package all commits. Include beta in a pre-release tag. Merging code does **not** publish to CurseForge. After November 4 live testing, the next manually approved candidate tag is `v0.10.2-rc.1-beta`. We stay on 0.10.x until validation.
 
@@ -76,3 +76,14 @@ The optional seventh module KS Threat adds tank-oriented, categorical threat col
 ## KS Threat 0.10.7 RC — native nameplate compatibility fix
 
 The released 0.10.6 Beta read only the optional third-party namePlateUnitToken property; Blizzard's current nameplate API exposes unitToken and GetUnit() instead. Result: the nameplate color often remained unchanged. The new unpublished 0.10.7 source candidate accepts all three documented token paths and reports how many current plates it finds and colors via the KS Threat > Diagnose visible plates button. The diagnostic categorizes skipped plates as not hostile, not fighting, missing unit token, hidden/unavailable threat or health bar, or failed overlay painting, without printing protected combat data. Overlay health also refreshes on UNIT_HEALTH / UNIT_MAXHEALTH events. It preserves all seven modules, settings, the four-state red-to-purple palette and the existing immutable 0.10.6 tag.
+
+
+## Single-folder installation (0.10.8 RC)
+
+Extract the standard ZIP into `World of Warcraft/_forever_/Interface/AddOns/` to get exactly one new folder: `KoolSupport/`. It includes `KoolSupport.toc`, Base Lua and `Modules/{KSMacros,KSSupportSessions,KSStealth,KSAfflictions,KSCampfireChat,KSThreat}/`. The game loads only the Base TOC, in the same module order as before; the `/kool` in-game Module Manager retains its settings, dependencies and default-off KS Threat flag. The GitHub source remains separated in `addons/<module>` for engineering clarity, but distribution is nested by the packager.
+
+**Important upgrade from 0.10.7 or earlier:** Exit WoW completely; back up `Interface/AddOns` and `WTF`. Delete the **six obsolete top-level module folders** (`KSMacros`, `KSSupportSessions`, `KSStealth`, `KSAfflictions`, `KSCampfireChat`, `KSThreat`) from `Interface/AddOns` before extracting 0.10.8; otherwise old addon code may load twice and register modules twice. Keep `KoolSupport/` and replace its files. Do **not** delete or replace `WTF` — the per-character `KoolSupportDB` remains under the same host addon and should persist.
+
+The legacy **account-wide Afflictions tracker** data (`KSAfflictionsTrackerDB`) previously lived in `WTF/Account/<account>/SavedVariables/KSAfflictions.lua`; it will now be saved under `.../SavedVariables/KoolSupport.lua` because WoW keys saved-variable files to the physical addon folder. **Back up this original file before migration.** For continuity, with WoW closed and with no existing `.../SavedVariables/KoolSupport.lua`, make a **copy** of `KSAfflictions.lua` named `KoolSupport.lua` in the same directory. If `KoolSupport.lua` already exists, don't overwrite it; merge only the `KSAfflictionsTrackerDB` assignment manually after backing up both files. The older file is not deleted automatically. The module's own `## SavedVariables: KSAfflictionsTrackerDB` declaration is carried into the unified TOC.
+
+0.10.8 is development-only until its real packager and Forever client are verified; it does not publish a new CurseForge tag automatically.
