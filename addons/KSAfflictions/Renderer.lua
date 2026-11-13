@@ -305,64 +305,215 @@ function A:Paint(h,unit)
   end
   h:Show()
 end
+
+-- 0.10.9: text ONLY on Blizzard's native health bars. There is no replacement
+-- health bar, DoT strip, icon, popup or mouse hitbox in this display mode.
+A.minimalUnits=A.minimalUnits or {}
+A.minimalPlates=A.minimalPlates or {}
+
+local function publicPlateToken(raw)
+  if type(issecretvalue)~="function" then return nil end
+  local ok,secret=pcall(issecretvalue,raw)
+  if not ok or secret or type(raw)~="string" then return nil end
+  if raw:match("^nameplate%d+$") then return raw end
+end
+function A:PlateUnit(plate)
+  if not plate then return nil end
+  local token=publicPlateToken(plate.namePlateUnitToken)
+    or publicPlateToken(plate.unitToken)
+  if token then return token end
+  if type(plate.GetUnit)=="function" then
+    local ok,result=pcall(plate.GetUnit,plate)
+    if ok then return publicPlateToken(result) end
+  end
+  return nil
+end
+function A:ResolvePlateHealthBar(plate)
+  local root=plate and (plate.UnitFrame or plate.unitFrame)
+  if not root then return nil end
+  local container=root.HealthBarsContainer
+  return statusBar(root.healthBar) or statusBar(root.healthbar)
+    or statusBar(root.HealthBar) or statusBar(container and container.HealthBar)
+    or statusBar(container and container.healthBar)
+    or statusBar(root.healthBars and root.healthBars.healthBar)
+end
+local function nativeVisible(native)
+  if not native then return false end
+  if type(native.IsShown)~="function" then return true end
+  local ok,shown=pcall(native.IsShown,native)
+  return ok and shown==true
+end
+local function hideMinimal(record)
+  if record then
+    record.active=false
+    record.frame:Hide()
+  end
+end
+function A:EnsureMinimal(cache,key,native)
+  if not native then return nil end
+  local old=cache[key]
+  if old and old.native==native then return old end
+  hideMinimal(old)
+  local ok,record=pcall(function()
+    -- Independent, nonsecure overlay anchored to the ORIGINAL StatusBar;
+    -- never resize/reparent/recolor the Blizzard bar or consume mouse input.
+    local frame=CreateFrame("Frame",nil,UIParent)
+    frame:SetAllPoints(native)
+    frame:EnableMouse(false)
+    local level=type(native.GetFrameLevel)=="function" and native:GetFrameLevel()
+    if type(level)=="number" then frame:SetFrameLevel(level+6) end
+    if type(native.GetFrameStrata)=="function" and type(frame.SetFrameStrata)=="function" then
+      frame:SetFrameStrata(native:GetFrameStrata())
+    end
+    local word=frame:CreateFontString(nil,"OVERLAY","GameFontNormal")
+    word:SetPoint("CENTER",frame,"CENTER",0,0)
+    word:SetText("DIES")
+    word:SetTextColor(.83,1,.84,1)
+    if type(word.SetFont)=="function" then
+      word:SetFont("Fonts\\FRIZQT__.TTF",11,"OUTLINE")
+    end
+    if type(word.SetShadowColor)=="function" then word:SetShadowColor(0,0,0,1) end
+    if type(word.SetShadowOffset)=="function" then word:SetShadowOffset(1,-1) end
+    frame:Hide()
+    return {frame=frame,word=word,native=native,active=false}
+  end)
+  if not ok or not record then return nil end
+  cache[key]=record
+  return record
+end
+function A:PaintMinimal(cache,key,native,unit)
+  local record=cache[key]
+  if not nativeVisible(native) or not self:ConfirmedLethal(unit) then
+    hideMinimal(record)
+    return
+  end
+  record=self:EnsureMinimal(cache,key,native)
+  if not record then return end
+  record.unit=unit
+  record.active=true
+  record.frame:Show()
+end
+function A:AnyMinimalShown()
+  for _,record in pairs(self.minimalUnits) do if record.active then return true end end
+  for _,record in pairs(self.minimalPlates) do if record.active then return true end end
+  return false
+end
+
 function A:RefreshAll()
   local db=self:Store()
   local enabled=KoolSupport:IsModuleEnabled("ks_afflictions")
+  local centered=db.displayMode=="centered"
   for _,unit in ipairs(UNITS) do
-    local visible=enabled and db[unit] and type(UnitExists)=="function" and UnitExists(unit)
-    local existing=self.onFrameHUDs[unit]
-    local native=visible and db.onFrame and self:ResolveUnitHealthBar(unit) or nil
-    local overlay=native and self:EnsureOnFrame(unit,native) or nil
-    if overlay and (not native.IsShown or native:IsShown()) then
-      local legacy=self.huds[unit]
-      if legacy then legacy:Hide() end
-      self:PaintOnFrame(overlay,unit)
+    local visible=enabled and db[unit] and type(UnitExists)=="function"
+      and UnitExists(unit)
+    local old=self.huds[unit]
+    local onframe=self.onFrameHUDs[unit]
+    if centered then
+      if old then old:Hide() end
+      if onframe then onframe:Hide() end
+      local native=visible and self:ResolveUnitHealthBar(unit) or nil
+      self:PaintMinimal(self.minimalUnits,unit,native,unit)
     else
-      if existing then existing:Hide() end
-      -- Some client skins do not expose a standard health StatusBar. Keep the
-      -- existing movable HUD available rather than silently losing DoT data.
-      local h=self:EnsureUnit(unit)
-      if visible then
-        h:SetScale(db.scale)
-        self:Paint(h,unit)
-      else h:Hide() end
+      hideMinimal(self.minimalUnits[unit])
+      local native=visible and db.displayMode=="onframe"
+        and self:ResolveUnitHealthBar(unit) or nil
+      local overlay=native and self:EnsureOnFrame(unit,native) or nil
+      if overlay and nativeVisible(native) then
+        if old then old:Hide() end
+        self:PaintOnFrame(overlay,unit)
+      else
+        if onframe then onframe:Hide() end
+        -- This fallback is for the explicitly selected legacy HUD modes only.
+        local h=self:EnsureUnit(unit)
+        if visible then h:SetScale(db.scale);self:Paint(h,unit)
+        else h:Hide() end
+      end
     end
   end
+
   local seen={}
-  if enabled and db.nameplates and C_NamePlate and C_NamePlate.GetNamePlates then
-    for _,plate in ipairs(C_NamePlate.GetNamePlates() or {}) do
-      local unit=plate.namePlateUnitToken
-      if type(unit)=="string" then
-        local h=self:EnsurePlate(plate)
+  if enabled and db.nameplates and C_NamePlate
+    and type(C_NamePlate.GetNamePlates)=="function" then
+    local ok,plates=pcall(C_NamePlate.GetNamePlates)
+    if ok and type(plates)=="table" then
+      for _,plate in ipairs(plates) do
         seen[plate]=true
-        h:SetScale(db.scale)
-        h:ClearAllPoints()
-        h:SetPoint("TOP",plate,"BOTTOM",0,-db.offsetY)
-        self:Paint(h,unit)
+        local unit=self:PlateUnit(plate)
+        local old=self.plates[plate]
+        if centered then
+          if old then old:Hide() end
+          local native=unit and self:ResolvePlateHealthBar(plate) or nil
+          self:PaintMinimal(self.minimalPlates,plate,native,unit)
+        else
+          hideMinimal(self.minimalPlates[plate])
+          if unit then
+            local h=self:EnsurePlate(plate)
+            h:SetScale(db.scale)
+            h:ClearAllPoints()
+            h:SetPoint("TOP",plate,"BOTTOM",0,-db.offsetY)
+            self:Paint(h,unit)
+          elseif old then old:Hide() end
+        end
       end
     end
   end
   for plate,h in pairs(self.plates) do if not seen[plate] then h:Hide() end end
+  for plate,record in pairs(self.minimalPlates) do
+    if not seen[plate] then hideMinimal(record) end
+  end
 end
 function A:HideAll()
   for _,h in pairs(self.huds) do h:Hide() end
   for _,h in pairs(self.onFrameHUDs) do h:Hide() end
   for _,h in pairs(self.plates) do h:Hide() end
+  for _,record in pairs(self.minimalUnits) do hideMinimal(record) end
+  for _,record in pairs(self.minimalPlates) do hideMinimal(record) end
 end
 function A:Enable() self:RefreshAll() end
 function A:Disable() self:HideAll() end
+
+-- The vendored tracker already maintains its DoT housekeeping clock. The
+-- minimal renderer has no independent OnUpdate; only active DIES labels need
+-- a bounded (0.5s) expiry recheck while quiet.
+function A:OnTrackerRefresh()
+  if not KoolSupport:IsModuleEnabled("ks_afflictions") then return end
+  if self:Store().displayMode=="centered" and not self:AnyMinimalShown() then return end
+  local now=type(GetTime)=="function" and GetTime() or 0
+  if now-(self.lastTrackerPaint or -10)<.5 then return end
+  self.lastTrackerPaint=now
+  self:RefreshAll()
+end
+
 local driver=CreateFrame("Frame")
-local timer=0
-driver:SetScript("OnUpdate",function(_,elapsed)
-  timer=timer+elapsed
-  if timer<.2 then return end
-  timer=0
-  if KoolSupport:IsModuleEnabled("ks_afflictions") and A:TrackerReady() then A:RefreshAll() end
-end)
 for _,event in ipairs({"PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED",
-  "NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","PLAYER_ENTERING_WORLD"}) do
+  "NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","PLAYER_ENTERING_WORLD",
+  "PLAYER_REGEN_ENABLED","UNIT_HEALTH","UNIT_MAXHEALTH","UNIT_AURA",
+  "UNIT_COMBAT","UNIT_SPELLCAST_SUCCEEDED","UNIT_SPELLCAST_FAILED",
+  "UNIT_SPELLCAST_INTERRUPTED"}) do
   driver:RegisterEvent(event)
 end
-driver:SetScript("OnEvent",function()
-  if A:TrackerReady() then A:RefreshAll() end
+local queued=false
+local function repaint()
+  queued=false
+  if KoolSupport:IsModuleEnabled("ks_afflictions") and A:TrackerReady() then
+    A:RefreshAll()
+  end
+end
+driver:SetScript("OnEvent",function(_,event,unit)
+  -- A reused plate or changed target cannot inherit a previous enemy's word,
+  -- even for the one event turn before the deferred tracker repaint.
+  if event=="PLAYER_TARGET_CHANGED" then hideMinimal(A.minimalUnits.target) end
+  if event=="PLAYER_FOCUS_CHANGED" then hideMinimal(A.minimalUnits.focus) end
+  if event=="NAME_PLATE_UNIT_REMOVED" then
+    for _,record in pairs(A.minimalPlates) do
+      if record.unit==unit then hideMinimal(record) end
+    end
+  end
+  if queued then return end
+  queued=true
+  if C_Timer and type(C_Timer.After)=="function" then
+    C_Timer.After(0,repaint) -- after the vendor's handlers have processed this event
+  else
+    repaint()
+  end
 end)

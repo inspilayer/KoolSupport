@@ -1,5 +1,5 @@
 -- KS Afflictions offline contract: independent data, opaque health passthrough, toggles.
-KoolSupportDB={core={},modules={}}
+KoolSupportDB={core={},modules={ks_afflictions={displayMode="panels"}}}
 local combat=false
 KoolSupport={
  GetDatabase=function()return KoolSupportDB end,
@@ -14,6 +14,7 @@ local secret=setmetatable({},{
  __eq=function()error("secret health compared")end,
  __tostring=function()error("secret health formatted")end,
 })
+issecretvalue=function(value)return rawequal(value,secret)end
 local uiButtons={}
 local uiLabels={}
 local function mk(kind)
@@ -231,11 +232,11 @@ local function findButton(term)
  end
  return nil
 end
-local modeButton=findButton("Simplified / On-frame: OFF")
+local modeButton=findButton("Centered DIES (default)")
 assert(modeButton,"The simplified mode toggle must exist and be discoverable")
 assert(modeButton.point[4]==20 and modeButton.point[5]==-109,
-  "The on-frame toggle must appear near the top of the settings page")
-assert(findButton("Appearance & Colors") and findButton("Visibility & Position"),
+  "Centered DIES mode must appear near the top of the settings page")
+assert(findButton("Advanced Appearance") and findButton("Visibility & Position"),
   "Both settings tabs must be visible")
 assert(findButton("Reset Target") and findButton("Reset Focus"),
   "Position reset controls must stay available in the second tab")
@@ -256,14 +257,15 @@ for i=beforeLabels+1,#uiLabels do
  end
 end
 modeButton.scripts.OnClick()
-assert(A:Store().onFrame and modeButton.text=="Simplified / On-frame: ON")
+assert(A:Store().displayMode=="centered","Text-only mode is selectable")
+assert(modeButton.text:find("> ",1,true)==1,"Chosen mode is visibly selected")
 local advanced=findButton("Visibility & Position")
 advanced.scripts.OnClick()
 assert(advanced.text:find("> ",1,true)==1,
   "Visibility / Position tab must visibly indicate its selected state")
-modeButton.scripts.OnClick()
-assert(not A:Store().onFrame and modeButton.text=="Simplified / On-frame: OFF",
-  "On-frame mode must be toggleable even while advanced settings are selected")
-assert(findButton("Appearance & Colors").scripts.OnClick,
+local panels=findButton("Movable Panels")
+panels.scripts.OnClick()
+assert(A:Store().displayMode=="panels","Legacy panels are still selectable")
+assert(findButton("Advanced Appearance").scripts.OnClick,
   "Appearance tab callback must remain interactive")
 print("PASS afflictions: vendor bridge, values, secret sinks, settings, nameplates, mode tab layout")
