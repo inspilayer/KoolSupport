@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. Source candidate **0.10.9-rc.1** keeps the single `KoolSupport/` install folder introduced in 0.10.8 and makes KS Afflictions' *Centered DIES* mode the default. It is **unpublished**; prior release tags remain unchanged.
+Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. Source candidate **0.10.9-rc.2** keeps the single `KoolSupport/` install folder introduced in 0.10.8 and makes KS Afflictions' *Centered DIES* mode the default. It is **unpublished**; prior release tags remain unchanged.
 
 ## Modules
 
@@ -92,4 +92,6 @@ The legacy **account-wide Afflictions tracker** data (`KSAfflictionsTrackerDB`) 
 
 **Default: no bars, floating windows, DoT strips, or extra spell icons.** When KS can attribute tracked remaining DoT/bleed damage to an enemy and compare it to **readable, nonsecret** health, a mouse-transparent outlined `DIES` word appears over the *original* target, focus, or visible enemy nameplate health bar. If health becomes secret or any estimate/attribution is unsupported, the word does **not** appear; the previous wide clipped StatusBar cannot supply a reliable exact lethal condition. This deliberate fail-closed behavior must be validated in the real Forever client.
 
-Use `/kool` > KS Afflictions to switch between **Centered DIES** (default), **On-frame Extras**, and **Movable Panels**. Historical advanced options and prior per-character panel positions remain available. The old automatic `onFrame=false` default does not reliably distinguish someone who deliberately clicked OFF, so default-equivalent saves migrate to centered mode; an explicit new displayMode persists on subsequent upgrades. The full client-install guide and limitations are in [0.10.9 development notes](docs/RELEASE_NOTES_0.10.9-rc.1.md). **No new CurseForge tag is published by this development change.**
+Use `/kool` > KS Afflictions to switch between **Centered DIES** (default), **On-frame Extras**, and **Movable Panels**. Historical advanced options and prior per-character panel positions remain available. The old automatic `onFrame=false` default does not reliably distinguish someone who deliberately clicked OFF, so default-equivalent saves migrate to centered mode; an explicit new displayMode persists on subsequent upgrades. The full client-install guide and limitations are in [0.10.9 development notes](docs/RELEASE_NOTES_0.10.9-rc.2.md). **No new CurseForge tag is published by this development change.**
+
+**Live screenshot follow-up (0.10.9-rc.2):** Old saved `onFrame=true` preferences intentionally select **On-frame Extras**, which still shows green/purple DoTs strips; choose `/kool` > KS Afflictions > **Centered DIES** for *no extra bars*. The settings page now displays the active mode. Legacy modes no longer use the off-right giant clipping/statusbar lethal label; any advanced-mode DIES/skull is centered and uses the same conservative nonsecret-health predicate. Secret combat health may mean no alert. See [RC2 notes](docs/RELEASE_NOTES_0.10.9-rc.2.md).
