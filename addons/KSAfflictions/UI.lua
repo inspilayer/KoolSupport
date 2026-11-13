@@ -107,7 +107,7 @@ function A.BuildPage(parent)
   local detail=label(normal,"",20,-441,755,"GameFontHighlightSmall")
   redrawers[#redrawers+1]=function()
     local supported=A.SecretCurveSupported and A:SecretCurveSupported()
-    local last=A.lastMinimalReason
+    local last=A.minimalReasons and A.minimalReasons.target
     if supported then
       detail:SetText(GREEN.."Native secret-health curves found|r"..
         (last and "  |  Last render: "..last or "  |  Live combat confirmation needed"))
