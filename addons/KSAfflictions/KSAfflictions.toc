@@ -2,7 +2,7 @@
 ## Title: KS Afflictions
 ## Notes: Player DoT estimates, target/focus/nameplate bars, and shared KoolSupport styling.
 ## Author: InspiLayer; tracking engine by Joe Greive (MIT)
-## Version: 0.10.10-rc.1
+## Version: 0.10.10-rc.2
 ## Dependencies: KoolSupport
 ## SavedVariables: KSAfflictionsTrackerDB
 
