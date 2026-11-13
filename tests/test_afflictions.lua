@@ -130,6 +130,39 @@ assert(A.plates[plate].dot.value==600)
 assert(A.huds.target.lethalWord.hidden==true,
   "Legacy displays must never show DIES for secret health")
 assert(A.plates[plate].lethalWord.hidden==true)
+-- Legacy advanced modes must use the SAME opaque native alpha path as
+-- DIES-only when Forever protects enemy health.
+CreateColor=function(r,g,b,a)return {r=r,g=g,b=b,a=a} end
+Enum={LuaCurveType={Step="STEP"}}
+local nativeHiddenHealth=300
+C_CurveUtil={CreateColorCurve=function()
+ local curve={points={}}
+ function curve:SetType(t)self.kind=t end
+ function curve:AddPoint(x,color)self.points[#self.points+1]={x=x,color=color} end
+ function curve:EvaluateUnpacked(hp)
+  assert(rawequal(hp,secret),"Secret must flow untouched into native curve")
+  assert(#self.points==3 and self.points[1].color.a==0,
+   "Zero health must always hide a DIES label")
+  local color=nativeHiddenHealth==0 and self.points[1].color
+    or (nativeHiddenHealth<self.points[3].x and self.points[2].color
+      or self.points[3].color)
+  return color.r,color.g,color.b,color.a
+ end
+ return curve
+end}
+A:RefreshAll()
+assert(not A.huds.target.lethalWord.hidden and not A.plates[plate].lethalWord.hidden,
+ "Legacy panel/nameplate alerts must accept native secret colors")
+assert(A.huds.target.lethalWord.color==nil or A.huds.target.lethalWord.color[4]~=nil)
+-- A real native widget may carry secret color values, so only the mock's
+-- internal calculated alpha is visible to this test.
+nativeHiddenHealth=1000
+A:RefreshAll()
+assert(not A.huds.target.lethalWord.hidden,
+ "The client, not Lua, decides secret-health alpha")
+C_CurveUtil=nil
+A:RefreshAll()
+assert(A.huds.target.lethalWord.hidden,"Without native support fail closed")
 readableHealth=400
 A:RefreshAll()
 assert(not A.huds.target.lethalWord.hidden,
