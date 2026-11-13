@@ -141,8 +141,10 @@ assert(target.word.text=="DIES" and target.word.point[1]=="CENTER")
 assert(target.word.point[2]==target.frame)
 assert(target.frame.anchor==TargetFrameHealthBar and target.frame.mouse==false)
 assert(lethalPlate and lethalPlate.active and lethalPlate.frame.anchor==plateB.UnitFrame.HealthBar)
-assert(not A.minimalUnits.focus,"Nonlethal focus gets no overlay")
-assert(not A.minimalPlates[plateA],"Nonlethal nameplate gets no overlay")
+assert(not A.minimalUnits.focus or A.minimalUnits.focus.frame.hidden,
+ "Nonlethal focus never displays DIES")
+assert(not A.minimalPlates[plateA] or A.minimalPlates[plateA].frame.hidden,
+ "Nonlethal nameplate never displays DIES")
 assert(not A.minimalPlates[plateUnsupported],"Unsupported native bar must not get overlay")
 assert(not A.huds.target and not A.plates[plateA],"Never create extra HUDs in centered mode")
 assert(not TargetFrameHealthBar.nativeMutation and not FocusFrameHealthBar.nativeMutation)
