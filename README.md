@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. The latest published 0.10.7 code is an **unreleased development candidate**. Source candidate **0.10.8-rc.1** changes installation packaging to a single `KoolSupport/` directory with six internal modules; prior release tags remain unchanged.
+Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. Source candidate **0.10.9-rc.1** keeps the single `KoolSupport/` install folder introduced in 0.10.8 and makes KS Afflictions' *Centered DIES* mode the default. It is **unpublished**; prior release tags remain unchanged.
 
 ## Modules
 
@@ -12,13 +12,13 @@ Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. The latest published 0.10.
 | **KS Macros** | Included and on by default | Generic Macro Suite, Full Spellbook, Custom Builder |
 | **KS Support Sessions** | Included; player-toggleable | Healer class presets, named focus, heals, battle rez, follow/assist |
 | **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point UI on visible nameplates |
-| **KS Afflictions** | Included; player-toggleable | DoT impact estimates and KS visual options (MIT DoesItDie engine) |
+| **KS Afflictions** | Included; player-toggleable | Minimal centered DIES text on known-lethal native health bars; optional advanced displays (MIT DoesItDie engine) |
 | **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
 **Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All six module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`).
 
-The **0.10.8 standard ZIP contains one top-level folder**, `KoolSupport`, with all six modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
+The **0.10.9 development ZIP contains one top-level folder**, `KoolSupport`, with all six modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
@@ -87,3 +87,9 @@ Extract the standard ZIP into `World of Warcraft/_forever_/Interface/AddOns/` to
 The legacy **account-wide Afflictions tracker** data (`KSAfflictionsTrackerDB`) previously lived in `WTF/Account/<account>/SavedVariables/KSAfflictions.lua`; it will now be saved under `.../SavedVariables/KoolSupport.lua` because WoW keys saved-variable files to the physical addon folder. **Back up this original file before migration.** For continuity, with WoW closed and with no existing `.../SavedVariables/KoolSupport.lua`, make a **copy** of `KSAfflictions.lua` named `KoolSupport.lua` in the same directory. If `KoolSupport.lua` already exists, don't overwrite it; merge only the `KSAfflictionsTrackerDB` assignment manually after backing up both files. The older file is not deleted automatically. The module's own `## SavedVariables: KSAfflictionsTrackerDB` declaration is carried into the unified TOC.
 
 0.10.8 is development-only until its real packager and Forever client are verified; it does not publish a new CurseForge tag automatically.
+
+## KS Afflictions — 0.10.9 Centered DIES
+
+**Default: no bars, floating windows, DoT strips, or extra spell icons.** When KS can attribute tracked remaining DoT/bleed damage to an enemy and compare it to **readable, nonsecret** health, a mouse-transparent outlined `DIES` word appears over the *original* target, focus, or visible enemy nameplate health bar. If health becomes secret or any estimate/attribution is unsupported, the word does **not** appear; the previous wide clipped StatusBar cannot supply a reliable exact lethal condition. This deliberate fail-closed behavior must be validated in the real Forever client.
+
+Use `/kool` > KS Afflictions to switch between **Centered DIES** (default), **On-frame Extras**, and **Movable Panels**. Historical advanced options and prior per-character panel positions remain available. The old automatic `onFrame=false` default does not reliably distinguish someone who deliberately clicked OFF, so default-equivalent saves migrate to centered mode; an explicit new displayMode persists on subsequent upgrades. The full client-install guide and limitations are in [0.10.9 development notes](docs/RELEASE_NOTES_0.10.9-rc.1.md). **No new CurseForge tag is published by this development change.**
