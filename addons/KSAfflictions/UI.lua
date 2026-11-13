@@ -46,7 +46,7 @@ function A.BuildPage(parent)
   separator(parent,-80)
 
   local feedback=label(parent,"",20,-552,770,"GameFontHighlightSmall")
-  local foot=label(parent,MUTED.."DIES is an estimate. Opaque health is evaluated only by supported native visual APIs.|r",
+  local foot=label(parent,MUTED.."During combat: /kool dies prints the tracker's evidence and rejection reason (no secret health).|r",
     20,-574,775,"GameFontHighlightSmall")
   local active=label(parent,"",420,-22,368,"GameFontHighlightSmall")
   local normal=CreateFrame("Frame",nil,parent)
@@ -115,11 +115,19 @@ function A.BuildPage(parent)
       detail:SetText("|cffffbd8bSecret-health curve API unavailable|r; text hides when health is protected")
     end
   end
-  button(normal,"Refresh display check",20,-482,217,function()
+  local trackerLine=label(normal,"",20,-469,775,"GameFontHighlightSmall")
+  redrawers[#redrawers+1]=function()
+    if type(A.DiagnosticLine)=="function" then
+      trackerLine:SetText(A:DiagnosticLine("target"))
+    else
+      trackerLine:SetText("Tracker diagnostics unavailable")
+    end
+  end
+  button(normal,"Refresh display check",20,-503,217,function()
     if A.RefreshAll then A:RefreshAll() end
     refresh()
   end)
-  button(normal,"Advanced settings",258,-482,194,function()view("advanced")end)
+  button(normal,"Advanced settings",258,-503,194,function()view("advanced")end)
 
   -- Advanced options: a separate page, not 25 simultaneous option buttons.
   button(advanced,"< Back to simple settings",20,-105,240,function()view("normal")end)
