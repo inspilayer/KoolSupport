@@ -195,6 +195,17 @@ A:RefreshAll()
 assert(target.active and target.mode=="native_percent_applied"
   and target.word.alpha==protectedAlpha and computedAlpha==1,
  "Client-style native curve is applied without inspecting opaque alpha")
+-- Forever may hide GUIDs in combat; vendor deliberately falls back to
+-- "target" even for the SAME selected mob. Event boundaries, not opaque GUID
+-- changes alone, invalidate a previously captured readable max.
+keys.target="target"
+A:RefreshAll()
+assert(target.active and A:KnownMax("target")==1000 and computedAlpha==1,
+ "Secret GUID fallback for unchanged target must preserve precombat max")
+keys.target="guid-1"
+A:RefreshAll()
+assert(target.active and A:KnownMax("target")==1000)
+
 secretRawHealth=0
 A:RefreshAll()
 assert(computedAlpha==0,"Zero HP must suppress DIES in native evaluator")
