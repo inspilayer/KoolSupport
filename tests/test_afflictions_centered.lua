@@ -169,17 +169,29 @@ C_CurveUtil={CreateColorCurve=function()
  function curve:AddPoint(x,color)self.points[#self.points+1]={x=x,color=color} end
  function curve:EvaluateUnpacked(value)
   assert(rawequal(value,secret),"Native curve must receive secret health untouched")
-  assert(self.kind==Enum.LuaCurveType.Step and #self.points==2,
-   "Only native non-interpolating threshold curves permitted")
-  local color=secretRawHealth<self.points[2].x and self.points[1].color or self.points[2].color
+  assert(self.kind==Enum.LuaCurveType.Step and #self.points==3,
+   "Native non-interpolating threshold must also hide dead units")
+  local color=secretRawHealth<self.points[2].x and self.points[1].color
+    or (secretRawHealth<self.points[3].x and self.points[2].color or self.points[3].color)
   return color.r,color.g,color.b,color.a
  end
  return curve
 end}
 health.target=secret
 A:RefreshAll()
-assert(target.active and target.mode=="secret_curve" and target.word.color[4]==1,
+assert(target.active and target.mode=="native_curve_applied" and target.word.color[4]==1,
  "Client-supported curve shows a lethal enemy without comparing secret health")
+-- A protected/unavailable death flag MUST NOT hide a living enemy merely
+-- because WoW keeps its boolean secret. The native curve handles 0 HP.
+UnitIsDeadOrGhost=function()return secret end
+A:RefreshAll()
+assert(target.active and target.word.color[4]==1,
+ "Secret dead flag must not preempt native health curve")
+secretRawHealth=0
+A:RefreshAll()
+assert(target.word.color[4]==0,"Dead enemy health must suppress DIES natively")
+secretRawHealth=350
+UnitIsDeadOrGhost=function()return false end
 secretRawHealth=1000
 A:RefreshAll()
 assert(target.active and target.word.color[4]==0,
