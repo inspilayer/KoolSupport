@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last verified public GitHub Beta tag: **v0.10.4-rc.1-beta** (publishing workflow succeeded November 6, 2026; CurseForge moderation not independently checked). The prior 0.10.5-rc.1 Beta tag remains immutable. New source candidate **0.10.6-rc.1** adds optional KS Threat as the seventh module. Previous tags remain immutable; gameplay/client validation is required before stable release.
+Last verified public GitHub Beta tag: **v0.10.6-rc.1-beta** (publishing workflow succeeded November 6, 2026; CurseForge moderation not independently checked). The prior 0.10.5-rc.1 Beta tag remains immutable. New source candidate **0.10.6-rc.1** adds optional KS Threat as the seventh module. Previous tags remain immutable; gameplay/client validation is required before stable release.
 
 ## Modules
 
@@ -72,3 +72,7 @@ Included in the same package as a separate optional module, **Campfire Chat** pr
 ## KS Threat — 0.10.6 development candidate
 
 The optional seventh module KS Threat adds tank-oriented, categorical threat colors to Blizzard enemy nameplate health bars: red (aggro status 3), pink (2), violet (1), and purple (0). It is disabled by default for each character; enable it in /kool > Modules, then open KS Threat. It is a small visual layer, not a replacement for Blizzard nameplates, cast bars, KS Afflictions or KS Stealth. It never modifies native health bar values or original colors. Only hostile, engaged enemies are colored by default; disable that restriction on the module page if desired. If Forever reports threat as secret or the health bar cannot be located safely, the original Blizzard colors remain visible. Exact hidden threat percentages are not invented. This is an unpublished source candidate, not the existing 0.10.5 Beta.
+
+## KS Threat 0.10.7 RC — native nameplate compatibility fix
+
+The released 0.10.6 Beta read only the optional third-party namePlateUnitToken property; Blizzard's current nameplate API exposes unitToken and GetUnit() instead. Result: the nameplate color often remained unchanged. The new unpublished 0.10.7 source candidate accepts all three documented token paths and reports how many current plates it finds and colors via the KS Threat > Diagnose visible plates button. The diagnostic categorizes skipped plates as not hostile, not fighting, missing unit token, hidden/unavailable threat or health bar, or failed overlay painting, without printing protected combat data. Overlay health also refreshes on UNIT_HEALTH / UNIT_MAXHEALTH events. It preserves all seven modules, settings, the four-state red-to-purple palette and the existing immutable 0.10.6 tag.
