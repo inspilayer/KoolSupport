@@ -34,24 +34,27 @@ function KS:CollectLaunchChecks()
   add("interface","Live client Interface",toc==16001 and "MATCH" or "REVIEW",
    tostring(toc).." (addon manifests expect 16001; verify in live client)")
  else add("interface","Live client Interface","UNKNOWN","GetBuildInfo unavailable") end
+ -- Only KoolSupport is a physical WoW addon. Modules are Lua subdirectories
+ -- and cannot be checked with C_AddOns.IsAddOnLoaded(moduleName).
+ local rootLoaded=addonLoaded("KoolSupport")
  for _,entry in ipairs(NAMES) do
   local name,title,module=entry[1],entry[2],entry[3]
-  local loaded=addonLoaded(name)
-  local def=self:GetModule(module)
-  if loaded==false then
-   add(name,title,"MISSING","WoW reports addon not loaded")
-  elseif loaded==nil then
-   add(name,title,(def or name=="KoolSupport") and "UNVERIFIED" or "MISSING",
-     (def or name=="KoolSupport") and "Registered; WoW loaded-state API unavailable" or "Not registered; loaded state unknown")
-  elseif name=="KoolSupport" then
-   add(name,title,"ENABLED","KoolSupport Base loaded; root is not a registered submodule")
-  elseif not def then
-   add(name,title,"MISSING","Loaded but not registered with KoolSupport")
+  if name=="KoolSupport" then
+   add(name,title,rootLoaded==false and "MISSING" or
+       rootLoaded==nil and "UNVERIFIED" or "ENABLED",
+       rootLoaded==false and "KoolSupport root was not loaded" or
+       rootLoaded==nil and "Root loaded state unavailable; UI code is active" or
+       "Single KoolSupport addon loaded; six modules are bundled inside")
   else
-   local enabled,reason=self:IsModuleEnabled(module)
-   add(name,title,enabled and "ENABLED" or "OFF",
-     enabled and "Loaded and enabled in /kool" or
-      ("Loaded; disabled by module setting"..(reason and " ("..reason..")" or "")))
+   local def=self:GetModule(module)
+   if not def then
+    add(name,title,"MISSING","Bundled Lua module did not register in KoolSupport")
+   else
+    local enabled,reason=self:IsModuleEnabled(module)
+    add(name,title,enabled and "ENABLED" or "OFF",
+      enabled and "Registered and enabled in the unified KoolSupport addon" or
+      ("Bundled; disabled by module setting"..(reason and " ("..reason..")" or "")))
+   end
   end
  end
  local capabilities={
