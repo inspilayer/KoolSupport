@@ -388,7 +388,10 @@ local function publicKey(unit)
   return key
 end
 function A:ForgetKnownMax(unit)
-  if type(unit)=="string" then self.knownUnitMax[unit]=nil end
+  if type(unit)~="string" then return end
+  if type(issecretvalue)~="function" then return end
+  local ok,secret=pcall(issecretvalue,unit)
+  if ok and not secret then self.knownUnitMax[unit]=nil end
 end
 function A:RememberPublicMax(unit)
   if not unit or type(UnitHealthMax)~="function"
