@@ -362,16 +362,101 @@ function A:EnsureMinimal(cache,key,native)
   cache[key]=record
   return record
 end
+-- WoW's public ColorCurve/FontString APIs accept opaque numeric values.
+-- The step function is evaluated by the client, NOT Lua: for positive health
+-- strictly below floor(remaining DoT damage) the text is opaque, otherwise
+-- transparent. This conservative one-HP margin avoids boundary false positives.
+-- If a client lacks these APIs or refuses a secret argument, fail closed.
+local function curveSupported()
+  return type(C_CurveUtil)=="table"
+    and type(C_CurveUtil.CreateColorCurve)=="function"
+    and type(CreateColor)=="function"
+    and type(Enum)=="table" and type(Enum.LuaCurveType)=="table"
+    and Enum.LuaCurveType.Step~=nil
+end
+function A:SecretCurveSupported()
+  return curveSupported()
+end
+local function ensureCurve(record,total)
+  local cutoff=math.floor(total)
+  if cutoff<=0 or not curveSupported() then return nil end
+  if record.curve and record.curveCutoff==cutoff then return record.curve end
+  local ok,curve=pcall(function()
+    local c=C_CurveUtil.CreateColorCurve()
+    c:SetType(Enum.LuaCurveType.Step)
+    c:AddPoint(0,CreateColor(.83,1,.84,1))
+    c:AddPoint(cutoff,CreateColor(.83,1,.84,0))
+    return c
+  end)
+  if not ok or not curve or type(curve.EvaluateUnpacked)~="function" then
+    record.curve=nil
+    return nil
+  end
+  record.curve=curve
+  record.curveCutoff=cutoff
+  return curve
+end
 function A:PaintMinimal(cache,key,native,unit)
   local record=cache[key]
-  if not nativeVisible(native) or not self:ConfirmedLethal(unit) then
+  if not nativeVisible(native) or not unit then
     hideMinimal(record)
     return
   end
-  record=self:EnsureMinimal(cache,key,native)
-  if not record then return end
+  local total,reason=self:LethalEvidence(unit)
+  if not total then
+    self.lastMinimalReason=reason or "untrusted_estimate"
+    hideMinimal(record)
+    return
+  end
+  if type(UnitHealth)~="function" or type(issecretvalue)~="function" then
+    self.lastMinimalReason="health_api_unavailable"
+    hideMinimal(record)
+    return
+  end
+  local ok,health=pcall(UnitHealth,unit)
+  if not ok then self.lastMinimalReason="health_unavailable";hideMinimal(record);return end
+  local checked,secret=pcall(issecretvalue,health)
+  if not checked then self.lastMinimalReason="health_unavailable";hideMinimal(record);return end
+  if not secret then
+    -- Arithmetic/branching only on a proven nonsecret numeric value.
+    if type(health)~="number" or health~=health or health<=0 or total<health then
+      self.lastMinimalReason="not_lethal"
+      hideMinimal(record)
+      return
+    end
+    record=self:EnsureMinimal(cache,key,native)
+    if not record then self.lastMinimalReason="unsupported_frame";return end
+    local painted=pcall(record.word.SetTextColor,record.word,.83,1,.84,1)
+    if not painted then hideMinimal(record);return end
+    record.mode="readable"
+  else
+    -- A supported native widget evaluates SECRET health without inspecting,
+    -- comparing, formatting, logging or transferring it into addon arithmetic.
+    record=self:EnsureMinimal(cache,key,native)
+    if not record then self.lastMinimalReason="unsupported_frame";return end
+    local curve=ensureCurve(record,total)
+    if not curve then
+      self.lastMinimalReason="secret_curve_unavailable"
+      hideMinimal(record)
+      return
+    end
+    local evaluated,r,g,b,a=pcall(curve.EvaluateUnpacked,curve,health)
+    if not evaluated then
+      self.lastMinimalReason="secret_curve_rejected"
+      hideMinimal(record)
+      return
+    end
+    local painted=pcall(record.word.SetTextColor,record.word,r,g,b,a)
+    if not painted then
+      self.lastMinimalReason="secret_text_rejected"
+      hideMinimal(record)
+      return
+    end
+    record.mode="secret_curve"
+  end
   record.unit=unit
-  record.active=true
+  record.active=true -- eligible for refresh, NOT a Lua assertion of secret lethality
+  self.lastMinimalReason=record.mode
   record.frame:Show()
 end
 function A:AnyMinimalShown()
