@@ -49,29 +49,39 @@ UISpecialFrames={}
 local sentinel={preserved=true}
 KoolSupportDB={untouched=sentinel}
 KSAfflictionsTrackerDB={untouched=sentinel}
-local addons={"KoolSupport","KSMacros","KSSupportSessions","KSStealth","KSAfflictions","KSCampfireChat","KSThreat"}
+-- One installable AddOn TOC; each nested source module shares the SAME
+-- KoolSupport addon namespace (critical for DoesItDie event initialization).
 local ns={}
-local manifests={}
-local function loadAddon(addon)
- local toc=assert(io.open("addons/"..addon.."/"..addon..".toc","r"))
- local names={}
- for line in toc:lines() do
-  if line:match("%.lua%s*$") and not line:match("^%s*#") then
-   local path=line:match("^%s*(.-)%s*$")
-   local filename="addons/"..addon.."/"..path
-   names[#names+1]=filename
-   local fn=assert(loadfile(filename))
-   if addon=="KSAfflictions" then fn(addon,ns) else fn(addon,{}) end
+local counts={KoolSupport=0,KSMacros=0,KSSupportSessions=0,KSStealth=0,
+ KSAfflictions=0,KSCampfireChat=0,KSThreat=0}
+local loaded={}
+local toc=assert(io.open("addons/KoolSupport/KoolSupport.toc","r"))
+for line in toc:lines() do
+ if line:match("%.lua%s*$") and not line:match("^%s*#") then
+  local rel=line:match("^%s*(.-)%s*$"):gsub("\\","/")
+  local module,path=rel:match("^Modules/([^/]+)/(.+)$")
+  local filename
+  if module then
+   assert(counts[module]~=nil,"Unexpected root module: "..module)
+   filename="addons/"..module.."/"..path
+  else
+   module="KoolSupport"
+   filename="addons/KoolSupport/"..rel
   end
+  assert(not loaded[filename],"A Lua file appeared twice in unified TOC: "..filename)
+  loaded[filename]=true
+  counts[module]=counts[module]+1
+  local fn=assert(loadfile(filename))
+  fn("KoolSupport",ns)
  end
- toc:close()
- assert(#names>0,"missing addon files in "..addon)
- manifests[addon]=names
 end
-for _,name in ipairs(addons)do loadAddon(name)end
+toc:close()
+for module,count in pairs(counts) do
+ assert(count>0,"Unified TOC omitted all Lua from "..module)
+end
 local K=KoolSupport
 assert(K.API_VERSION==1)
-assert(K.VERSION=="0.10.7-rc.1")
+assert(K.VERSION=="0.10.8-rc.1")
 assert(K.BarTheme and K.CollectLaunchChecks)
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
  K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat)
@@ -112,4 +122,4 @@ assert(K:CanOpenPage("support_session"))
 assert(not K:SetModuleEnabled("ks_macros",false),"active support dependency must protect macros")
 assert(KoolSupportDB.untouched==sentinel and KSAfflictionsTrackerDB.untouched==sentinel)
 assert(createdMacros==0)
-print("PASS unified boot: all five TOCs in order, shared namespace, pages, dependency gates, no macro writes")
+print("PASS unified boot: ONE TOC loads all seven code groups in order, shared namespace, six modules, no macro writes")
