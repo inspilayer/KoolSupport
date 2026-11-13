@@ -114,6 +114,11 @@ assert(A:Store().displayMode=="centered")
 assert(not A:ChangeSetting("displayMode","unsupported"))
 assert(A:ChangeSetting("displayMode","centered"))
 
+local deferred={}
+C_Timer={After=function(_,cb)deferred[#deferred+1]=cb end}
+local function drain()
+ while #deferred>0 do table.remove(deferred,1)() end
+end
 assert(loadfile("addons/KSAfflictions/Renderer.lua"))("KoolSupport",ns)
 local driver=frames[#frames]
 assert(driver.scripts.OnUpdate==nil,"Minimal renderer must not add its own polling OnUpdate")
@@ -202,6 +207,10 @@ assert(focus.active)
 -- Clearing a target must hide its label before deferred rendering.
 driver.scripts.OnEvent(nil,"PLAYER_TARGET_CHANGED")
 assert(target.frame.hidden)
+assign("target",nil) -- vendor clears the secret-GUID fallback on target change
+drain()
+assert(target.frame.hidden)
+assign("target",600)
 A:RefreshAll()
 assert(target.active)
 
@@ -209,6 +218,8 @@ assert(target.active)
 driver.scripts.OnEvent(nil,"NAME_PLATE_UNIT_REMOVED","nameplate2")
 assert(lethalPlate.frame.hidden)
 visiblePlates={plateA,plateUnsupported}
+drain()
+assert(lethalPlate.frame.hidden)
 A:RefreshAll()
 assert(lethalPlate.frame.hidden)
 visiblePlates={plateA,plateB,plateUnsupported}
