@@ -123,38 +123,62 @@ end
 local function finiteNumber(n)
   return type(n)=="number" and n==n and n>=0 and n<math.huge
 end
-function A:ConfirmedLethal(unit)
+-- Shared *public* confidence gate. This never opens enemy health in Lua.
+-- It only inspects our own tracker estimates and nonsecret unit identity.
+-- Native color curves may subsequently use opaque UnitHealth as widget input.
+function A:LethalEvidence(unit)
   if unit~="target" and unit~="focus"
-    and (type(unit)~="string" or not unit:match("^nameplate%d+$")) then return false end
-  if not self:TrackerReady() or not self:LethalOn(unit) then return false end
+    and (type(unit)~="string" or not unit:match("^nameplate%d+$")) then
+    return nil,"invalid_unit"
+  end
+  if not self:TrackerReady() or not self:LethalOn(unit) then
+    return nil,"disabled"
+  end
   local exists,valid=knownCall(UnitExists,unit)
-  if not valid or exists~=true then return false end
+  if not valid or exists~=true then return nil,"unit_unavailable" end
   local hostile,hostileKnown=knownCall(UnitCanAttack,"player",unit)
-  if not hostileKnown or hostile~=true then return false end
-  if type(ns.tracking)~="table" or type(ns.tracking.unitKey)~="function" then return false end
+  if not hostileKnown or hostile~=true then return nil,"not_confirmed_hostile" end
+  -- Avoid a DIES label on a corpse when health is opaque.
+  local dead,deadKnown=knownCall(UnitIsDeadOrGhost,unit)
+  if not deadKnown or dead~=false then return nil,"death_unavailable" end
+  if type(ns.tracking)~="table" or type(ns.tracking.unitKey)~="function" then
+    return nil,"identity_unavailable"
+  end
   local key,keyKnown=knownCall(ns.tracking.unitKey,unit)
-  if not keyKnown or type(key)~="string" or key=="" then return false end
-  -- The vendor's secret-GUID fallback "target" must never identify a focus/plate.
-  if key=="target" and unit~="target" then return false end
+  if not keyKnown or type(key)~="string" or key=="" then
+    return nil,"identity_unavailable"
+  end
+  if key=="target" and unit~="target" then return nil,"identity_unavailable" end
   local dots,total=self:Snapshot(unit)
-  if #dots==0 or not readable(total) or not finiteNumber(total) or total<=0 then return false end
+  if #dots==0 or not readable(total) or not finiteNumber(total) or total<=0 then
+    return nil,"no_estimate"
+  end
   local now,timeKnown=knownCall(GetTime)
-  if not timeKnown or not finiteNumber(now) then return false end
+  if not timeKnown or not finiteNumber(now) then return nil,"time_unavailable" end
   local sum=0
   for _,dot in ipairs(dots) do
     if type(dot)~="table" or dot.provisional
       or not readable(dot.damage) or not finiteNumber(dot.damage)
       or not readable(dot.expiresAt) or not finiteNumber(dot.expiresAt)
-      or dot.expiresAt<=now then return false end
+      or dot.expiresAt<=now then return nil,"untrusted_estimate" end
     sum=sum+dot.damage
   end
-  if not finiteNumber(sum) or math.abs(sum-total)>0.01 then return false end
-  local health,healthKnown=knownCall(UnitHealth,unit)
-  if not healthKnown or not finiteNumber(health) or health<=0 then return false end
+  if not finiteNumber(sum) or math.abs(sum-total)>0.01 then
+    return nil,"untrusted_estimate"
+  end
   local after,afterKnown=knownCall(ns.tracking.unitKey,unit)
-  if not afterKnown or after~=key then return false end
-  -- Only nonsecret health reaches the comparison. It is deliberately NOT
-  -- attempted for secret health even if a StatusBar might visually clamp.
+  if not afterKnown or after~=key then return nil,"identity_changed" end
+  return total,"ready"
+end
+
+-- For clients exposing *readable* health, direct comparison is safe after
+-- checking issecretvalue. For secret health the renderer instead delegates the
+-- threshold to Blizzard's native ColorCurve -> FontString alpha pipeline.
+function A:ConfirmedLethal(unit)
+  local total=self:LethalEvidence(unit)
+  if not total then return false end
+  local health,known=knownCall(UnitHealth,unit)
+  if not known or not finiteNumber(health) or health<=0 then return false end
   return total>=health
 end
 

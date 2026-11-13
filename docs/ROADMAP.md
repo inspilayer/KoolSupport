@@ -189,3 +189,9 @@ Release gate: full tests, seven-addon package, in-client test with visible enemy
 - A Forever screenshot shows the preserved On-frame Extras mode: green/purple DoTs bars and an off-right DIES. The original 18,000px clipped StatusBar is a visual approximation, not an exact Boolean, and is retired **also in advanced modes**. New centered Word/Skull glyphs use verified nonsecret `ConfirmedLethal` for each correct unit and hide with secret/unknown data.
 - Explain current advanced/centered mode in settings without overwriting any saved preferences. Text-only mode remains one click in `/kool`. Retain advanced panels and bars for users who deliberately selected them.
 - Required: Lua tests, green PR/main CI, unified dev ZIP and real BigWigs dry-run. Real client check for mode, native bar center, secret health behavior, release remains owner-controlled.
+
+## November 13, 2026 — 0.10.10: native DIES alpha + clean configuration
+
+User RC2 screenshot: a nearly dead Shore Crawler with Rip/Rake effects and no DIES. Previous implementation hid text whenever UnitHealth was secret. Fix attempts the supported ColorCurve Step -> FontString alpha display path for a verifiably attributable, active DoT estimate, never doing Lua arithmetic or comparisons with secret health or its returned alpha. The client controls whether the label is opaque; unsupported API -> hide. This is experimental until live Forever validation and cannot guarantee any specific combat result. Old clipping method remains retired.
+
+Present /kool navigation as one expandable category sidebar, not a long stack of buttons. Afflictions default page now has the three display choices and four essential checkboxes with an Advanced view for retained saved appearance/position options. Keep the single-root install and macro/vendor data untouched. Gate merge on Lua tests, updated UI mocks, one-root package and actual BigWigs packager dry-run; require owner approval before any Beta tag.

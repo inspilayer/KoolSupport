@@ -16,6 +16,7 @@ local secret=setmetatable({},{
 })
 issecretvalue=function(value)return rawequal(value,secret)end
 local uiButtons={}
+local uiChecks={}
 local uiLabels={}
 local function mk(kind)
  local f={hidden=false,kind=kind or "Frame"}
@@ -35,6 +36,8 @@ local function mk(kind)
  function f:SetMinMaxValues(min,max)self.min=min;self.max=max end
  function f:SetValue(value)self.value=value end
  function f:SetText(t)self.text=t end
+ function f:SetChecked(v)self.checked=v end
+ function f:GetChecked()return self.checked end
  function f:Show()self.hidden=false end
  function f:Hide()self.hidden=true end
  function f:SetShown(x)self.hidden=not x end
@@ -57,6 +60,7 @@ end
 CreateFrame=function(kind)
  local item=mk(kind)
  if kind=="Button" then uiButtons[#uiButtons+1]=item end
+ if kind=="CheckButton" then uiChecks[#uiChecks+1]=item end
  return item
 end
 UIParent=mk();TargetFrame=mk();FocusFrame=mk()
@@ -66,6 +70,7 @@ UnitHealth=function()return readableHealth end
 UnitCanAttack=function(_,unit)return true end
 UnitHealthMax=function()return secret end
 UnitExists=function()return true end
+UnitIsDeadOrGhost=function()return false end
 GetTime=function()return 100 end
 local plate=mk();plate.namePlateUnitToken="nameplate1"
 C_NamePlate={GetNamePlates=function()return {plate}end}
@@ -235,9 +240,10 @@ combat=false
 assert(A:ChangeSetting("nameplates",false))
 assert(A.plates[plate].hidden)
 
--- Settings page regression: simplify is prominent, not hidden in the bottom row.
--- Test actual button callbacks as well as coordinates inside the Base 824x605 pane.
+-- Clean settings: the default page uses radio/checkboxes, and advanced buttons
+-- live in a separate hidden view rather than all being actionable at once.
 local before=#uiButtons
+local beforeChecks=#uiChecks
 local beforeLabels=#uiLabels
 A.BuildPage(mk())
 local function findButton(term)
@@ -245,22 +251,46 @@ local function findButton(term)
   local b=uiButtons[i]
   if type(b.text)=="string" and b.text:find(term,1,true) then return b end
  end
- return nil
 end
-local modeButton=findButton("Centered DIES (default)")
-assert(modeButton,"The simplified mode toggle must exist and be discoverable")
-assert(modeButton.point[4]==20 and modeButton.point[5]==-109,
-  "Centered DIES mode must appear near the top of the settings page")
-assert(findButton("Advanced Appearance") and findButton("Visibility & Position"),
-  "Both settings tabs must be visible")
+local function findCheck(key,value)
+ for i=beforeChecks+1,#uiChecks do
+  local c=uiChecks[i]
+  if c.ksKey==key and (value==nil or c.ksValue==value) then return c end
+ end
+end
+local centered=findCheck("displayMode","centered")
+assert(centered,"DIES-only mode must be a visible native checkbox/radio")
+assert(centered.point[5]==-161 and centered.checked==false)
+assert(findCheck("target") and findCheck("focus") and findCheck("nameplates")
+ and findCheck("lethal"),"Simple view should expose only essential location toggles")
+assert(#uiChecks-beforeChecks<=15,"Avoid a huge grid of simultaneous toggle buttons")
+local advanced=findButton("Advanced settings")
+assert(advanced,"The compact simple UI must have one advanced entry point")
+centered.scripts.OnClick()
+assert(A:Store().displayMode=="centered" and centered.checked,
+  "Choosing DIES-only updates saved mode and visual selection")
+local targetToggle=findCheck("target")
+targetToggle.scripts.OnClick()
+assert(not A:Store().target and not targetToggle.checked)
+targetToggle.scripts.OnClick()
+assert(A:Store().target and targetToggle.checked)
+advanced.scripts.OnClick()
+local back=findButton("Back to simple settings")
+assert(back and back.scripts.OnClick,"Advanced view must have a usable way back")
 assert(findButton("Reset Target") and findButton("Reset Focus"),
-  "Position reset controls must stay available in the second tab")
+  "Legacy saved panel positions remain controllable in advanced settings")
+local barCycle=findButton("Bar style")
+assert(barCycle,"Advanced bar look is a compact cycle control")
+barCycle.scripts.OnClick()
+assert(A:Store().style=="classic")
+back.scripts.OnClick()
+assert(centered.checked,"Basic preference survives browsing advanced options")
 for i=before+1,#uiButtons do
  local b=uiButtons[i]
  if b.point and b.point[1]=="TOPLEFT" and b.width and b.height then
   local x,y=b.point[4],b.point[5]
-  assert(x>=0 and x+b.width<=824,"Settings button overflows content pane horizontally")
-  assert(y<=0 and y-b.height>=-605,"Settings button overflows content pane vertically")
+  assert(x>=0 and x+b.width<=824,"Settings button overflows horizontally")
+  assert(y<=0 and y-b.height>=-605,"Settings button overflows vertically")
  end
 end
 for i=beforeLabels+1,#uiLabels do
@@ -271,16 +301,4 @@ for i=beforeLabels+1,#uiLabels do
     "Settings label falls outside available content")
  end
 end
-modeButton.scripts.OnClick()
-assert(A:Store().displayMode=="centered","Text-only mode is selectable")
-assert(modeButton.text:find("> ",1,true)==1,"Chosen mode is visibly selected")
-local advanced=findButton("Visibility & Position")
-advanced.scripts.OnClick()
-assert(advanced.text:find("> ",1,true)==1,
-  "Visibility / Position tab must visibly indicate its selected state")
-local panels=findButton("Movable Panels")
-panels.scripts.OnClick()
-assert(A:Store().displayMode=="panels","Legacy panels are still selectable")
-assert(findButton("Advanced Appearance").scripts.OnClick,
-  "Appearance tab callback must remain interactive")
 print("PASS afflictions: vendor bridge, values, secret sinks, settings, nameplates, mode tab layout")

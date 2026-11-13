@@ -92,7 +92,7 @@ end
 assert(trackerInitialized,"Afflictions tracker must initialize in the new host addon namespace")
 local K=KoolSupport
 assert(K.API_VERSION==1)
-assert(K.VERSION=="0.10.9-rc.2")
+assert(K.VERSION=="0.10.10-rc.1")
 assert(K.BarTheme and K.CollectLaunchChecks)
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
  K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat)

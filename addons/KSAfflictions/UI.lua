@@ -1,161 +1,183 @@
--- KS Afflictions native settings. Centered DIES is the first, uncluttered mode.
--- DoT tracking is independent of this presentation-only page.
+-- KS Afflictions UI: clear everyday controls; advanced details stay in their own view.
+-- Native WoW controls only; no protected actions or DoT data in configuration.
 local A=KSAfflictions
 local GOLD="|cffffd87a"
+local GREEN="|cff9de4b3"
 local MUTED="|cff9fb4ad"
 
-local function label(parent,text,x,y,w,font)
+local function label(parent,txt,x,y,width,font)
   local t=parent:CreateFontString(nil,"OVERLAY",font or "GameFontNormal")
   t:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
-  t:SetWidth(w)
+  t:SetWidth(width)
   t:SetJustifyH("LEFT")
-  t:SetText(text)
+  t:SetText(txt)
   return t
 end
-local function button(parent,text,x,y,w,fn)
+local function button(parent,txt,x,y,w,fn)
   local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
-  b:SetSize(w,31)
+  b:SetSize(w,29)
   b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
-  b:SetText(text)
+  b:SetText(txt)
   b:SetScript("OnClick",fn)
   return b
+end
+local function check(parent,txt,x,y,key,value,fn)
+  local c=CreateFrame("CheckButton",nil,parent,"UICheckButtonTemplate")
+  c:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
+  c:SetSize(26,26)
+  c.ksKey=key
+  c.ksValue=value
+  c.ksTitle=txt
+  label(parent,txt,x+32,y-3,190,"GameFontHighlight")
+  c:SetScript("OnClick",fn)
+  return c
+end
+local function separator(parent,y)
+  local t=parent:CreateTexture(nil,"ARTWORK")
+  t:SetColorTexture(.39,.32,.17,.52)
+  t:SetPoint("TOPLEFT",parent,"TOPLEFT",20,y)
+  t:SetSize(760,1)
 end
 
 function A.BuildPage(parent)
   A:Store()
-  label(parent,GOLD.."KS Afflictions|r  - Display Settings",20,-15,775,"GameFontNormalLarge")
-  local activeMode=label(parent,"",20,-45,780)
+  label(parent,GOLD.."KS Afflictions|r",20,-17,340,"GameFontNormalLarge")
+  label(parent,MUTED.."Clean display for damage-over-time finishers",20,-49,700)
+  separator(parent,-80)
 
-  local status=label(parent,"",20,-544,765,"GameFontHighlightSmall")
-  label(parent,MUTED.."Secret or unsupported enemy health: hide DIES, never guess. Existing advanced preferences are kept.|r",20,-574,765,"GameFontHighlightSmall")
+  local feedback=label(parent,"",20,-552,770,"GameFontHighlightSmall")
+  local foot=label(parent,MUTED.."DIES is an estimate. Opaque health is evaluated only by supported native visual APIs.|r",
+    20,-574,775,"GameFontHighlightSmall")
+  local active=label(parent,"",420,-22,368,"GameFontHighlightSmall")
+  local normal=CreateFrame("Frame",nil,parent)
+  normal:SetAllPoints(parent)
+  local advanced=CreateFrame("Frame",nil,parent)
+  advanced:SetAllPoints(parent)
+  local activeView="normal"
   local redrawers={}
-  redrawers[#redrawers+1]=function()
-    local mode=A:Store().displayMode
-    local names={centered="Centered DIES (no extra bars)",
-      onframe="On-frame Extras (saved preference)",panels="Movable Panels (saved preference)"}
-    activeMode:SetText("Active: "..(names[mode] or "Unknown")..
-      (mode=="centered" and " — hides all DoT panels and strips." or
-      " — select Centered DIES below to hide extra bars."))
-  end
   local function refresh()
-    for _,fn in ipairs(redrawers) do fn() end
+    for _,f in ipairs(redrawers) do f() end
   end
   local function choose(key,value)
-    local ok,reason=A:ChangeSetting(key,value)
-    status:SetText(ok and "Display settings updated." or tostring(reason))
+    local ok,why=A:ChangeSetting(key,value)
+    feedback:SetText(ok and GREEN.."Saved|r" or "|cffff9486"..tostring(why).."|r")
     refresh()
   end
-
-  -- Mode selection stays visible regardless of advanced settings tab.
-  label(parent,GOLD.."Display mode|r",20,-81,300,"GameFontNormalLarge")
-  local modes={
-    {"centered","Centered DIES (default)",20,224},
-    {"onframe","On-frame Extras",253,218},
-    {"panels","Movable Panels",484,222}
-  }
-  for _,entry in ipairs(modes) do
-    local key,title,x,w=entry[1],entry[2],entry[3],entry[4]
-    local b=button(parent,"",x,-109,w,function()choose("displayMode",key)end)
-    redrawers[#redrawers+1]=function()
-      b:SetText((A:Store().displayMode==key and "> " or "")..title)
-    end
-  end
-  label(parent,"Centered shows only DIES; other modes retain DoT strips, icons, and saved panel positions.",
-    20,-145,775,"GameFontHighlightSmall")
-
-  local appearance=CreateFrame("Frame",nil,parent)
-  appearance:SetAllPoints(parent)
-  local controls=CreateFrame("Frame",nil,parent)
-  controls:SetAllPoints(parent)
-  local selected="appearance"
-  local appearanceTab,controlsTab
-  local function selectTab(tab)
-    selected=tab
-    appearance:SetShown(tab=="appearance")
-    controls:SetShown(tab=="controls")
+  local function view(name)
+    activeView=name
+    normal:SetShown(name=="normal")
+    advanced:SetShown(name=="advanced")
     refresh()
   end
-  appearanceTab=button(parent,"Advanced Appearance",20,-177,211,function()
-    selectTab("appearance")
-  end)
-  controlsTab=button(parent,"Visibility & Position",242,-177,250,function()
-    selectTab("controls")
-  end)
   redrawers[#redrawers+1]=function()
-    appearanceTab:SetText((selected=="appearance" and "> " or "").."Advanced Appearance")
-    controlsTab:SetText((selected=="controls" and "> " or "").."Visibility & Position")
+    local names={centered="DIES only",onframe="On-frame extras",panels="Movable panels"}
+    active:SetText(GREEN.."Active: "..(names[A:Store().displayMode] or "Unknown").."|r")
   end
 
-  local function options(host,title,key,choices,y,width)
-    label(host,GOLD..title.."|r",20,y,755,"GameFontNormalLarge")
-    for i,choice in ipairs(choices) do
-      local id,name=choice[1],choice[2]
-      local b=button(host,"",20+(i-1)*width,y-28,width-9,function()choose(key,id)end)
-      redrawers[#redrawers+1]=function()
-        b:SetText((A:Store()[key]==id and "> " or "")..name)
-      end
+  -- Default view: 3 native radio-like choices, 4 checkboxes, one action.
+  label(normal,GOLD.."Display|r",20,-103,250,"GameFontNormalLarge")
+  label(normal,"Choose one layout",20,-129,650,"GameFontHighlightSmall")
+  local layouts={
+    {"centered","DIES only",20},
+    {"onframe","On-frame extras",278},
+    {"panels","Movable panels",535},
+  }
+  for _,entry in ipairs(layouts) do
+    local value,name,x=entry[1],entry[2],entry[3]
+    local c=check(normal,name,x,-161,"displayMode",value,function()choose("displayMode",value)end)
+    redrawers[#redrawers+1]=function()c:SetChecked(A:Store().displayMode==value)end
+  end
+  label(normal,MUTED.."DIES only adds text inside the original health bar. No second bars, icons or windows.|r",
+    20,-212,760,"GameFontHighlightSmall")
+  separator(normal,-247)
+  label(normal,GOLD.."Where to show it|r",20,-269,340,"GameFontNormalLarge")
+  local mainToggles={
+    {"target","Target",20,-307},
+    {"focus","Focus",278,-307},
+    {"nameplates","Enemy nameplates",535,-307},
+    {"lethal","Enable DIES indicator",20,-350},
+  }
+  for _,entry in ipairs(mainToggles) do
+    local key,txt,x,y=entry[1],entry[2],entry[3],entry[4]
+    local c=check(normal,txt,x,y,key,nil,function()choose(key,not A:Store()[key])end)
+    redrawers[#redrawers+1]=function()c:SetChecked(A:Store()[key])end
+  end
+  separator(normal,-400)
+  label(normal,GOLD.."Client support|r",20,-416,300,"GameFontNormalLarge")
+  local detail=label(normal,"",20,-441,755,"GameFontHighlightSmall")
+  redrawers[#redrawers+1]=function()
+    local supported=A.SecretCurveSupported and A:SecretCurveSupported()
+    local last=A.minimalReasons and A.minimalReasons.target
+    if supported then
+      detail:SetText(GREEN.."Native secret-health curves found|r"..
+        (last and "  |  Last render: "..last or "  |  Live combat confirmation needed"))
+    else
+      detail:SetText("|cffffbd8bSecret-health curve API unavailable|r; text hides when health is protected")
     end
   end
-  options(appearance,"Legacy Bar Appearance","style",{
-    {"modern","Modern KS"},{"classic","Classic WoW"},{"minimal","Minimal"}
-  },-228,246)
-  options(appearance,"Estimated Lethal Indicator","lethalMode",{
-    {"dies","DIES"},{"skull","Skull"},{"both","Both"},{"off","Off"}
-  },-318,184)
-  options(appearance,"DoT Bar Color","dotColor",{
-    {"purple","Purple"},{"gold","Gold"},{"red","Red"},{"school","Spell School"}
-  },-408,184)
-  label(appearance,MUTED.."Appearance and icon options apply to On-frame Extras and Movable Panels, not text-only DIES.|r",20,-493,760,"GameFontHighlightSmall")
+  button(normal,"Refresh display check",20,-482,217,function()
+    if A.RefreshAll then A:RefreshAll() end
+    refresh()
+  end)
+  button(normal,"Advanced settings",258,-482,194,function()view("advanced")end)
 
-  label(controls,GOLD.."Visibility|r",20,-211,755,"GameFontNormalLarge")
-  local switches={
-    {"target","Target"},{"focus","Focus"},{"nameplates","Nameplates"},
-    {"showIcons","Spell Icons"},{"showLabels","Spell Names"},{"lethal","Lethal Detection"},
-    {"lethalTarget","Target Alert"},{"lethalFocus","Focus Alert"},{"lethalNameplates","Nameplate Alert"}
-  }
-  for i,entry in ipairs(switches) do
-    local key,title=entry[1],entry[2]
-    local col=(i-1)%3
-    local row=math.floor((i-1)/3)
-    local b=button(controls,"",20+col*246,-239-row*39,230,function()
-      choose(key,not A:Store()[key])
+  -- Advanced options: a separate page, not 25 simultaneous option buttons.
+  button(advanced,"< Back to simple settings",20,-105,240,function()view("normal")end)
+  label(advanced,GOLD.."Advanced appearance|r",20,-158,390,"GameFontNormalLarge")
+  label(advanced,MUTED.."These options mainly affect the two extra-bar layouts.|r",
+    20,-185,750,"GameFontHighlightSmall")
+  local function cycle(key,choices,txt,x,y,w)
+    local b=button(advanced,"",x,y,w,function()
+      local db=A:Store()
+      local idx=1
+      for i,v in ipairs(choices) do if v[1]==db[key] then idx=i;break end end
+      local nextChoice=choices[idx%#choices+1][1]
+      choose(key,nextChoice)
     end)
     redrawers[#redrawers+1]=function()
-      b:SetText(title..": "..(A:Store()[key] and "ON" or "OFF"))
+      local current=A:Store()[key]
+      local value="Unknown"
+      for _,choice in ipairs(choices) do if choice[1]==current then value=choice[2] end end
+      b:SetText(txt..": "..value)
     end
   end
-  label(controls,GOLD.."Size & Position|r",20,-369,755,"GameFontNormalLarge")
-  local scale=button(controls,"",20,-398,192,function()
-    choose("scale",math.max(.65,A:Store().scale-.1))
-  end)
-  button(controls,"Bigger",220,-398,108,function()
+  cycle("style",{{"modern","Modern"},{"classic","Classic"},{"minimal","Minimal"}},"Bar style",20,-217,235)
+  cycle("dotColor",{{"purple","Purple"},{"gold","Gold"},{"red","Red"},{"school","School"}},"DoT color",270,-217,235)
+  cycle("lethalMode",{{"dies","DIES"},{"skull","Skull"},{"both","Both"},{"off","Off"}},"Alert",520,-217,225)
+  local advancedToggles={
+    {"showIcons","Spell icons",20,-279},
+    {"showLabels","Spell names",275,-279},
+    {"lethalTarget","Target alert",530,-279},
+    {"lethalFocus","Focus alert",20,-326},
+    {"lethalNameplates","Nameplate alert",275,-326},
+    {"schoolColors","School colors",530,-326},
+  }
+  for _,entry in ipairs(advancedToggles) do
+    local key,txt,x,y=entry[1],entry[2],entry[3],entry[4]
+    local c=check(advanced,txt,x,y,key,nil,function()choose(key,not A:Store()[key])end)
+    redrawers[#redrawers+1]=function()c:SetChecked(A:Store()[key])end
+  end
+  separator(advanced,-375)
+  label(advanced,GOLD.."Saved layout adjustments|r",20,-397,390,"GameFontNormalLarge")
+  local size=button(advanced,"",20,-438,245,function()
     choose("scale",math.min(1.65,A:Store().scale+.1))
   end)
-  local height=button(controls,"",336,-398,184,function()
-    choose("height",math.max(9,A:Store().height-2))
-  end)
-  button(controls,"Taller",528,-398,107,function()
-    choose("height",math.min(25,A:Store().height+2))
-  end)
-  button(controls,"Up",643,-398,55,function()
+  local offset=button(advanced,"",278,-438,245,function()
     choose("offsetY",math.min(50,A:Store().offsetY+3))
   end)
-  button(controls,"Down",705,-398,65,function()
-    choose("offsetY",math.max(-20,A:Store().offsetY-3))
-  end)
   redrawers[#redrawers+1]=function()
-    scale:SetText(string.format("Smaller (%.2fx)",A:Store().scale))
-    height:SetText("Shorter ("..A:Store().height.." px)")
+    size:SetText(string.format("Increase size  (%.2fx)",A:Store().scale))
+    offset:SetText("Move nameplates up  ("..A:Store().offsetY..")")
   end
-  button(controls,"Reset Target",20,-443,145,function()
+  button(advanced,"Reset Target",20,-489,153,function()
     local ok,why=A:ResetHUDPosition("target")
-    status:SetText(ok and "Target panel returned to its default anchor." or tostring(why))
+    feedback:SetText(ok and "Target panel reset" or tostring(why))
   end)
-  button(controls,"Reset Focus",176,-443,145,function()
+  button(advanced,"Reset Focus",190,-489,153,function()
     local ok,why=A:ResetHUDPosition("focus")
-    status:SetText(ok and "Focus panel returned to its default anchor." or tostring(why))
+    feedback:SetText(ok and "Focus panel reset" or tostring(why))
   end)
-  label(controls,"Drag the separate Target/Focus panel titles outside combat. Up/Down adjusts nameplates.",338,-448,434,"GameFontHighlightSmall")
-
-  selectTab("appearance")
+  label(advanced,MUTED.."Existing size, offsets and panel positions remain saved. WoW combat blocks setting changes.|r",
+    362,-494,418,"GameFontHighlightSmall")
+  view("normal")
 end
