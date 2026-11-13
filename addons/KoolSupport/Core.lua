@@ -2,7 +2,7 @@
 KoolSupport = KoolSupport or {}
 local KS = KoolSupport
 KS.API_VERSION = 1
-KS.VERSION = "0.10.10-rc.1"
+KS.VERSION = "0.10.10-rc.2"
 KS.modules = KS.modules or {}
 KS.moduleOrder = KS.moduleOrder or {}
 KS.pages = KS.pages or {}
@@ -113,6 +113,37 @@ SlashCmdList = SlashCmdList or {}
 SlashCmdList.KOOLSUPPORT = function(text)
   local page = (text or ""):lower():match("^%s*(.-)%s*$")
   if page == "" then page = "home" end
+  if page == "dies" or page == "diecheck" then
+    local A=KSAfflictions
+    if not A or type(A.DiagnosticLine)~="function" then
+      print("KoolSupport: KS Afflictions diagnostics are unavailable.")
+      return
+    end
+    -- Read-only, explicitly requested. May be called in combat; any protected
+    -- value is only passed to issecretvalue and never printed or compared.
+    if type(A.RefreshAll)=="function" then pcall(A.RefreshAll,A) end
+    print("KoolSupport "..KS.VERSION.."  KS Afflictions ("..
+      A:Store().displayMode..")")
+    print("  "..A:DiagnosticLine("target"))
+    print("  "..A:DiagnosticLine("focus"))
+    if C_NamePlate and type(C_NamePlate.GetNamePlates)=="function" and
+        type(A.PlateUnit)=="function" then
+      local ok,plates=pcall(C_NamePlate.GetNamePlates)
+      if ok and type(plates)=="table" then
+        local count=0
+        for _,plate in ipairs(plates) do
+          local token=A:PlateUnit(plate)
+          if token then
+            count=count+1
+            print("  Visible plate "..count..": "..A:DiagnosticLine(token))
+            if count>=2 then break end
+          end
+        end
+      end
+    end
+    print("  0 tracked DoTs can mean a spell has not ticked yet or the tracker could not confirm it.")
+    return
+  end
   if page == "builder" or page == "macros" then page = "macro_workshop" end
   if page == "suite" then page = "macro_suite" end
   if page == "spellbook" then page = "full_spellbook" end

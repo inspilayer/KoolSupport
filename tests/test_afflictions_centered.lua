@@ -141,8 +141,10 @@ assert(target.word.text=="DIES" and target.word.point[1]=="CENTER")
 assert(target.word.point[2]==target.frame)
 assert(target.frame.anchor==TargetFrameHealthBar and target.frame.mouse==false)
 assert(lethalPlate and lethalPlate.active and lethalPlate.frame.anchor==plateB.UnitFrame.HealthBar)
-assert(not A.minimalUnits.focus,"Nonlethal focus gets no overlay")
-assert(not A.minimalPlates[plateA],"Nonlethal nameplate gets no overlay")
+assert(not A.minimalUnits.focus or A.minimalUnits.focus.frame.hidden,
+ "Nonlethal focus never displays DIES")
+assert(not A.minimalPlates[plateA] or A.minimalPlates[plateA].frame.hidden,
+ "Nonlethal nameplate never displays DIES")
 assert(not A.minimalPlates[plateUnsupported],"Unsupported native bar must not get overlay")
 assert(not A.huds.target and not A.plates[plateA],"Never create extra HUDs in centered mode")
 assert(not TargetFrameHealthBar.nativeMutation and not FocusFrameHealthBar.nativeMutation)
@@ -169,17 +171,29 @@ C_CurveUtil={CreateColorCurve=function()
  function curve:AddPoint(x,color)self.points[#self.points+1]={x=x,color=color} end
  function curve:EvaluateUnpacked(value)
   assert(rawequal(value,secret),"Native curve must receive secret health untouched")
-  assert(self.kind==Enum.LuaCurveType.Step and #self.points==2,
-   "Only native non-interpolating threshold curves permitted")
-  local color=secretRawHealth<self.points[2].x and self.points[1].color or self.points[2].color
+  assert(self.kind==Enum.LuaCurveType.Step and #self.points==3,
+   "Native non-interpolating threshold must also hide dead units")
+  local color=secretRawHealth<self.points[2].x and self.points[1].color
+    or (secretRawHealth<self.points[3].x and self.points[2].color or self.points[3].color)
   return color.r,color.g,color.b,color.a
  end
  return curve
 end}
 health.target=secret
 A:RefreshAll()
-assert(target.active and target.mode=="secret_curve" and target.word.color[4]==1,
+assert(target.active and target.mode=="native_curve_applied" and target.word.color[4]==1,
  "Client-supported curve shows a lethal enemy without comparing secret health")
+-- A protected/unavailable death flag MUST NOT hide a living enemy merely
+-- because WoW keeps its boolean secret. The native curve handles 0 HP.
+UnitIsDeadOrGhost=function()return secret end
+A:RefreshAll()
+assert(target.active and target.word.color[4]==1,
+ "Secret dead flag must not preempt native health curve")
+secretRawHealth=0
+A:RefreshAll()
+assert(target.word.color[4]==0,"Dead enemy health must suppress DIES natively")
+secretRawHealth=350
+UnitIsDeadOrGhost=function()return false end
 secretRawHealth=1000
 A:RefreshAll()
 assert(target.active and target.word.color[4]==0,
@@ -272,4 +286,16 @@ A:RefreshAll()
 assert(target.frame.hidden and focus.frame.hidden and lethalPlate.frame.hidden)
 assert(KSThreat.plates[plateA].overlay==threatOverlay and not threatOverlay.hidden)
 assert(KSStealth.plates[plateB].holder==stealthOverlay and not stealthOverlay.hidden)
+-- An explicit diagnostic must expose the independent tracker estimate and a
+-- categorical protected-health state, NEVER the secret HP value itself.
+health.target=secret
+local report=A:DiagnosticLine("target")
+assert(report:find("HP secret",1,true) and report:find("estimated 600",1,true))
+assert(report:find("gate ready",1,true))
+assert(not report:find("guid-",1,true),"Do not print internal creature identifiers")
+assert(A:DiagnosticLine("player")=="invalid unit")
+UnitIsDeadOrGhost=function()return true end
+local total,reason=A:LethalEvidence("target")
+assert(total==nil and reason=="dead_unit","Known dead units cannot show DIES")
+
 print("PASS centered DIES: migration, attribution, secrets, expiry, healing, bars, event/compatibility")

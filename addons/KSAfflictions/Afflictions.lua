@@ -138,9 +138,14 @@ function A:LethalEvidence(unit)
   if not valid or exists~=true then return nil,"unit_unavailable" end
   local hostile,hostileKnown=knownCall(UnitCanAttack,"player",unit)
   if not hostileKnown or hostile~=true then return nil,"not_confirmed_hostile" end
-  -- Avoid a DIES label on a corpse when health is opaque.
-  local dead,deadKnown=knownCall(UnitIsDeadOrGhost,unit)
-  if not deadKnown or dead~=false then return nil,"death_unavailable" end
+  -- The dead flag may itself be secret or unavailable on Forever. Reject a
+  -- *confirmed* dead unit; don't reject every living unit simply because the
+  -- boolean is protected. The renderer independently makes alpha ZERO for
+  -- raw health 0 using a native Step ColorCurve, or checks nonsecret HP > 0.
+  if type(UnitIsDeadOrGhost)=="function" then
+    local dead,deadKnown=knownCall(UnitIsDeadOrGhost,unit)
+    if deadKnown and dead==true then return nil,"dead_unit" end
+  end
   if type(ns.tracking)~="table" or type(ns.tracking.unitKey)~="function" then
     return nil,"identity_unavailable"
   end
@@ -180,6 +185,39 @@ function A:ConfirmedLethal(unit)
   local health,known=knownCall(UnitHealth,unit)
   if not known or not finiteNumber(health) or health<=0 then return false end
   return total>=health
+end
+
+-- Read-only, user-triggered diagnostic. Every displayed number is from our
+-- player-owned DoT model, NEVER from enemy health. Only the categorical
+-- issecretvalue result is reported. No GUID, unit name or secret RGBA output.
+function A:DiagnosticLine(unit)
+  if unit~="target" and unit~="focus" and
+    (type(unit)~="string" or not unit:match("^nameplate%d+$")) then
+    return "invalid unit"
+  end
+  local dots,damage=self:Snapshot(unit)
+  local count=type(dots)=="table" and #dots or 0
+  local estimate="unavailable"
+  if readable(damage) and finiteNumber(damage) then
+    estimate=tostring(math.floor(damage+.5))
+  end
+  local _,gate=self:LethalEvidence(unit)
+  local mode="unknown"
+  if type(UnitHealth)=="function" and type(issecretvalue)=="function" then
+    local ok,hp=pcall(UnitHealth,unit)
+    if ok then
+      local checked,hidden=pcall(issecretvalue,hp)
+      if checked then mode=hidden and "secret" or "readable" end
+    end
+  end
+  local stage=self.minimalReasons and self.minimalReasons[unit] or "not_rendered"
+  local label=unit=="target" and "Target"
+    or unit=="focus" and "Focus" or "Plate"
+  -- Unit token indexes are deliberately not logged; these fields cannot
+  -- identify a player or creature and contain no secret health.
+  return label..": "..count.." DoT, estimated "..estimate..
+    " remaining; HP "..mode.."; gate "..(gate or "ready")..
+    "; display "..stage
 end
 
 function A:ChangeSetting(key,value)

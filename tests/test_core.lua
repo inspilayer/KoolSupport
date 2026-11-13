@@ -28,4 +28,22 @@ assert(KS:SetModuleEnabled('profiles',true))
 InCombatLockdown=function() return true end
 ok=KS:SetModuleEnabled('profiles',false)
 assert(not ok, 'combat blocks module settings mutation')
+-- Read-only /kool dies must work in combat without changing settings or
+-- opening a page. Only nonsecret evidence summaries are printed.
+local previousPrint=print
+local lines={}
+print=function(msg)lines[#lines+1]=msg end
+local count=0
+KSAfflictions={
+ Store=function()return {displayMode="centered"} end,
+ RefreshAll=function()count=count+1 end,
+ DiagnosticLine=function(_,unit)return unit..": 1 DoT, estimated 400 remaining; HP secret" end,
+}
+SlashCmdList.KOOLSUPPORT('dies')
+assert(count==1 and #lines>=4,"Combat read-only diagnostic should execute")
+assert(lines[2]:find("target:",1,true),"Target diagnostic must be reported")
+assert(lines[3]:find("focus:",1,true),"Focus diagnostic must be reported")
+assert(not lines[2]:find("UnitHealth"),"No raw health is emitted")
+print=previousPrint
+
 print('PASS core: registration, prerequisites, page gating, runtime toggles, combat lock')

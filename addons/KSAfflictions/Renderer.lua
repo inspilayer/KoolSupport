@@ -39,16 +39,15 @@ local function lethalWidget(h)
   h.lethalIcon=skull
 end
 local function paintLethal(A,h,unit,db,center)
-  local eligible=A:ConfirmedLethal(unit)
   local mode=db.lethalMode
-  local word=eligible and (mode=="dies" or mode=="both")
-  local skull=eligible and (mode=="skull" or mode=="both")
+  local eligible,reason=A:ApplyLethalTint(unit,h,h.lethalWord,h.lethalIcon)
+  A:NoteMinimalReason(unit,reason)
   h.lethalWord:ClearAllPoints()
   h.lethalIcon:ClearAllPoints()
   h.lethalWord:SetPoint("CENTER",center,"CENTER",mode=="both" and -8 or 0,0)
   h.lethalIcon:SetPoint("CENTER",center,"CENTER",mode=="both" and 21 or 0,0)
-  h.lethalWord:SetShown(word)
-  h.lethalIcon:SetShown(skull)
+  h.lethalWord:SetShown(eligible and (mode=="dies" or mode=="both"))
+  h.lethalIcon:SetShown(eligible and (mode=="skull" or mode=="both"))
 end
 local function makeHUD(parent,small)
   local h=CreateFrame("Frame",nil,parent)
@@ -379,12 +378,16 @@ function A:SecretCurveSupported()
 end
 local function ensureCurve(record,total)
   local cutoff=math.floor(total)
-  if cutoff<=0 or not curveSupported() then return nil end
+  -- Health zero is DEAD, even when UnitIsDeadOrGhost itself is secret.
+  -- A 0 -> transparent, 1 -> opaque, cutoff -> transparent step curve
+  -- never shows DIES on corpses or at/above the conservative threshold.
+  if cutoff<2 or not curveSupported() then return nil end
   if record.curve and record.curveCutoff==cutoff then return record.curve end
   local ok,curve=pcall(function()
     local c=C_CurveUtil.CreateColorCurve()
     c:SetType(Enum.LuaCurveType.Step)
-    c:AddPoint(0,CreateColor(.83,1,.84,1))
+    c:AddPoint(0,CreateColor(.83,1,.84,0))
+    c:AddPoint(1,CreateColor(.83,1,.84,1))
     c:AddPoint(cutoff,CreateColor(.83,1,.84,0))
     return c
   end)
@@ -403,6 +406,51 @@ function A:NoteMinimalReason(unit,reason)
     self.minimalReasons[unit]=reason
   end
 end
+-- Shared native visual primitive for Centered DIES AND optional advanced
+-- bars. Returns whether a trusted visual predicate was installed, NOT the
+-- actual outcome when health/curve colors are secret. Neither Lua nor chat
+-- ever inspect or compare the returned secret RGBA values.
+function A:ApplyLethalTint(unit,record,word,skull,knownTotal)
+  local total,reason=knownTotal,"ready"
+  if not total then total,reason=self:LethalEvidence(unit) end
+  if not total then return false,reason or "no_estimate" end
+  if type(UnitHealth)~="function" or type(issecretvalue)~="function" then
+    return false,"health_api_unavailable"
+  end
+  local ok,health=pcall(UnitHealth,unit)
+  if not ok then return false,"health_unavailable" end
+  local checked,secret=pcall(issecretvalue,health)
+  if not checked then return false,"health_unavailable" end
+  if not secret then
+    if type(health)~="number" or health~=health or health<=0 or total<health then
+      return false,"not_lethal"
+    end
+    local p=pcall(word.SetTextColor,word,.83,1,.84,1)
+    if not p then return false,"text_rejected" end
+    if skull then
+      if type(skull.SetVertexColor)~="function" then return false,"skull_unsupported" end
+      if not pcall(skull.SetVertexColor,skull,.83,1,.84,1) then
+        return false,"skull_rejected"
+      end
+    end
+    return true,"readable_lethal"
+  end
+  local curve=ensureCurve(record,total)
+  if not curve then return false,"secret_curve_unavailable" end
+  local evaluated,r,g,b,a=pcall(curve.EvaluateUnpacked,curve,health)
+  if not evaluated then return false,"secret_curve_rejected" end
+  if not pcall(word.SetTextColor,word,r,g,b,a) then
+    return false,"secret_text_rejected"
+  end
+  if skull then
+    if type(skull.SetVertexColor)~="function" then return false,"skull_unsupported" end
+    if not pcall(skull.SetVertexColor,skull,r,g,b,a) then
+      return false,"secret_skull_rejected"
+    end
+  end
+  -- This is opaque visual eligibility, not a claim we have read secret HP.
+  return true,"native_curve_applied"
+end
 function A:PaintMinimal(cache,key,native,unit)
   local record=cache[key]
   if not nativeVisible(native) or not unit then
@@ -410,61 +458,28 @@ function A:PaintMinimal(cache,key,native,unit)
     hideMinimal(record)
     return
   end
+  -- Avoid creating new nameplate frames until public DoT evidence exists.
   local total,reason=self:LethalEvidence(unit)
   if not total then
-    self:NoteMinimalReason(unit,reason or "untrusted_estimate")
+    self:NoteMinimalReason(unit,reason or "no_estimate")
     hideMinimal(record)
     return
   end
-  if type(UnitHealth)~="function" or type(issecretvalue)~="function" then
-    self:NoteMinimalReason(unit,"health_api_unavailable")
-    hideMinimal(record)
+  record=self:EnsureMinimal(cache,key,native)
+  if not record then
+    self:NoteMinimalReason(unit,"unsupported_frame")
     return
   end
-  local ok,health=pcall(UnitHealth,unit)
-  if not ok then self:NoteMinimalReason(unit,"health_unavailable");hideMinimal(record);return end
-  local checked,secret=pcall(issecretvalue,health)
-  if not checked then self:NoteMinimalReason(unit,"health_unavailable");hideMinimal(record);return end
-  if not secret then
-    -- Arithmetic/branching only on a proven nonsecret numeric value.
-    if type(health)~="number" or health~=health or health<=0 or total<health then
-      self:NoteMinimalReason(unit,"not_lethal")
-      hideMinimal(record)
-      return
-    end
-    record=self:EnsureMinimal(cache,key,native)
-    if not record then self:NoteMinimalReason(unit,"unsupported_frame");return end
-    local painted=pcall(record.word.SetTextColor,record.word,.83,1,.84,1)
-    if not painted then hideMinimal(record);return end
-    record.mode="readable"
-  else
-    -- A supported native widget evaluates SECRET health without inspecting,
-    -- comparing, formatting, logging or transferring it into addon arithmetic.
-    record=self:EnsureMinimal(cache,key,native)
-    if not record then self:NoteMinimalReason(unit,"unsupported_frame");return end
-    local curve=ensureCurve(record,total)
-    if not curve then
-      self:NoteMinimalReason(unit,"secret_curve_unavailable")
-      hideMinimal(record)
-      return
-    end
-    local evaluated,r,g,b,a=pcall(curve.EvaluateUnpacked,curve,health)
-    if not evaluated then
-      self:NoteMinimalReason(unit,"secret_curve_rejected")
-      hideMinimal(record)
-      return
-    end
-    local painted=pcall(record.word.SetTextColor,record.word,r,g,b,a)
-    if not painted then
-      self:NoteMinimalReason(unit,"secret_text_rejected")
-      hideMinimal(record)
-      return
-    end
-    record.mode="secret_curve"
+  local eligible,why=self:ApplyLethalTint(unit,record,record.word,nil,total)
+  if not eligible then
+    self:NoteMinimalReason(unit,why)
+    hideMinimal(record)
+    return
   end
   record.unit=unit
-  record.active=true -- eligible for refresh, NOT a Lua assertion of secret lethality
-  self:NoteMinimalReason(unit,record.mode)
+  record.active=true
+  record.mode=why
+  self:NoteMinimalReason(unit,why)
   record.frame:Show()
 end
 function A:AnyMinimalShown()
