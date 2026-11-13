@@ -534,6 +534,9 @@ function A:RefreshAll()
   for _,unit in ipairs(UNITS) do
     local visible=enabled and db[unit] and type(UnitExists)=="function"
       and UnitExists(unit)
+    -- Learn exact max HP only while readable. Later combat secrecy may reuse
+    -- this ephemeral value for the SAME unit identity, until invalidated.
+    if enabled and visible then self:RememberPublicMax(unit) end
     local old=self.huds[unit]
     local onframe=self.onFrameHUDs[unit]
     if centered then
@@ -567,6 +570,7 @@ function A:RefreshAll()
       for _,plate in ipairs(plates) do
         seen[plate]=true
         local unit=self:PlateUnit(plate)
+        if unit then self:RememberPublicMax(unit) end
         local old=self.plates[plate]
         if centered then
           if old then old:Hide() end
@@ -630,8 +634,19 @@ end
 driver:SetScript("OnEvent",function(_,event,unit)
   -- A reused plate or changed target cannot inherit a previous enemy's word,
   -- even for the one event turn before the deferred tracker repaint.
-  if event=="PLAYER_TARGET_CHANGED" then hideMinimal(A.minimalUnits.target) end
-  if event=="PLAYER_FOCUS_CHANGED" then hideMinimal(A.minimalUnits.focus) end
+  if event=="PLAYER_ENTERING_WORLD" then A.knownUnitMax={} end
+  if event=="PLAYER_TARGET_CHANGED" then
+    A:ForgetKnownMax("target")
+    hideMinimal(A.minimalUnits.target)
+  end
+  if event=="PLAYER_FOCUS_CHANGED" then
+    A:ForgetKnownMax("focus")
+    hideMinimal(A.minimalUnits.focus)
+  end
+  if event=="UNIT_MAXHEALTH" or event=="NAME_PLATE_UNIT_ADDED"
+    or event=="NAME_PLATE_UNIT_REMOVED" then
+    A:ForgetKnownMax(unit)
+  end
   if event=="NAME_PLATE_UNIT_REMOVED" then
     for _,record in pairs(A.minimalPlates) do
       if record.unit==unit then hideMinimal(record) end
