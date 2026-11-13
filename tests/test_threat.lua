@@ -139,6 +139,31 @@ assert(overlay.hidden,"No secret-detection API means no threat status inspection
 issecretvalue=function(value)return value==secret end
 A:RefreshAll()
 assert(not overlay.hidden)
+-- Regression: native Blizzard nameplates use plate.unitToken, not necessarily
+-- the older third-party namePlateUnitToken field (the 0.10.6 blank-plate bug).
+plate.namePlateUnitToken=nil
+plate.unitToken="nameplate1"
+A:RefreshAll()
+assert(A.plates[plate].overlay==overlay and not overlay.hidden,
+ "Blizzard unitToken must work with no namePlateUnitToken")
+local main,details=A:DiagnosticText()
+assert(main:find("Visible plates: 1",1,true) and main:find("colored: 1",1,true))
+assert(details:find("No skipped plates",1,true))
+plate.unitToken=nil
+plate.GetUnit=function()return "nameplate1" end
+A:RefreshAll()
+assert(not overlay.hidden,"Blizzard GetUnit() fallback must resolve native nameplates")
+plate.GetUnit=nil
+A:RefreshAll()
+assert(overlay.hidden,"Unsupported token must fail closed")
+main,details=A:DiagnosticText()
+assert(main:find("colored: 0",1,true) and details:find("no token: 1",1,true),
+ "Diagnostics must show why a plate was skipped")
+plate.namePlateUnitToken="nameplate1"
+A:RefreshAll()
+assert(not overlay.hidden,"Restored token restores coloring")
+assert(A:HealthBar({UnitFrame={HealthBarsContainer={HealthBar=native}}})==native,
+ "Resolve Blizzard nested health StatusBar as well")
 -- Nameplate lacking a native StatusBar is ignored; original bar never restyled.
 plate.UnitFrame.healthBar=makeFrame("Frame")
 A:RefreshAll()
