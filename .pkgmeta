@@ -1,15 +1,15 @@
-# One KoolSupport CurseForge project / one installable ZIP / seven sibling WoW addons.
-# Optional in the game UI does NOT require a separate CurseForge project.
+# One CurseForge installable addon folder with six in-game optional module folders.
+# Source modules remain separate for engineering tests; distribution nests them.
 package-as: KoolSupport
 enable-nolib-creation: no
 move-folders:
     KoolSupport/addons/KoolSupport: KoolSupport
-    KoolSupport/addons/KSMacros: KSMacros
-    KoolSupport/addons/KSSupportSessions: KSSupportSessions
-    KoolSupport/addons/KSStealth: KSStealth
-    KoolSupport/addons/KSAfflictions: KSAfflictions
-    KoolSupport/addons/KSCampfireChat: KSCampfireChat
-    KoolSupport/addons/KSThreat: KSThreat
+    KoolSupport/addons/KSMacros: KoolSupport/Modules/KSMacros
+    KoolSupport/addons/KSSupportSessions: KoolSupport/Modules/KSSupportSessions
+    KoolSupport/addons/KSStealth: KoolSupport/Modules/KSStealth
+    KoolSupport/addons/KSAfflictions: KoolSupport/Modules/KSAfflictions
+    KoolSupport/addons/KSCampfireChat: KoolSupport/Modules/KSCampfireChat
+    KoolSupport/addons/KSThreat: KoolSupport/Modules/KSThreat
 ignore:
     - docs
     - tests
@@ -18,4 +18,11 @@ ignore:
     - legacy
     - .github
     - README.md
+    # Nested modules are scripts, not separately loadable addons.
+    - addons/KSMacros/KSMacros.toc
+    - addons/KSSupportSessions/KSSupportSessions.toc
+    - addons/KSStealth/KSStealth.toc
+    - addons/KSAfflictions/KSAfflictions.toc
+    - addons/KSCampfireChat/KSCampfireChat.toc
+    - addons/KSThreat/KSThreat.toc
 license-output: LICENSE

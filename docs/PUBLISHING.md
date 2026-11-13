@@ -62,3 +62,12 @@ The successful GitHub `v0.10.4-rc.1-beta` tag is an immutable previous release. 
 ## 0.10.6 candidate: KS Threat (November 11, 2026)
 
 The public v0.10.5-rc.1-beta GitHub tag already exists and must never be changed or recreated. Candidate 0.10.6-rc.1 includes a seventh sibling, KSThreat, in the same CurseForge project 1780256, not a separate listing. Publish only after verifying red/pink/violet/purple threat states on a live Forever Druid tank, nameplate compatibility and full CI, followed by explicit owner authorization of a NEW versioned beta tag.
+
+
+## 0.10.8 RC — one folder on disk (current packaging specification)
+
+Older sections above describe the previously released multiple-sibling-folder format; **this is superseded for 0.10.8 and later.** The new unified CurseForge project remains one listing, but the actual archive must contain only `KoolSupport/` at its root, with `KoolSupport.toc` and exactly six code directories under `KoolSupport/Modules/`. Unlike the past versions, no standalone `KSMacros.toc`, `KSAfflictions.toc`, etc. is distributed. The `.pkgmeta` nested destinations, `scripts/check.py --package` ZIP and BigWigs real packager dry-run are all checked for that exact shape; any packager placing modules beside KoolSupport instead of inside it is a release-blocking failure.
+
+To upgrade from earlier betas, stop WoW, back up AddOns and WTF, remove **only** the old root-level `KSMacros`, `KSSupportSessions`, `KSStealth`, `KSAfflictions`, `KSCampfireChat` and `KSThreat` addon folders, then extract the ZIP's `KoolSupport/`. Per-character `KoolSupportDB` remains as-is. Copy account-wide `WTF/.../SavedVariables/KSAfflictions.lua` to `KoolSupport.lua` *only if absent*, or manually merge the `KSAfflictionsTrackerDB` assignment after backing up both. The old file is not deleted automatically. The tracker is now saved under the single addon root; this transition cannot migrate silently using a WoW API. Previous releases and tags remain unchanged.
+
+The last publicly verified Beta tag at sprint start was `v0.10.6-rc.1-beta`; there is no 0.10.7 tag. `0.10.8-rc.1` is a separate unpublished candidate and needs a fresh owner-approved workflow after green CI and live Forever verification. Never retag earlier versions. CurseForge's external tag webhook remains the delivery route.

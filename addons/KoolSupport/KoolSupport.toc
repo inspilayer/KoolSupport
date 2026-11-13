@@ -1,10 +1,60 @@
 ## Interface: 16001
 ## Title: KoolSupport
-## Notes: Core framework for the KoolSupport addon family (development preview)
-## Author: KoolSupport
-## Version: 0.10.7-rc.1
+## Notes: Unified KoolSupport suite with six optional in-game modules
+## Author: InspiLayer
+## Version: 0.10.8-rc.1
 ## SavedVariablesPerCharacter: KoolSupportDB
+## SavedVariables: KSAfflictionsTrackerDB
+
 Core.lua
 BarTheme.lua
 Diagnostics.lua
 UI.lua
+
+# Macro Workshop
+Modules\KSMacros\Engine.lua
+Modules\KSMacros\Spellbook.lua
+Modules\KSMacros\ClassPresets.lua
+Modules\KSMacros\Suite.lua
+Modules\KSMacros\Workshop.lua
+Modules\KSMacros\Module.lua
+
+# Support Sessions
+Modules\KSSupportSessions\Profiles.lua
+Modules\KSSupportSessions\Session.lua
+Modules\KSSupportSessions\Module.lua
+
+# Stealth
+Modules\KSStealth\Stealth.lua
+Modules\KSStealth\TalentImpactData.lua
+Modules\KSStealth\TalentResolver.lua
+Modules\KSStealth\TalentTooltip.lua
+Modules\KSStealth\UI.lua
+Modules\KSStealth\TalentImpactUI.lua
+Modules\KSStealth\Module.lua
+
+# Afflictions (MIT-licensed tracker)
+Modules\KSAfflictions\Vendor\Locale.lua
+Modules\KSAfflictions\Vendor\Locale_deDE.lua
+Modules\KSAfflictions\Vendor\Locale_esES.lua
+Modules\KSAfflictions\Vendor\Locale_frFR.lua
+Modules\KSAfflictions\Vendor\Locale_koKR.lua
+Modules\KSAfflictions\Vendor\Locale_ptBR.lua
+Modules\KSAfflictions\Vendor\Locale_zhCN.lua
+Modules\KSAfflictions\Vendor\Tracker.lua
+Modules\KSAfflictions\TrackerBridge.lua
+Modules\KSAfflictions\Afflictions.lua
+Modules\KSAfflictions\Renderer.lua
+Modules\KSAfflictions\UI.lua
+Modules\KSAfflictions\Module.lua
+
+# Campfire Chat
+Modules\KSCampfireChat\Content.lua
+Modules\KSCampfireChat\CampfireChat.lua
+Modules\KSCampfireChat\UI.lua
+Modules\KSCampfireChat\Module.lua
+
+# Threat
+Modules\KSThreat\Threat.lua
+Modules\KSThreat\UI.lua
+Modules\KSThreat\Module.lua
