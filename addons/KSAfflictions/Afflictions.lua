@@ -138,9 +138,14 @@ function A:LethalEvidence(unit)
   if not valid or exists~=true then return nil,"unit_unavailable" end
   local hostile,hostileKnown=knownCall(UnitCanAttack,"player",unit)
   if not hostileKnown or hostile~=true then return nil,"not_confirmed_hostile" end
-  -- Avoid a DIES label on a corpse when health is opaque.
-  local dead,deadKnown=knownCall(UnitIsDeadOrGhost,unit)
-  if not deadKnown or dead~=false then return nil,"death_unavailable" end
+  -- The dead flag may itself be secret or unavailable on Forever. Reject a
+  -- *confirmed* dead unit; don't reject every living unit simply because the
+  -- boolean is protected. The renderer independently makes alpha ZERO for
+  -- raw health 0 using a native Step ColorCurve, or checks nonsecret HP > 0.
+  if type(UnitIsDeadOrGhost)=="function" then
+    local dead,deadKnown=knownCall(UnitIsDeadOrGhost,unit)
+    if deadKnown and dead==true then return nil,"dead_unit" end
+  end
   if type(ns.tracking)~="table" or type(ns.tracking.unitKey)~="function" then
     return nil,"identity_unavailable"
   end
