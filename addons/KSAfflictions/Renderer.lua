@@ -387,6 +387,16 @@ local function publicKey(unit)
   if not checked or secret or type(key)~="string" or key=="" then return nil end
   return key
 end
+-- The vendor intentionally changes GUID -> "target"/"plate:nameplateN"
+-- when identity becomes secret in combat. This is not a unit swap. Unit
+-- target/nameplate change events still invalidate the baseline immediately.
+local function sameAssociation(unit,oldKey,newKey)
+  if oldKey==newKey then return true end
+  if unit=="target" and newKey=="target" then return true end
+  if type(unit)=="string" and unit:match("^nameplate%d+$")
+    and newKey=="plate:"..unit then return true end
+  return false
+end
 function A:ForgetKnownMax(unit)
   if type(unit)~="string" then return end
   if type(issecretvalue)~="function" then return end
@@ -399,7 +409,7 @@ function A:RememberPublicMax(unit)
   local key=publicKey(unit)
   if not key then self:ForgetKnownMax(unit);return false end
   local old=self.knownUnitMax[unit]
-  if old and old.key~=key then self:ForgetKnownMax(unit) end
+  if old and not sameAssociation(unit,old.key,key) then self:ForgetKnownMax(unit) end
   local ok,value=pcall(UnitHealthMax,unit)
   if not ok then return false end
   local checked,secret=pcall(issecretvalue,value)
@@ -413,7 +423,7 @@ function A:KnownMax(unit)
   local saved=self.knownUnitMax[unit]
   if not saved then return nil end
   local key=publicKey(unit)
-  if not key or key~=saved.key then
+  if not key or not sameAssociation(unit,saved.key,key) then
     self:ForgetKnownMax(unit)
     return nil
   end
