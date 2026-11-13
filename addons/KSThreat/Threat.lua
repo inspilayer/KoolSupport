@@ -222,6 +222,7 @@ local driver=CreateFrame("Frame")
 for _,event in ipairs({
  "PLAYER_ENTERING_WORLD","PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED",
  "UNIT_THREAT_LIST_UPDATE","UNIT_THREAT_SITUATION_UPDATE",
+ "UNIT_HEALTH","UNIT_MAXHEALTH",
  "NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED",
 }) do driver:RegisterEvent(event) end
 driver:SetScript("OnEvent",function()
