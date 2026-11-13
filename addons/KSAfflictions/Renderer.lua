@@ -361,42 +361,94 @@ function A:EnsureMinimal(cache,key,native)
   cache[key]=record
   return record
 end
--- WoW's public ColorCurve/FontString APIs accept opaque numeric values.
--- The step function is evaluated by the client, NOT Lua: for positive health
--- strictly below floor(remaining DoT damage) the text is opaque, otherwise
--- transparent. This conservative one-HP margin avoids boundary false positives.
--- If a client lacks these APIs or refuses a secret argument, fail closed.
-local function curveSupported()
+-- 0.10.10 RC3: NEVER call Curve:Evaluate* on secret UnitHealth from
+-- tainted addon code; that API is AllowedWhenUntainted and Forever rejects it.
+-- UnitHealthPercent(unit, false, curve), however, is a native unit API that
+-- evaluates a scalar Curve itself. Its secret result goes directly to a
+-- FontString/Texture:SetAlpha sink (AllowedWhenTainted). The absolute DoT
+-- threshold requires an exact max-HP baseline captured while readable.
+local function percentCurveSupported()
   return type(C_CurveUtil)=="table"
-    and type(C_CurveUtil.CreateColorCurve)=="function"
-    and type(CreateColor)=="function"
+    and type(C_CurveUtil.CreateCurve)=="function"
     and type(Enum)=="table" and type(Enum.LuaCurveType)=="table"
     and Enum.LuaCurveType.Step~=nil
+    and type(UnitHealthPercent)=="function"
 end
 function A:SecretCurveSupported()
-  return curveSupported()
+  return percentCurveSupported()
 end
-local function ensureCurve(record,total)
-  local cutoff=math.floor(total)
-  -- Health zero is DEAD, even when UnitIsDeadOrGhost itself is secret.
-  -- A 0 -> transparent, 1 -> opaque, cutoff -> transparent step curve
-  -- never shows DIES on corpses or at/above the conservative threshold.
-  if cutoff<2 or not curveSupported() then return nil end
-  if record.curve and record.curveCutoff==cutoff then return record.curve end
-  local ok,curve=pcall(function()
-    local c=C_CurveUtil.CreateColorCurve()
-    c:SetType(Enum.LuaCurveType.Step)
-    c:AddPoint(0,CreateColor(.83,1,.84,0))
-    c:AddPoint(1,CreateColor(.83,1,.84,1))
-    c:AddPoint(cutoff,CreateColor(.83,1,.84,0))
-    return c
-  end)
-  if not ok or not curve or type(curve.EvaluateUnpacked)~="function" then
-    record.curve=nil
+A.knownUnitMax=A.knownUnitMax or {}
+local function publicKey(unit)
+  if not ns.tracking or type(ns.tracking.unitKey)~="function"
+    or type(issecretvalue)~="function" then return nil end
+  local ok,key=pcall(ns.tracking.unitKey,unit)
+  if not ok then return nil end
+  local checked,secret=pcall(issecretvalue,key)
+  if not checked or secret or type(key)~="string" or key=="" then return nil end
+  return key
+end
+-- The vendor intentionally changes GUID -> "target"/"plate:nameplateN"
+-- when identity becomes secret in combat. This is not a unit swap. Unit
+-- target/nameplate change events still invalidate the baseline immediately.
+local function sameAssociation(unit,oldKey,newKey)
+  if oldKey==newKey then return true end
+  if unit=="target" and newKey=="target" then return true end
+  if type(unit)=="string" and unit:match("^nameplate%d+$")
+    and newKey=="plate:"..unit then return true end
+  return false
+end
+function A:ForgetKnownMax(unit)
+  if type(unit)~="string" then return end
+  if type(issecretvalue)~="function" then return end
+  local ok,secret=pcall(issecretvalue,unit)
+  if ok and not secret then self.knownUnitMax[unit]=nil end
+end
+function A:RememberPublicMax(unit)
+  if not unit or type(UnitHealthMax)~="function"
+    or type(issecretvalue)~="function" then return false end
+  local key=publicKey(unit)
+  if not key then self:ForgetKnownMax(unit);return false end
+  local old=self.knownUnitMax[unit]
+  if old and not sameAssociation(unit,old.key,key) then self:ForgetKnownMax(unit) end
+  local ok,value=pcall(UnitHealthMax,unit)
+  if not ok then return false end
+  local checked,secret=pcall(issecretvalue,value)
+  if not checked or secret then return false end
+  if type(value)~="number" or value~=value or value<=0
+    or value==math.huge then return false end
+  self.knownUnitMax[unit]={key=key,max=value}
+  return true
+end
+function A:KnownMax(unit)
+  local saved=self.knownUnitMax[unit]
+  if not saved then return nil end
+  local key=publicKey(unit)
+  if not key or not sameAssociation(unit,saved.key,key) then
+    self:ForgetKnownMax(unit)
     return nil
   end
-  record.curve=curve
-  record.curveCutoff=cutoff
+  return saved.max
+end
+local function ensurePercentCurve(record,total,maxHP)
+  if not percentCurveSupported() or type(total)~="number" then return nil end
+  local cutoff=math.floor(total)
+  if cutoff<2 or type(maxHP)~="number" or maxHP<=0 then return nil end
+  if record.percentCurve and record.percentCutoff==cutoff
+    and record.percentMax==maxHP then return record.percentCurve end
+  local ok,curve=pcall(function()
+    local c=C_CurveUtil.CreateCurve()
+    c:SetType(Enum.LuaCurveType.Step)
+    -- 0 HP: transparent (corpse); 1+ HP: visible only while remaining
+    -- damage strictly exceeds HP. Equal threshold stays hidden.
+    c:AddPoint(0,0)
+    c:AddPoint(1/maxHP,1)
+    c:AddPoint(cutoff/maxHP,0)
+    return c
+  end)
+  if not ok or not curve then return nil end
+  record.percentCurve=curve
+  record.percentCutoff=cutoff
+  record.percentMax=maxHP
   return curve
 end
 A.minimalReasons=A.minimalReasons or {}
@@ -425,31 +477,31 @@ function A:ApplyLethalTint(unit,record,word,skull,knownTotal)
     if type(health)~="number" or health~=health or health<=0 or total<health then
       return false,"not_lethal"
     end
-    local p=pcall(word.SetTextColor,word,.83,1,.84,1)
-    if not p then return false,"text_rejected" end
-    if skull then
-      if type(skull.SetVertexColor)~="function" then return false,"skull_unsupported" end
-      if not pcall(skull.SetVertexColor,skull,.83,1,.84,1) then
-        return false,"skull_rejected"
-      end
-    end
+    if type(word.SetAlpha)~="function"
+      or not pcall(word.SetAlpha,word,1) then return false,"text_rejected" end
+    if skull and (type(skull.SetAlpha)~="function"
+      or not pcall(skull.SetAlpha,skull,1)) then return false,"skull_rejected" end
     return true,"readable_lethal"
   end
-  local curve=ensureCurve(record,total)
-  if not curve then return false,"secret_curve_unavailable" end
-  local evaluated,r,g,b,a=pcall(curve.EvaluateUnpacked,curve,health)
-  if not evaluated then return false,"secret_curve_rejected" end
-  if not pcall(word.SetTextColor,word,r,g,b,a) then
-    return false,"secret_text_rejected"
+  local maxHP=self:KnownMax(unit)
+  if not maxHP then return false,"max_baseline_unavailable" end
+  local curve=ensurePercentCurve(record,total,maxHP)
+  if not curve then return false,"percent_curve_unavailable" end
+  -- The curve, not Lua, evaluates protected percent inside UnitHealthPercent.
+  -- Neither the secret percent nor resulting alpha is read or compared.
+  local evaluated,alpha=pcall(UnitHealthPercent,unit,false,curve)
+  if not evaluated then return false,"native_percent_rejected" end
+  if type(word.SetAlpha)~="function"
+    or not pcall(word.SetAlpha,word,alpha) then
+    return false,"secret_alpha_rejected"
   end
   if skull then
-    if type(skull.SetVertexColor)~="function" then return false,"skull_unsupported" end
-    if not pcall(skull.SetVertexColor,skull,r,g,b,a) then
-      return false,"secret_skull_rejected"
+    if type(skull.SetAlpha)~="function"
+      or not pcall(skull.SetAlpha,skull,alpha) then
+      return false,"secret_skull_alpha_rejected"
     end
   end
-  -- This is opaque visual eligibility, not a claim we have read secret HP.
-  return true,"native_curve_applied"
+  return true,"native_percent_applied"
 end
 function A:PaintMinimal(cache,key,native,unit)
   local record=cache[key]
@@ -495,6 +547,9 @@ function A:RefreshAll()
   for _,unit in ipairs(UNITS) do
     local visible=enabled and db[unit] and type(UnitExists)=="function"
       and UnitExists(unit)
+    -- Learn exact max HP only while readable. Later combat secrecy may reuse
+    -- this ephemeral value for the SAME unit identity, until invalidated.
+    if enabled and visible then self:RememberPublicMax(unit) end
     local old=self.huds[unit]
     local onframe=self.onFrameHUDs[unit]
     if centered then
@@ -528,6 +583,7 @@ function A:RefreshAll()
       for _,plate in ipairs(plates) do
         seen[plate]=true
         local unit=self:PlateUnit(plate)
+        if unit then self:RememberPublicMax(unit) end
         local old=self.plates[plate]
         if centered then
           if old then old:Hide() end
@@ -591,8 +647,19 @@ end
 driver:SetScript("OnEvent",function(_,event,unit)
   -- A reused plate or changed target cannot inherit a previous enemy's word,
   -- even for the one event turn before the deferred tracker repaint.
-  if event=="PLAYER_TARGET_CHANGED" then hideMinimal(A.minimalUnits.target) end
-  if event=="PLAYER_FOCUS_CHANGED" then hideMinimal(A.minimalUnits.focus) end
+  if event=="PLAYER_ENTERING_WORLD" then A.knownUnitMax={} end
+  if event=="PLAYER_TARGET_CHANGED" then
+    A:ForgetKnownMax("target")
+    hideMinimal(A.minimalUnits.target)
+  end
+  if event=="PLAYER_FOCUS_CHANGED" then
+    A:ForgetKnownMax("focus")
+    hideMinimal(A.minimalUnits.focus)
+  end
+  if event=="UNIT_MAXHEALTH" or event=="NAME_PLATE_UNIT_ADDED"
+    or event=="NAME_PLATE_UNIT_REMOVED" then
+    A:ForgetKnownMax(unit)
+  end
   if event=="NAME_PLATE_UNIT_REMOVED" then
     for _,record in pairs(A.minimalPlates) do
       if record.unit==unit then hideMinimal(record) end

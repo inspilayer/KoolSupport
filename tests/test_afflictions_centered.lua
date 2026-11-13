@@ -34,6 +34,7 @@ local function mk(kind)
  function f:CreateFontString()return mk("FontString")end
  function f:SetText(value)self.text=value end
  function f:SetTextColor(...)self.color={...}end
+ function f:SetAlpha(alpha)self.alpha=alpha end
  function f:SetShadowColor(...)self.shadow={...}end
  function f:SetShadowOffset(...)self.shadowOffset={...}end
  function f:SetFont(...)self.font={...}end
@@ -64,6 +65,8 @@ local visiblePlates={plateA,plateB,plateUnsupported}
 C_NamePlate={GetNamePlates=function()return visiblePlates end}
 local health={target=400,focus=850,nameplate1=900,nameplate2=400,nameplate3=150}
 UnitHealth=function(unit)return health[unit] end
+local maxHealth={target=1000,focus=2000,nameplate1=1000,nameplate2=1000,nameplate3=1000}
+UnitHealthMax=function(unit)return maxHealth[unit] end
 UnitExists=function(unit)return health[unit]~=nil end
 UnitIsDeadOrGhost=function()return false end
 UnitCanAttack=function(_,unit)return health[unit]~=nil end
@@ -159,52 +162,83 @@ assert(not target.active and target.frame.hidden)
 health.target=400
 A:RefreshAll()
 assert(target.active)
--- WoW native color curves can display a conditional alpha from SECRET health
--- without ever returning the numeric health to Lua. The MOCK below owns its
--- hidden input; production addon code must only pass the opaque value through.
+-- The restricted Curve:EvaluateUnpacked(secretUnitHealth) path is intentionally
+-- NEVER used. Native UnitHealthPercent(unit,false,curve) evaluates the curve
+-- inside WoW before returning a protected alpha to Region:SetAlpha.
 local secretRawHealth=350
-CreateColor=function(r,g,b,a)return {r=r,g=g,b=b,a=a} end
+local computedAlpha
+local protectedAlpha=setmetatable({},{
+ __lt=function()error("compared secret alpha")end,
+ __le=function()error("compared secret alpha")end,
+ __tostring=function()error("formatted secret alpha")end,
+})
 Enum={LuaCurveType={Step="STEP"}}
-C_CurveUtil={CreateColorCurve=function()
- local curve={points={}}
- function curve:SetType(kind)self.kind=kind end
- function curve:AddPoint(x,color)self.points[#self.points+1]={x=x,color=color} end
- function curve:EvaluateUnpacked(value)
-  assert(rawequal(value,secret),"Native curve must receive secret health untouched")
-  assert(self.kind==Enum.LuaCurveType.Step and #self.points==3,
-   "Native non-interpolating threshold must also hide dead units")
-  local color=secretRawHealth<self.points[2].x and self.points[1].color
-    or (secretRawHealth<self.points[3].x and self.points[2].color or self.points[3].color)
-  return color.r,color.g,color.b,color.a
- end
- return curve
+C_CurveUtil={CreateCurve=function()
+ local c={points={}}
+ function c:SetType(t)self.kind=t end
+ function c:AddPoint(x,y)self.points[#self.points+1]={x=x,y=y}end
+ function c:Evaluate()error("Tainted code must not call curve evaluator")end
+ return c
 end}
+UnitHealthPercent=function(unit,predicted,curve)
+ assert(unit=="target" and predicted==false,"Native health percent called for correct unit")
+ assert(curve.kind==Enum.LuaCurveType.Step and #curve.points==3,
+  "Native percent curve must be a corpse-safe step")
+ local p=secretRawHealth/1000
+ computedAlpha=p<curve.points[2].x and curve.points[1].y
+   or (p<curve.points[3].x and curve.points[2].y or curve.points[3].y)
+ return protectedAlpha
+end
+maxHealth.target=secret
 health.target=secret
 A:RefreshAll()
-assert(target.active and target.mode=="native_curve_applied" and target.word.color[4]==1,
- "Client-supported curve shows a lethal enemy without comparing secret health")
--- A protected/unavailable death flag MUST NOT hide a living enemy merely
--- because WoW keeps its boolean secret. The native curve handles 0 HP.
-UnitIsDeadOrGhost=function()return secret end
+assert(target.active and target.mode=="native_percent_applied"
+  and target.word.alpha==protectedAlpha and computedAlpha==1,
+ "Client-style native curve is applied without inspecting opaque alpha")
+-- Forever may hide GUIDs in combat; vendor deliberately falls back to
+-- "target" even for the SAME selected mob. Event boundaries, not opaque GUID
+-- changes alone, invalidate a previously captured readable max.
+keys.target="target"
 A:RefreshAll()
-assert(target.active and target.word.color[4]==1,
- "Secret dead flag must not preempt native health curve")
+assert(target.active and A:KnownMax("target")==1000 and computedAlpha==1,
+ "Secret GUID fallback for unchanged target must preserve precombat max")
+keys.target="guid-1"
+A:RefreshAll()
+assert(target.active and A:KnownMax("target")==1000)
+
 secretRawHealth=0
 A:RefreshAll()
-assert(target.word.color[4]==0,"Dead enemy health must suppress DIES natively")
+assert(computedAlpha==0,"Zero HP must suppress DIES in native evaluator")
+-- A protected dead flag must not block a living unit when native zero guard works.
+UnitIsDeadOrGhost=function()return secret end
 secretRawHealth=350
+A:RefreshAll()
+assert(target.active and computedAlpha==1,"Secret death flag is handled by native zero alpha")
 UnitIsDeadOrGhost=function()return false end
 secretRawHealth=1000
 A:RefreshAll()
-assert(target.active and target.word.color[4]==0,
- "Native step curve must hide a secret-health nonlethal enemy")
+assert(computedAlpha==0,"Nonlethal secret health is transparent")
 secretRawHealth=600
 A:RefreshAll()
-assert(target.word.color[4]==0,"Exact threshold is intentionally hidden to avoid boundary false positives")
+assert(computedAlpha==0,"Equal predicted health is conservatively transparent")
 secretRawHealth=350
+A:ForgetKnownMax("target")
+A:RefreshAll()
+assert(target.frame.hidden and A.minimalReasons.target=="max_baseline_unavailable",
+ "If secret max cannot be validated, no lethal label is allowed")
+maxHealth.target=1000
+A:RefreshAll()
+assert(target.active and A:KnownMax("target")==1000,
+ "Restored readable max enables threshold calculation")
+-- A client refusing the safe UnitHealthPercent evaluation must fail closed.
+local previousPercent=UnitHealthPercent
+UnitHealthPercent=function()error("protected percent not supported")end
+A:RefreshAll()
+assert(target.frame.hidden and A.minimalReasons.target=="native_percent_rejected")
+UnitHealthPercent=previousPercent
 C_CurveUtil=nil
 A:RefreshAll()
-assert(target.frame.hidden,"No native curve support must fail closed even when tracked DoTs are strong")
+assert(target.frame.hidden,"Unsupported percent curve must fail closed")
 health.target=400
 A:RefreshAll()
 assert(target.active)

@@ -177,8 +177,8 @@ function A:LethalEvidence(unit)
 end
 
 -- For clients exposing *readable* health, direct comparison is safe after
--- checking issecretvalue. For secret health the renderer instead delegates the
--- threshold to Blizzard's native ColorCurve -> FontString alpha pipeline.
+-- checking issecretvalue. For secret health the renderer uses UnitHealthPercent's built-in curve
+-- evaluator only when a verified nonsecret maximum HP was cached beforehand.
 function A:ConfirmedLethal(unit)
   local total=self:LethalEvidence(unit)
   if not total then return false end
@@ -215,9 +215,10 @@ function A:DiagnosticLine(unit)
     or unit=="focus" and "Focus" or "Plate"
   -- Unit token indexes are deliberately not logged; these fields cannot
   -- identify a player or creature and contain no secret health.
+  local calibrated=self.KnownMax and self:KnownMax(unit)~=nil
   return label..": "..count.." DoT, estimated "..estimate..
-    " remaining; HP "..mode.."; gate "..(gate or "ready")..
-    "; display "..stage
+    " remaining; HP "..mode.."; max baseline "..(calibrated and "ready" or "missing")..
+    "; gate "..(gate or "ready").."; display "..stage
 end
 
 function A:ChangeSetting(key,value)

@@ -46,7 +46,7 @@ function A.BuildPage(parent)
   separator(parent,-80)
 
   local feedback=label(parent,"",20,-552,770,"GameFontHighlightSmall")
-  local foot=label(parent,MUTED.."During combat: /kool dies prints the tracker's evidence and rejection reason (no secret health).|r",
+  local foot=label(parent,MUTED.."Target an enemy before combat to cache max HP. /kool dies reports the blocker safely.|r",
     20,-574,775,"GameFontHighlightSmall")
   local active=label(parent,"",420,-22,368,"GameFontHighlightSmall")
   local normal=CreateFrame("Frame",nil,parent)
@@ -109,10 +109,10 @@ function A.BuildPage(parent)
     local supported=A.SecretCurveSupported and A:SecretCurveSupported()
     local last=A.minimalReasons and A.minimalReasons.target
     if supported then
-      detail:SetText(GREEN.."Native secret-health curves found|r"..
-        (last and "  |  Last render: "..last or "  |  Live combat confirmation needed"))
+      detail:SetText(GREEN.."Native percent curves found|r"..
+        (last and "  |  Target: "..last or "  |  Target an enemy before combat"))
     else
-      detail:SetText("|cffffbd8bSecret-health curve API unavailable|r; text hides when health is protected")
+      detail:SetText("|cffffbd8bNative percent-curve API unavailable|r; protected health hides DIES")
     end
   end
   local trackerLine=label(normal,"",20,-469,775,"GameFontHighlightSmall")
