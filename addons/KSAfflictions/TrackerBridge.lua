@@ -16,6 +16,9 @@ ns.display = {
 }
 ns.refresh = function()
   if ns.tracking and ns.tracking.housekeep then ns.tracking.housekeep(GetTime()) end
+  if KSAfflictions and KSAfflictions.OnTrackerRefresh then
+    KSAfflictions:OnTrackerRefresh()
+  end
 end
 ns.playFlash = function() end
 -- The old addon settings window is replaced by the KS module page.
