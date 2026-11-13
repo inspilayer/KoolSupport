@@ -187,6 +187,39 @@ function A:ConfirmedLethal(unit)
   return total>=health
 end
 
+-- Read-only, user-triggered diagnostic. Every displayed number is from our
+-- player-owned DoT model, NEVER from enemy health. Only the categorical
+-- issecretvalue result is reported. No GUID, unit name or secret RGBA output.
+function A:DiagnosticLine(unit)
+  if unit~="target" and unit~="focus" and
+    (type(unit)~="string" or not unit:match("^nameplate%d+$")) then
+    return "invalid unit"
+  end
+  local dots,damage=self:Snapshot(unit)
+  local count=type(dots)=="table" and #dots or 0
+  local estimate="unavailable"
+  if readable(damage) and finiteNumber(damage) then
+    estimate=tostring(math.floor(damage+.5))
+  end
+  local _,gate=self:LethalEvidence(unit)
+  local mode="unknown"
+  if type(UnitHealth)=="function" and type(issecretvalue)=="function" then
+    local ok,hp=pcall(UnitHealth,unit)
+    if ok then
+      local checked,hidden=pcall(issecretvalue,hp)
+      if checked then mode=hidden and "secret" or "readable" end
+    end
+  end
+  local stage=self.minimalReasons and self.minimalReasons[unit] or "not_rendered"
+  local label=unit=="target" and "Target"
+    or unit=="focus" and "Focus" or "Plate"
+  -- Unit token indexes are deliberately not logged; these fields cannot
+  -- identify a player or creature and contain no secret health.
+  return label..": "..count.." DoT, estimated "..estimate..
+    " remaining; HP "..mode.."; gate "..(gate or "ready")..
+    "; display "..stage
+end
+
 function A:ChangeSetting(key,value)
   if KoolSupport:IsInCombat() then return false,"Change display settings outside combat" end
   if self.DEFAULTS[key]==nil then return false,"Unknown option" end
