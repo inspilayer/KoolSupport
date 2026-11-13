@@ -24,11 +24,19 @@ end
 function A.BuildPage(parent)
   A:Store()
   label(parent,GOLD.."KS Afflictions|r  - Display Settings",20,-15,775,"GameFontNormalLarge")
-  label(parent,"Default: no extra bars or windows. DIES appears only with readable, attributable lethal evidence.",20,-45,780)
+  local activeMode=label(parent,"",20,-45,780)
 
   local status=label(parent,"",20,-544,765,"GameFontHighlightSmall")
   label(parent,MUTED.."Secret or unsupported enemy health: hide DIES, never guess. Existing advanced preferences are kept.|r",20,-574,765,"GameFontHighlightSmall")
   local redrawers={}
+  redrawers[#redrawers+1]=function()
+    local mode=A:Store().displayMode
+    local names={centered="Centered DIES (no extra bars)",
+      onframe="On-frame Extras (saved preference)",panels="Movable Panels (saved preference)"}
+    activeMode:SetText("Active: "..(names[mode] or "Unknown")..
+      (mode=="centered" and " — hides all DoT panels and strips." or
+      " — select Centered DIES below to hide extra bars."))
+  end
   local function refresh()
     for _,fn in ipairs(redrawers) do fn() end
   end

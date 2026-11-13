@@ -183,3 +183,9 @@ Release gate: full tests, seven-addon package, in-client test with visible enemy
 - **Secret combat data gate:** native StatusBar geometry alone cannot give an exact reliable conditional centered text for secret health, so centered DIES fails closed when `UnitHealth` is secret or the unit/DoT estimate is untrusted. It uses plain Lua numeric comparison **only after `issecretvalue` confirms nonsecret input**. Never infer lethality from a nearly filled UI bar.
 - **Migration:** additive `displayMode`, preserves old keys/positions; explicit old on-frame and customized-panel preferences survive. Old `onFrame=false` could be implicit or explicit, indistinguishable from its historical persisted default; document ambiguity.
 - **Engineering verification:** Lua tests, PR+main CI, one-folder ZIP and upstream CurseForge dry-run; no new Beta tag. **Live acceptance gate:** inspect real Forever target/focus/nameplate health secrecy, DoT timing/expiry, frame strata with KS Threat, client Lua errors and migration before a separately approved release.
+
+## November 13, 2026 — 0.10.9-rc.2 screenshot-based alert repair
+
+- A Forever screenshot shows the preserved On-frame Extras mode: green/purple DoTs bars and an off-right DIES. The original 18,000px clipped StatusBar is a visual approximation, not an exact Boolean, and is retired **also in advanced modes**. New centered Word/Skull glyphs use verified nonsecret `ConfirmedLethal` for each correct unit and hide with secret/unknown data.
+- Explain current advanced/centered mode in settings without overwriting any saved preferences. Text-only mode remains one click in `/kool`. Retain advanced panels and bars for users who deliberately selected them.
+- Required: Lua tests, green PR/main CI, unified dev ZIP and real BigWigs dry-run. Real client check for mode, native bar center, secret health behavior, release remains owner-controlled.

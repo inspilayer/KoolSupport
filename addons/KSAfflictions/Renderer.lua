@@ -20,33 +20,35 @@ local function bar(parent,role)
   return f
 end
 local function lethalWidget(h)
-  -- UI-only comparison: as the estimated DoT damage fill reaches the right edge
-  -- of the hidden bar, its anchored icon/word enters the clipping window.
-  -- This is approximate, and may not work on every Forever client.
-  local clip=CreateFrame("Frame",nil,h)
-  clip:SetSize(90,22)
-  clip:SetPoint("LEFT",h,"RIGHT",3,0)
-  local works=type(clip.SetClipsChildren)=="function" and pcall(clip.SetClipsChildren,clip,true)
-  local detector=CreateFrame("StatusBar",nil,clip)
-  detector:SetSize(18000,22)
-  detector:SetPoint("RIGHT",clip,"RIGHT",0,0)
-  detector:SetStatusBarTexture(WHITE)
-  detector:SetStatusBarColor(0,0,0,0)
-  local edge=detector:GetStatusBarTexture()
-  local word=clip:CreateFontString(nil,"OVERLAY","GameFontNormal")
-  word:SetText("|cff83ed70DIES|r")
-  word:SetWidth(45)
-  word:SetJustifyH("RIGHT")
-  word:SetPoint("RIGHT",edge,"RIGHT",-1,0)
-  local skull=detector:CreateTexture(nil,"OVERLAY")
-  skull:SetSize(18,18)
-  skull:SetPoint("RIGHT",edge,"RIGHT",-3,0)
+  -- Every display mode uses the same conservative nonsecret lethal decision.
+  -- The old 18,000px clipped StatusBar could leak an off-bar DIES at threshold.
+  local word=h:CreateFontString(nil,"OVERLAY","GameFontNormal")
+  word:SetText("DIES")
+  word:SetTextColor(.83,1,.84,1)
+  if type(word.SetFont)=="function" then
+    word:SetFont("Fonts\\FRIZQT__.TTF",11,"OUTLINE")
+  end
+  if type(word.SetShadowColor)=="function" then word:SetShadowColor(0,0,0,1) end
+  if type(word.SetShadowOffset)=="function" then word:SetShadowOffset(1,-1) end
+  word:Hide()
+  local skull=h:CreateTexture(nil,"OVERLAY")
+  skull:SetSize(13,13)
   skull:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
-  h.lethalClip=clip
-  h.lethal=detector
+  skull:Hide()
   h.lethalWord=word
   h.lethalIcon=skull
-  h.lethalAvailable=works
+end
+local function paintLethal(A,h,unit,db,center)
+  local eligible=A:ConfirmedLethal(unit)
+  local mode=db.lethalMode
+  local word=eligible and (mode=="dies" or mode=="both")
+  local skull=eligible and (mode=="skull" or mode=="both")
+  h.lethalWord:ClearAllPoints()
+  h.lethalIcon:ClearAllPoints()
+  h.lethalWord:SetPoint("CENTER",center,"CENTER",mode=="both" and -8 or 0,0)
+  h.lethalIcon:SetPoint("CENTER",center,"CENTER",mode=="both" and 21 or 0,0)
+  h.lethalWord:SetShown(word)
+  h.lethalIcon:SetShown(skull)
 end
 local function makeHUD(parent,small)
   local h=CreateFrame("Frame",nil,parent)
@@ -240,8 +242,6 @@ function A:PaintOnFrame(h,unit)
   local ok=pcall(function()
     h.dot:SetMinMaxValues(0,UnitHealthMax(unit))
     h.dot:SetValue(total)
-    h.lethal:SetMinMaxValues(0,UnitHealth(unit))
-    h.lethal:SetValue(total)
   end)
   if not ok then h:Hide();return end
   for i,icon in ipairs(h.icons) do
@@ -249,13 +249,7 @@ function A:PaintOnFrame(h,unit)
     local texture=dot and db.showIcons and spellTexture(dot)
     if texture then icon:SetTexture(texture);icon:Show() else icon:Hide() end
   end
-  local allowed=h.lethalAvailable and #dots>0 and self:LethalOn(unit)
-  local mode=db.lethalMode
-  h.lethalClip:SetShown(allowed)
-  h.lethalWord:SetShown(allowed and (mode=="dies" or mode=="both"))
-  h.lethalIcon:SetShown(allowed and (mode=="skull" or mode=="both"))
-  h.lethalWord:ClearAllPoints()
-  h.lethalWord:SetPoint("RIGHT",h.lethal:GetStatusBarTexture(),"RIGHT",mode=="both" and -22 or -1,0)
+  paintLethal(self,h,unit,db,h)
   h:Show()
 end
 
@@ -272,8 +266,6 @@ function A:Paint(h,unit)
     h.health:SetValue(UnitHealth(unit))
     h.dot:SetMinMaxValues(0,UnitHealthMax(unit))
     h.dot:SetValue(total)
-    h.lethal:SetMinMaxValues(0,UnitHealth(unit))
-    h.lethal:SetValue(total)
   end)
   if not ok then h:Hide();return end
   h.count:SetText(tostring(#dots))
@@ -291,18 +283,7 @@ function A:Paint(h,unit)
   if h.spells then
     h.spells:SetText(#names>0 and table.concat(names," · ") or "No active DoTs")
   end
-  local mode=db.lethalMode
-  local allowed=h.lethalAvailable and self:LethalOn(unit)
-  h.lethalClip:SetShown(allowed)
-  h.lethalWord:SetShown(allowed and (mode=="dies" or mode=="both"))
-  h.lethalIcon:SetShown(allowed and (mode=="skull" or mode=="both"))
-  if mode=="both" then
-    h.lethalWord:ClearAllPoints()
-    h.lethalWord:SetPoint("RIGHT",h.lethal:GetStatusBarTexture(),"RIGHT",-22,0)
-  else
-    h.lethalWord:ClearAllPoints()
-    h.lethalWord:SetPoint("RIGHT",h.lethal:GetStatusBarTexture(),"RIGHT",-1,0)
-  end
+  paintLethal(self,h,unit,db,h.health)
   h:Show()
 end
 
