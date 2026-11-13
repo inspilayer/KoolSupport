@@ -1,4 +1,4 @@
--- KS Afflictions native settings. Two short sections fit within Base's 824x605 pane.
+-- KS Afflictions native settings. Centered DIES is the first, uncluttered mode.
 -- DoT tracking is independent of this presentation-only page.
 local A=KSAfflictions
 local GOLD="|cffffd87a"
@@ -24,10 +24,10 @@ end
 function A.BuildPage(parent)
   A:Store()
   label(parent,GOLD.."KS Afflictions|r  - Display Settings",20,-15,775,"GameFontNormalLarge")
-  label(parent,"Choose where DoT estimates appear. Your current tracker and saved positions are preserved.",20,-45,780)
+  label(parent,"Default: no extra bars or windows. DIES appears only with readable, attributable lethal evidence.",20,-45,780)
 
   local status=label(parent,"",20,-544,765,"GameFontHighlightSmall")
-  label(parent,MUTED.."Damage is estimated, not a guaranteed kill. Protected health remains in WoW StatusBars.|r",20,-574,765,"GameFontHighlightSmall")
+  label(parent,MUTED.."Secret or unsupported enemy health: hide DIES, never guess. Existing advanced preferences are kept.|r",20,-574,765,"GameFontHighlightSmall")
   local redrawers={}
   local function refresh()
     for _,fn in ipairs(redrawers) do fn() end
@@ -38,15 +38,22 @@ function A.BuildPage(parent)
     refresh()
   end
 
-  -- Keep the new layout choice always visible, even when on the second tab.
-  label(parent,GOLD.."Target & Focus display|r",20,-82,300,"GameFontNormalLarge")
-  local compact=button(parent,"",20,-109,343,function()
-    choose("onFrame",not A:Store().onFrame)
-  end)
-  label(parent,"ON: add DoT strip and DIES to existing health bars. If unsupported, keep the movable panels.",380,-110,405,"GameFontHighlightSmall")
-  redrawers[#redrawers+1]=function()
-    compact:SetText("Simplified / On-frame: "..(A:Store().onFrame and "ON" or "OFF"))
+  -- Mode selection stays visible regardless of advanced settings tab.
+  label(parent,GOLD.."Display mode|r",20,-81,300,"GameFontNormalLarge")
+  local modes={
+    {"centered","Centered DIES (default)",20,224},
+    {"onframe","On-frame Extras",253,218},
+    {"panels","Movable Panels",484,222}
+  }
+  for _,entry in ipairs(modes) do
+    local key,title,x,w=entry[1],entry[2],entry[3],entry[4]
+    local b=button(parent,"",x,-109,w,function()choose("displayMode",key)end)
+    redrawers[#redrawers+1]=function()
+      b:SetText((A:Store().displayMode==key and "> " or "")..title)
+    end
   end
+  label(parent,"Centered shows only DIES; other modes retain DoT strips, icons, and saved panel positions.",
+    20,-145,775,"GameFontHighlightSmall")
 
   local appearance=CreateFrame("Frame",nil,parent)
   appearance:SetAllPoints(parent)
@@ -60,14 +67,14 @@ function A.BuildPage(parent)
     controls:SetShown(tab=="controls")
     refresh()
   end
-  appearanceTab=button(parent,"Appearance & Colors",20,-160,211,function()
+  appearanceTab=button(parent,"Advanced Appearance",20,-177,211,function()
     selectTab("appearance")
   end)
-  controlsTab=button(parent,"Visibility & Position",242,-160,250,function()
+  controlsTab=button(parent,"Visibility & Position",242,-177,250,function()
     selectTab("controls")
   end)
   redrawers[#redrawers+1]=function()
-    appearanceTab:SetText((selected=="appearance" and "> " or "").."Appearance & Colors")
+    appearanceTab:SetText((selected=="appearance" and "> " or "").."Advanced Appearance")
     controlsTab:SetText((selected=="controls" and "> " or "").."Visibility & Position")
   end
 
@@ -81,16 +88,16 @@ function A.BuildPage(parent)
       end
     end
   end
-  options(appearance,"Bar Appearance","style",{
+  options(appearance,"Legacy Bar Appearance","style",{
     {"modern","Modern KS"},{"classic","Classic WoW"},{"minimal","Minimal"}
-  },-214,246)
+  },-228,246)
   options(appearance,"Estimated Lethal Indicator","lethalMode",{
     {"dies","DIES"},{"skull","Skull"},{"both","Both"},{"off","Off"}
-  },-304,184)
+  },-318,184)
   options(appearance,"DoT Bar Color","dotColor",{
     {"purple","Purple"},{"gold","Gold"},{"red","Red"},{"school","Spell School"}
-  },-394,184)
-  label(appearance,MUTED.."Simplified mode uses the existing Target/Focus health bars; separate panels remain available.|r",20,-480,760,"GameFontHighlightSmall")
+  },-408,184)
+  label(appearance,MUTED.."Appearance and icon options apply to On-frame Extras and Movable Panels, not text-only DIES.|r",20,-493,760,"GameFontHighlightSmall")
 
   label(controls,GOLD.."Visibility|r",20,-211,755,"GameFontNormalLarge")
   local switches={
