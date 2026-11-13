@@ -65,6 +65,7 @@ C_NamePlate={GetNamePlates=function()return visiblePlates end}
 local health={target=400,focus=850,nameplate1=900,nameplate2=400,nameplate3=150}
 UnitHealth=function(unit)return health[unit] end
 UnitExists=function(unit)return health[unit]~=nil end
+UnitIsDeadOrGhost=function()return false end
 UnitCanAttack=function(_,unit)return health[unit]~=nil end
 local keys={target="guid-1",focus="guid-2",nameplate1="guid-3",
   nameplate2="guid-4",nameplate3="guid-5"}
@@ -153,6 +154,43 @@ assert(KSStealth.plates[plateB].holder==stealthOverlay)
 health.target=secret
 A:RefreshAll()
 assert(not target.active and target.frame.hidden)
+health.target=400
+A:RefreshAll()
+assert(target.active)
+-- WoW native color curves can display a conditional alpha from SECRET health
+-- without ever returning the numeric health to Lua. The MOCK below owns its
+-- hidden input; production addon code must only pass the opaque value through.
+local secretRawHealth=350
+CreateColor=function(r,g,b,a)return {r=r,g=g,b=b,a=a} end
+Enum={LuaCurveType={Step="STEP"}}
+C_CurveUtil={CreateColorCurve=function()
+ local curve={points={}}
+ function curve:SetType(kind)self.kind=kind end
+ function curve:AddPoint(x,color)self.points[#self.points+1]={x=x,color=color} end
+ function curve:EvaluateUnpacked(value)
+  assert(rawequal(value,secret),"Native curve must receive secret health untouched")
+  assert(self.kind==Enum.LuaCurveType.Step and #self.points==2,
+   "Only native non-interpolating threshold curves permitted")
+  local color=secretRawHealth<self.points[2].x and self.points[1].color or self.points[2].color
+  return color.r,color.g,color.b,color.a
+ end
+ return curve
+end}
+health.target=secret
+A:RefreshAll()
+assert(target.active and target.mode=="secret_curve" and target.word.color[4]==1,
+ "Client-supported curve shows a lethal enemy without comparing secret health")
+secretRawHealth=1000
+A:RefreshAll()
+assert(target.active and target.word.color[4]==0,
+ "Native step curve must hide a secret-health nonlethal enemy")
+secretRawHealth=600
+A:RefreshAll()
+assert(target.word.color[4]==0,"Exact threshold is intentionally hidden to avoid boundary false positives")
+secretRawHealth=350
+C_CurveUtil=nil
+A:RefreshAll()
+assert(target.frame.hidden,"No native curve support must fail closed even when tracked DoTs are strong")
 health.target=400
 A:RefreshAll()
 assert(target.active)
