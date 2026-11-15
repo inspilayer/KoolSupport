@@ -9,7 +9,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 ADDONS = ROOT / 'addons'
-VERSION = '0.10.12-rc.1'
+VERSION = '0.10.13-rc.1'
 # Source is separated for maintainability; distribution has one KoolSupport.toc.
 MODULES = {
     'KSMacros': ['KoolSupport'],
@@ -46,7 +46,7 @@ def verify():
     assert '## Version: ' + VERSION in body
     assert '## SavedVariablesPerCharacter: KoolSupportDB' in body, 'Preserve existing character preferences'
     assert '## SavedVariables: KSAfflictionsTrackerDB' in body, 'Register the tracker in the new host addon'
-    original_base = ['Core.lua', 'BarTheme.lua', 'Diagnostics.lua', 'UI.lua']
+    original_base = ['Core.lua', 'XPReminder.lua', 'BarTheme.lua', 'Diagnostics.lua', 'UI.lua']
     expected = list(original_base)
     for module, deps in MODULES.items():
         toc = ADDONS / module / (module + '.toc')

@@ -81,3 +81,8 @@ The last publicly verified Beta tag at sprint start was `v0.10.6-rc.1-beta`; the
 ## 0.10.12 candidate — centered DIES compatibility
 
 The 0.10.12 candidate extends KS Afflictions centered DIES to prewarm hidden health-bar text and support two native `UnitHealthPercent` curve visual sinks, with exact-GUID public maximum HP caching to make strict lethal thresholds available after combat starts. It does not modify the vendor tracker, game UI health, secrets, saved user preferences, or the six-module single-root package. Require full Lua, native-curve mock, single-root BigWigs packaging dry run, and actual Forever client validation (which can still legitimately hide DIES when no safe max/secret API is present). **No Beta tag or CurseForge publish without explicit owner approval.**
+
+
+## 0.10.13 candidate — Base Time Since XP (November 15, 2026)
+
+This source-only RC adds a **Base** last-XP activity reminder; the package still has **one** root `KoolSupport/`, one root TOC and **six** optional nested modules. Add `XPReminder.lua` after Core in the manifest; no changes to CurseForge listing, dependency graph, third-party vendor license, or existing module SavedVariables. Character preferences are stored additively in Base and default enabled, session reminders are 15-minute local messages only. Require CI Lua tests, one-root development ZIP, real BigWigs dry-run, and Forever live test to validate player XP event timing, max-level suppression and presentation. Do not auto-publish or reuse any prior public tag.
