@@ -587,7 +587,7 @@ function A:PaintMinimal(cache,key,native,unit)
   -- Pre-create ONLY hidden text overlays while out of combat, even before
   -- a DoT lands. This avoids attempting new frame/anchor operations during a
   -- protected combat event and costs no extra visible UI or health bar.
-  if not record and not KoolSupport:IsInCombat() then
+  if (not record or record.native~=native) and not KoolSupport:IsInCombat() then
     record=self:EnsureMinimal(cache,key,native)
   end
   local total,reason=self:LethalEvidence(unit)
