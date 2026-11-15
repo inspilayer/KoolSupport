@@ -97,7 +97,7 @@ assert(K.BarTheme and K.CollectLaunchChecks)
 assert(K.XPReminder and K.XPReminder.INTERVAL==900,
   "XP reminder must be a Base component, not a seventh module")
 assert(K.pages.xp_reminder and K:CanOpenPage("xp_reminder"))
-assert(KoolSupportDB.core.xpReminder==nil,
+assert(not KoolSupportDB.core or KoolSupportDB.core.xpReminder==nil,
   "Cold loading Base must not mutate reminder settings until used")
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
  K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat)
