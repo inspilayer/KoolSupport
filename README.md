@@ -112,3 +112,8 @@ For evidence, select the enemy and type **/kool dies** during a fight. Target/fo
 ### RC3: confirmed secret-curve blocker
 
 The real Forever diagnostic reported 2 DoTs, 294 predicted damage, gate ready, and secret_curve_rejected. The prior direct curve-evaluator call was restricted for tainted callers. RC3 instead uses native UnitHealthPercent(unit,false,curve) and an allowed alpha setter, but only if the enemy's exact maximum health was cached while readable before combat. No cached max or unsupported native method means no DIES, never a fabricated lethal label. Target an enemy before combat, then use /kool dies after Rip ticks; check for max baseline ready and native_percent_applied. See [RC3 development notes](docs/RELEASE_NOTES_0.10.10-rc.3.md). No Beta tag/publishing.
+
+
+## KS Threat — silver tagged-mob override (0.10.11 RC)
+
+When you enable KS Threat, its new **Silver for outside tags** toggle defaults to ON. Enemy nameplates whose mob is already tagged by a player outside your party/group appear silver/gray, **even if you have aggro**. Known player/group-eligible mobs keep the original red → pink → violet → purple threat palette. This is based on Forever's `UnitIsTapDenied` API, not threat. If the game hides or does not expose a valid tap status, KS Threat leaves Blizzard's own nameplate color instead of guessing. The KS Threat page shows a fifth SILVER swatch and a `Tagged silver` diagnostic counter. This is an unpublished `0.10.11-rc.1` source candidate pending client confirmation; the one-folder installation format and saved module preferences are unchanged.
