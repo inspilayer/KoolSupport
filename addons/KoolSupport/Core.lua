@@ -2,7 +2,7 @@
 KoolSupport = KoolSupport or {}
 local KS = KoolSupport
 KS.API_VERSION = 1
-KS.VERSION = "0.10.13-rc.1"
+KS.VERSION = "0.10.14-rc.1"
 KS.modules = KS.modules or {}
 KS.moduleOrder = KS.moduleOrder or {}
 KS.pages = KS.pages or {}
