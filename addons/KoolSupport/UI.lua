@@ -30,6 +30,7 @@ local function buildHome(parent)
   button(parent, "Full Spellbook", 246, -122, 190, function() KS:ShowPage("full_spellbook") end)
   button(parent, "Custom Builder", 456, -122, 190, function() KS:ShowPage("macro_workshop") end)
   button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
+  button(parent, "Time Since XP", 246, -169, 190, function() KS:ShowPage("xp_reminder") end)
   label(parent, "One install folder with six independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
   label(parent, MUTED .. "Development build. In-game verification is required before a public release.|r", 20, -270, 760)
 end
