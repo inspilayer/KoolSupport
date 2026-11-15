@@ -474,8 +474,10 @@ local function ensurePercentCurve(record,total,maxHP,colorCurve)
   local cutoff=math.floor(total)
   if cutoff<1 or type(maxHP)~="number" or maxHP<=0 then return nil end
   local property=colorCurve and "colorCurve" or "percentCurve"
-  if record[property] and record.percentCutoff==cutoff
-    and record.percentMax==maxHP then return record[property] end
+  local cutoffKey=colorCurve and "colorCutoff" or "scalarCutoff"
+  local maxKey=colorCurve and "colorMax" or "scalarMax"
+  if record[property] and record[cutoffKey]==cutoff
+    and record[maxKey]==maxHP then return record[property] end
   local create=colorCurve and C_CurveUtil.CreateColorCurve or C_CurveUtil.CreateCurve
   if type(create)~="function" then return nil end
   local ok,curve=pcall(function()
@@ -496,16 +498,8 @@ local function ensurePercentCurve(record,total,maxHP,colorCurve)
   end)
   if not ok or not curve then return nil end
   record[property]=curve
-  record.percentCutoff=cutoff
-  record.percentMax=maxHP
-  -- The other curve type may still be valid at the same threshold; discard
-  -- on any cutoff change to prevent a mismatched color/scalar fallback.
-  if colorCurve then
-    if record.percentCurve and record.scalarCutoff~=cutoff then record.percentCurve=nil end
-  else
-    if record.colorCurve and record.colorCutoff~=cutoff then record.colorCurve=nil end
-  end
-  if colorCurve then record.colorCutoff=cutoff else record.scalarCutoff=cutoff end
+  record[cutoffKey]=cutoff
+  record[maxKey]=maxHP
   return curve
 end
 A.minimalReasons=A.minimalReasons or {}
@@ -533,6 +527,11 @@ function A:ApplyLethalTint(unit,record,word,skull,knownTotal)
   if not secret then
     if type(health)~="number" or health~=health or health<=0 or total<health then
       return false,"not_lethal"
+    end
+    -- A previous ColorCurve paint may have left a secret/zero text alpha.
+    -- The readable-health path must reset all display opacity explicitly.
+    if type(word.SetTextColor)=="function" then
+      pcall(word.SetTextColor,word,.83,1,.84,1)
     end
     if type(word.SetAlpha)~="function"
       or not pcall(word.SetAlpha,word,1) then return false,"text_rejected" end
@@ -620,8 +619,16 @@ function A:RefreshAll()
   local enabled=KoolSupport:IsModuleEnabled("ks_afflictions")
   local centered=db.displayMode=="centered"
   for _,unit in ipairs(UNITS) do
-    local visible=enabled and db[unit] and type(UnitExists)=="function"
-      and UnitExists(unit)
+    -- UnitExists can also return a protected boolean; fail closed rather
+    -- than accidentally branch on a secret when entering combat.
+    local visible=false
+    if enabled and db[unit] and type(UnitExists)=="function" then
+      local ok,exists=pcall(UnitExists,unit)
+      if ok and type(issecretvalue)=="function" then
+        local checked,secret=pcall(issecretvalue,exists)
+        visible=checked and not secret and exists==true
+      end
+    end
     -- Learn exact max HP only while readable. Later combat secrecy may reuse
     -- this ephemeral value for the SAME unit identity, until invalidated.
     if enabled and visible then self:RememberPublicMax(unit) end
