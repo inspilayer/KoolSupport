@@ -33,6 +33,47 @@ local function buildHome(parent)
   label(parent, "One install folder with six independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
   label(parent, MUTED .. "Development build. In-game verification is required before a public release.|r", 20, -270, 760)
 end
+-- Base feature: a compact player-only XP inactivity timer, not a child module.
+local function buildXPReminder(parent)
+  local R=KS.XPReminder
+  label(parent,GOLD.."Time Since Last XP|r",20,-22,740,"GameFontNormalLarge")
+  label(parent,"A gentle reminder to get out of town and level.",20,-65,730)
+  label(parent,MUTED.."Every 15 minutes without earned XP, you'll get a chat and center-screen nudge.|r",
+    20,-94,765,"GameFontHighlightSmall")
+  label(parent,MUTED.."Gaining XP or leveling resets the clock. No reminders at max level.|r",
+    20,-117,765,"GameFontHighlightSmall")
+  local status=label(parent,"",20,-173,765,"GameFontNormalLarge")
+  local buttonLabel=label(parent,"",20,-207,765,"GameFontHighlightSmall")
+  local function refresh()
+    if not R then status:SetText("XP reminder unavailable");return end
+    status:SetText(R:Status())
+    buttonLabel:SetText("Per-character reminder: "..(R:Settings().enabled and "ON" or "OFF"))
+  end
+  button(parent,"Toggle reminder",20,-255,224,function()
+    if not R then return end
+    R:SetEnabled(not R:Settings().enabled)
+    refresh()
+  end)
+  button(parent,"Test notification",267,-255,224,function()
+    if R and type(R.Preview)=="function" then R:Preview() end
+  end)
+  button(parent,"Refresh timer",514,-255,225,refresh)
+  label(parent,GOLD.."How it works|r",20,-324,700,"GameFontNormalLarge")
+  label(parent,"15 minutes with no XP: first reminder. Another 15: second reminder, and so on.",
+    20,-356,760,"GameFontHighlightSmall")
+  label(parent,"The timer starts fresh on login/reload; it never counts overnight offline time.",
+    20,-383,760,"GameFontHighlightSmall")
+  label(parent,"No quest automation, spellcasting, party messages, or extra minimap icons.",
+    20,-410,760,"GameFontHighlightSmall")
+  local last=0
+  parent:SetScript("OnUpdate",function(_,delta)
+    if type(delta)~="number" or delta<0 then return end
+    last=last+delta
+    if last>=5 then last=0;refresh() end
+  end)
+  refresh()
+end
+
 local function buildModules(parent)
   label(parent, GOLD .. "Module Manager|r", 20, -22, 660, "GameFontNormalLarge")
   label(parent, "Disabling a module hides its UI; loaded Lua remains until reload.", 20, -60, 730)
@@ -75,7 +116,7 @@ local categories={
   {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
   {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_talents"}},
   {id="social",label="SOCIAL",pages={"campfire_chat"}},
-  {id="system",label="TOOLS",pages={"launch_checks"}},
+  {id="system",label="TOOLS",pages={"xp_reminder","launch_checks"}},
 }
 local function groupForPage(id)
   for _,group in ipairs(categories) do
@@ -165,6 +206,7 @@ function KS:ShowPage(id)
   if id == "home" then buildHome(pane)
   elseif id == "modules" then buildModules(pane)
   elseif id == "launch_checks" then buildLaunchChecks(pane)
+  elseif id == "xp_reminder" then buildXPReminder(pane)
   else
     local page = self.pages[id]
     if page then page.build(pane, self) else buildHome(pane) end
@@ -204,3 +246,4 @@ end
 KS:RegisterPage({id="home",title="Home",build=buildHome})
 KS:RegisterPage({id="modules",title="Modules",build=buildModules})
 KS:RegisterPage({id="launch_checks",title="Launch Checks",build=buildLaunchChecks})
+KS:RegisterPage({id="xp_reminder",title="Time Since XP",build=buildXPReminder})
