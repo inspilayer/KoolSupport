@@ -11,6 +11,7 @@ local enabled=false
 local hostile=true
 local fighting=true
 local state=3
+local tapDenied=false
 local plates={}
 KoolSupportDB={untouched={preserveMe=true},modules={ks_afflictions={onFrame=true}}}
 KoolSupport={
@@ -41,7 +42,11 @@ local function makeFrame(kind)
  function f:SetShown(v)self.hidden=not v end
  function f:Show()self.hidden=false end
  function f:Hide()self.hidden=true end
- function f:CreateFontString()return makeFrame("FontString")end
+ function f:CreateFontString()
+  local item=makeFrame("FontString")
+  frames[#frames+1]=item
+  return item
+ end
  return f
 end
 CreateFrame=function(kind,_,parent)
@@ -53,6 +58,7 @@ end
 UnitCanAttack=function()return hostile end
 UnitAffectingCombat=function()return fighting end
 UnitThreatSituation=function()return state end
+UnitIsTapDenied=function()return tapDenied end
 UnitHealth=function()return secret end
 UnitHealthMax=function()return secret end
 local plate={
@@ -69,7 +75,8 @@ local A=KSThreat
 assert(KoolSupport.module.id=="ks_threat" and KoolSupport.module.defaultEnabled==false)
 assert(KoolSupport.page.id=="ks_threat")
 assert(KoolSupportDB.untouched.preserveMe and KoolSupportDB.modules.ks_afflictions.onFrame)
-assert(A:Store().onlyCombat and A:Store().purpleNoThreat)
+assert(A:Store().onlyCombat and A:Store().purpleNoThreat and A:Store().greyTagged,
+ "External tap silver should default ON for an upgraded tank")
 assert(A:HealthBar(plate)==native)
 local repaint=A:ThreatState("nameplate1")
 assert(repaint==3)
@@ -84,12 +91,47 @@ assert(overlay.value==secret and overlay.max==secret,"Opaque health passes ONLY 
 assert(native.value==nil and native.color==nil and native.min==nil,
  "Threat overlay must not mutate Blizzard's native health bar")
 assert(overlay.mouse==false and not overlay.hidden)
+-- A tap by a player outside our party takes precedence over threat AND the
+-- combat-only filter. Aggro cannot imply tag ownership (or loot rights).
+tapDenied=true
+fighting=false
+state=secret
+A:RefreshAll()
+assert(overlay.color[1]==A.COLORS.tagged[1] and
+ overlay.color[2]==A.COLORS.tagged[2] and not overlay.hidden,
+ "Externally tagged mob is silver even if our threat state is hidden")
+local summary,reason=A:DiagnosticText()
+assert(summary:find("Tagged silver: 1",1,true),
+ "Diagnostics must identify silver external tags separately from threats")
+assert(A:ThreatState("nameplate1")=="tagged",
+ "Ownership must be checked before threat or combat-only gates")
+state=3
+assert(A:ChangeSetting("greyTagged",false))
+assert(overlay.hidden,"Tag overlay OFF suppresses outsider-owned mob, never paints red")
+assert(A:ChangeSetting("greyTagged",true))
+assert(not overlay.hidden and overlay.color[1]==A.COLORS.tagged[1])
+fighting=true
+tapDenied=secret
+A:RefreshAll()
+assert(overlay.hidden,"Secret tag value must not be compared")
+summary,reason=A:DiagnosticText()
+assert(reason:find("tap unavailable: 1",1,true),"Unknown tap state should be explained")
+UnitIsTapDenied=nil
+A:RefreshAll()
+assert(overlay.hidden,"Unavailable Forever API fails closed, not as false red")
+UnitIsTapDenied=function()return tapDenied end
+tapDenied=false
+A:RefreshAll()
+assert(overlay.color[1]==A.COLORS[3][1] and not overlay.hidden,
+ "Known untapped/group-owned mob returns to normal threat palette")
 local driver
 for _,frame in ipairs(frames) do
  if frame.events and frame.events.UNIT_THREAT_LIST_UPDATE then driver=frame;break end
 end
 assert(driver and driver.events.NAME_PLATE_UNIT_ADDED and driver.events.PLAYER_REGEN_DISABLED
- and driver.events.UNIT_HEALTH and driver.events.UNIT_MAXHEALTH)
+ and driver.events.UNIT_HEALTH and driver.events.UNIT_MAXHEALTH
+ and driver.events.UNIT_FLAGS and driver.events.UNIT_FACTION,
+ "Ownership changes must refresh without polling")
 state=2
 driver.scripts.OnEvent(driver,"UNIT_THREAT_LIST_UPDATE","target")
 assert(overlay.color[1]==A.COLORS[2][1],
@@ -192,4 +234,15 @@ local current=#frames
 KoolSupport.page.build(makeFrame())
 assert(#frames>current,"Settings UI should create preview swatches and toggles")
 assert(native.color==nil)
-print("PASS KS Threat: red-purple palette, explicit enable, secret-safe statuses, overlay isolation, combat, settings, nameplate lifecycle")
+local foundSilverToggle=false
+local foundSilverLegend=false
+for i=current+1,#frames do
+ local part=frames[i]
+ if part.text and part.text:find("Silver for outside tags: ON",1,true) then
+  foundSilverToggle=true
+ end
+ if part.text and part.text:find("SILVER",1,true) then foundSilverLegend=true end
+end
+assert(foundSilverToggle and foundSilverLegend,"The page must show the silver override and legend")
+assert(KoolSupportDB.modules.ks_afflictions.onFrame)
+print("PASS KS Threat: tag ownership silver priority, secret tap safety, red-purple palette, UI, diagnostics and native integrity")

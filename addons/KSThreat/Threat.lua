@@ -9,8 +9,9 @@ A.COLORS={
  [1]={.639,.416,.878}, -- violet: some threat, not the target
  [2]={.875,.341,.580}, -- pink: tanking but contested
  [3]={.937,.204,.290}, -- red: securely tanking
+ tagged={.66,.70,.74}, -- silver: mob tapped outside your group
 }
-A.DEFAULTS={onlyCombat=true,purpleNoThreat=true}
+A.DEFAULTS={onlyCombat=true,purpleNoThreat=true,greyTagged=true}
 A.plates=A.plates or {}
 A.lastCounts=A.lastCounts or {}
 
@@ -79,6 +80,17 @@ function A:ThreatState(unit)
  local hostile,known=safeCall(UnitCanAttack,"player",unit)
  if not known then return nil,"hostility unavailable" end
  if hostile~=true then return nil,"not hostile" end
+ -- Tap eligibility is distinct from threat. A mob can attack you while a
+ -- non-party player owns its tag. Check this FIRST, before combat/threat gates.
+ -- UnitIsTapDenied is group-aware on Forever; never infer ownership from aggro.
+ local denied,readable=safeCall(UnitIsTapDenied,unit)
+ if not readable or type(denied)~="boolean" then
+  return nil,"tap unavailable"
+ end
+ if denied==true then
+  if self:Store().greyTagged then return "tagged" end
+  return nil,"tagged suppressed"
+ end
  if self:Store().onlyCombat then
   local fighting,readable=safeCall(UnitAffectingCombat,unit)
   if not readable then return nil,"combat unavailable" end
@@ -164,7 +176,7 @@ function A:PaintPlate(plate)
   overlay:Show()
  end)
  if not ok then overlay:Hide();return false,"paint unavailable" end
- return true,"colored"
+ return true,state=="tagged" and "externally tagged" or "colored"
 end
 
 function A:RefreshAll()
@@ -178,7 +190,9 @@ function A:RefreshAll()
     counts.visible=counts.visible+1
     seen[plate]=true
     local painted,reason=self:PaintPlate(plate)
-    if painted then counts.colored=counts.colored+1
+    if painted then
+     counts.colored=counts.colored+1
+     if reason=="externally tagged" then counts.tagged=(counts.tagged or 0)+1 end
     else
      -- Only fixed diagnostic labels are stored, never unit names or values.
      counts[reason or "unknown"]= (counts[reason or "unknown"] or 0)+1
@@ -199,7 +213,8 @@ function A:DiagnosticText()
  local counts=self:RefreshAll()
  local reasons={
   "no token","hostility unavailable","not hostile","combat unavailable",
-  "not in combat","threat unavailable","no threat","no health bar",
+  "not in combat","tap unavailable","tagged suppressed",
+  "threat unavailable","no threat","no health bar",
   "overlay unavailable","paint unavailable","nameplate API unavailable","disabled",
  }
  local reasonText={}
@@ -208,7 +223,8 @@ function A:DiagnosticText()
    reasonText[#reasonText+1]=reason..": "..counts[reason]
   end
  end
- return "Visible plates: "..counts.visible.." | KS Threat colored: "..counts.colored,
+ return "Visible plates: "..counts.visible.." | KS Threat colored: "..counts.colored..
+    " | Tagged silver: "..(counts.tagged or 0),
     #reasonText>0 and table.concat(reasonText,"  |  ") or
     "No skipped plates. Check an enemy pull if no bars are visible."
 end
@@ -222,7 +238,7 @@ local driver=CreateFrame("Frame")
 for _,event in ipairs({
  "PLAYER_ENTERING_WORLD","PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED",
  "UNIT_THREAT_LIST_UPDATE","UNIT_THREAT_SITUATION_UPDATE",
- "UNIT_HEALTH","UNIT_MAXHEALTH",
+ "UNIT_HEALTH","UNIT_MAXHEALTH","UNIT_FLAGS","UNIT_FACTION",
  "NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED",
 }) do driver:RegisterEvent(event) end
 driver:SetScript("OnEvent",function()
