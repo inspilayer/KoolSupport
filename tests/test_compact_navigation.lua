@@ -4,6 +4,14 @@ KoolSupport={
  modules={},
 }
 local K=KoolSupport
+local xpSettings={enabled=true}
+local previewCount=0
+K.XPReminder={
+ Status=function()return "7 min without XP. Next reminder at 15 min." end,
+ Settings=function()return xpSettings end,
+ SetEnabled=function(_,enabled)xpSettings.enabled=enabled;return true end,
+ Preview=function()previewCount=previewCount+1 end,
+}
 function K:RegisterPage(page)
  self.pages[page.id]=page
  self.pageOrder[#self.pageOrder+1]=page.id
@@ -75,6 +83,24 @@ local macros=findCaption("MACROS",true)
 macros.scripts.OnClick()
 assert(findCaption("Builder",true))
 assert(not findCaption("KS Afflictions",true),"Only one group should expand")
+local tools=findCaption("TOOLS",true)
+assert(tools,"Base Tools group should remain accessible")
+tools.scripts.OnClick()
+assert(findCaption("Time Since XP",true),"XP timer should be visible in Base Tools")
+findCaption("Time Since XP",true).scripts.OnClick()
+local foundToggle,foundPreview=false,false
+for _,widget in ipairs(widgets) do
+ if widget.text=="Toggle reminder" then
+  widget.scripts.OnClick()
+  foundToggle=true
+ elseif widget.text=="Test notification" then
+  widget.scripts.OnClick()
+  foundPreview=true
+ end
+end
+assert(foundToggle and foundPreview)
+assert(xpSettings.enabled==false and previewCount==1,
+ "Base XP page should toggle reminders and preview without extra modules")
 local visible=0
 for _,item in ipairs(widgets) do
  if item.caption and not item.hidden then visible=visible+1 end
