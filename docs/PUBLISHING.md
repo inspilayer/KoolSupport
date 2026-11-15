@@ -71,3 +71,8 @@ Older sections above describe the previously released multiple-sibling-folder fo
 To upgrade from earlier betas, stop WoW, back up AddOns and WTF, remove **only** the old root-level `KSMacros`, `KSSupportSessions`, `KSStealth`, `KSAfflictions`, `KSCampfireChat` and `KSThreat` addon folders, then extract the ZIP's `KoolSupport/`. Per-character `KoolSupportDB` remains as-is. Copy account-wide `WTF/.../SavedVariables/KSAfflictions.lua` to `KoolSupport.lua` *only if absent*, or manually merge the `KSAfflictionsTrackerDB` assignment after backing up both. The old file is not deleted automatically. The tracker is now saved under the single addon root; this transition cannot migrate silently using a WoW API. Previous releases and tags remain unchanged.
 
 The last publicly verified Beta tag at sprint start was `v0.10.6-rc.1-beta`; there is no 0.10.7 tag. `0.10.8-rc.1` is a separate unpublished candidate and needs a fresh owner-approved workflow after green CI and live Forever verification. Never retag earlier versions. CurseForge's external tag webhook remains the delivery route.
+
+
+## 0.10.11 RC — group tap status overlay
+
+0.10.11 adds a new silver override for mobs tagged outside the player's group, based on guarded Forever `UnitIsTapDenied`. It is included within `Modules/KSThreat` under the **single** installable `KoolSupport/` root. Full Lua tests, real BigWigs packager dry run and client smoke test of tagged outsiders/group-owned units are required before any separate owner-approved Beta publishing workflow. The merge does not dispatch a public tag or upload CurseForge files. All previously released tags remain immutable.
