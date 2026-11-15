@@ -76,3 +76,8 @@ The last publicly verified Beta tag at sprint start was `v0.10.6-rc.1-beta`; the
 ## 0.10.11 RC — group tap status overlay
 
 0.10.11 adds a new silver override for mobs tagged outside the player's group, based on guarded Forever `UnitIsTapDenied`. It is included within `Modules/KSThreat` under the **single** installable `KoolSupport/` root. Full Lua tests, real BigWigs packager dry run and client smoke test of tagged outsiders/group-owned units are required before any separate owner-approved Beta publishing workflow. The merge does not dispatch a public tag or upload CurseForge files. All previously released tags remain immutable.
+
+
+## 0.10.12 candidate — centered DIES compatibility
+
+The 0.10.12 candidate extends KS Afflictions centered DIES to prewarm hidden health-bar text and support two native `UnitHealthPercent` curve visual sinks, with exact-GUID public maximum HP caching to make strict lethal thresholds available after combat starts. It does not modify the vendor tracker, game UI health, secrets, saved user preferences, or the six-module single-root package. Require full Lua, native-curve mock, single-root BigWigs packaging dry run, and actual Forever client validation (which can still legitimately hide DIES when no safe max/secret API is present). **No Beta tag or CurseForge publish without explicit owner approval.**
