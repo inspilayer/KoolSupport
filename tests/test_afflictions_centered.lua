@@ -226,7 +226,9 @@ secretRawHealth=601
 A:RefreshAll()
 assert(computedAlpha==0,"One HP above the remaining damage is nonlethal")
 secretRawHealth=350
-A:ForgetKnownMax("target")
+-- Explicit invalidation also drops the exact-GUID shared baseline, unlike a
+-- mere unit-token reassignment. The next protected max cannot recover it.
+A:ForgetKnownMax("target",true)
 A:RefreshAll()
 assert(target.frame.hidden and A.minimalReasons.target=="max_baseline_unavailable",
  "If secret max cannot be validated, no lethal label is allowed")
