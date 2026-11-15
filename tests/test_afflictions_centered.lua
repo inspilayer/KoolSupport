@@ -127,7 +127,8 @@ assert(loadfile("addons/KSAfflictions/Renderer.lua"))("KoolSupport",ns)
 local driver=frames[#frames]
 assert(driver.scripts.OnUpdate==nil,"Minimal renderer must not add its own polling OnUpdate")
 for _,event in ipairs({"UNIT_HEALTH","UNIT_MAXHEALTH","UNIT_AURA","UNIT_COMBAT",
- "PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED","NAME_PLATE_UNIT_REMOVED"}) do
+ "PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED","NAME_PLATE_UNIT_REMOVED",
+ "UPDATE_MOUSEOVER_UNIT","PLAYER_SOFT_ENEMY_CHANGED"}) do
  assert(driver.events[event],"Missing event-driven invalidation: "..event)
 end
 -- Preserve independently owned KS Threat and KS Stealth frames.
@@ -220,7 +221,10 @@ A:RefreshAll()
 assert(computedAlpha==0,"Nonlethal secret health is transparent")
 secretRawHealth=600
 A:RefreshAll()
-assert(computedAlpha==0,"Equal predicted health is conservatively transparent")
+assert(computedAlpha==1,"Exactly lethal remaining damage should include equal integer HP")
+secretRawHealth=601
+A:RefreshAll()
+assert(computedAlpha==0,"One HP above the remaining damage is nonlethal")
 secretRawHealth=350
 A:ForgetKnownMax("target")
 A:RefreshAll()
@@ -230,6 +234,70 @@ maxHealth.target=1000
 A:RefreshAll()
 assert(target.active and A:KnownMax("target")==1000,
  "Restored readable max enables threshold calculation")
+-- Proactive max-HP observation on mouseover/softenemy supports selecting a
+-- previously seen mob after combat secrets hide its maximum health.
+keys.mouseover="guid-1"
+maxHealth.mouseover=1000
+driver.scripts.OnEvent(nil,"UPDATE_MOUSEOVER_UNIT")
+assert(A.knownMaxByKey["guid-1"] and A.knownMaxByKey["guid-1"].max==1000)
+maxHealth.target=secret
+A:ForgetKnownMax("target")
+A:RefreshAll()
+assert(target.active and A:KnownMax("target")==1000,
+ "Previously sighted exact-GUID health is reused only for that same target")
+local originalGuid=keys.target
+keys.target="guid-different"
+A:RefreshAll()
+assert(target.frame.hidden and A:KnownMax("target")==nil,
+ "Baseline from one mob cannot be lent to another")
+keys.target=originalGuid
+A:RefreshAll()
+assert(target.active,"Restoring the known exact GUID recovers its own baseline")
+-- A real max-health change invalidates both the unit and shared baseline.
+driver.scripts.OnEvent(nil,"UNIT_MAXHEALTH","target")
+A:RefreshAll()
+assert(target.frame.hidden and A:KnownMax("target")==nil,
+ "Max HP changes invalidate cached GUID-linked observations")
+maxHealth.target=1000
+A:RefreshAll()
+assert(target.active)
+-- Client compatibility: some Forever builds support ColorCurve but reject
+-- scalar native curves. The secret RGBA goes directly to SetTextColor.
+local previousPercentFallback=UnitHealthPercent
+local previousCurve=C_CurveUtil
+local previousColorFactory=CreateColor
+CreateColor=function(r,g,b,a)
+ return {r=r,g=g,b=b,a=a}
+end
+C_CurveUtil.CreateColorCurve=function()
+ local c={points={},isColor=true}
+ function c:SetType(v)self.kind=v end
+ function c:AddPoint(x,v)self.points[#self.points+1]={x=x,y=v}end
+ return c
+end
+local opaqueColorAlpha=setmetatable({},{
+ __lt=function()error("compared secret color alpha")end,
+ __tostring=function()error("formatted secret color alpha")end,
+})
+UnitHealthPercent=function(unit,predicted,curve)
+ assert(unit=="target" and predicted==false)
+ if not curve.isColor then error("scalar curve rejected by client") end
+ assert(curve.points[3].x==601/1000,"Exact integer lethality threshold")
+ return {GetRGBA=function()return .83,1,.84,opaqueColorAlpha end}
+end
+health.target=secret
+maxHealth.target=secret
+A:RefreshAll()
+assert(target.active and target.mode=="native_color_percent_applied"
+ and target.word.color[4]==opaqueColorAlpha,
+ "Client ColorCurve fallback must write secret RGBA to a display-only sink")
+UnitHealthPercent=previousPercentFallback
+C_CurveUtil=previousCurve
+CreateColor=previousColorFactory
+maxHealth.target=1000
+A:RefreshAll()
+assert(target.active and target.word.color[4]==1,
+ "After ColorCurve use, scalar/readable paths must restore text opacity")
 -- A client refusing the safe UnitHealthPercent evaluation must fail closed.
 local previousPercent=UnitHealthPercent
 UnitHealthPercent=function()error("protected percent not supported")end
