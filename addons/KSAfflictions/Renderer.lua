@@ -326,8 +326,82 @@ end
 local function hideMinimal(record)
   if record then
     record.active=false
+    if record.clip then record.clip.window:Hide() end
     record.frame:Hide()
   end
+end
+
+-- No enemy max-HP baseline is needed for this native visual comparator.
+-- DoesItDie (MIT; Joe Greive) uses a very wide, transparent StatusBar
+-- whose maximum is secret UnitHealth(unit) and whose value is known DoT damage.
+-- A narrow clipped window reveals an icon when that native bar reaches 100%.
+-- Use a small centered DIES font instead of an icon; no extra visible bars.
+-- A few pixels of text may slide in immediately before fully lethal (0.38%).
+local CLIP_BAR_WIDTH=10000
+local CLIP_WORD_WIDTH=38
+function A:EnsureMinimalClip(record)
+  if not record or not record.frame then return nil end
+  if record.clip then return record.clip end
+  -- Prewarmed outside combat when possible. Late nameplates may arrive in
+  -- combat; attempt guarded nonsecure creation rather than silently skipping.
+  local ok,clip=pcall(function()
+    local window=CreateFrame("Frame",nil,record.frame)
+    window:SetSize(CLIP_WORD_WIDTH,16)
+    window:SetPoint("CENTER",record.frame,"CENTER",0,0)
+    window:SetClipsChildren(true)
+    window:EnableMouse(false)
+    local compare=CreateFrame("StatusBar",nil,window)
+    compare:SetSize(CLIP_BAR_WIDTH,16)
+    compare:SetPoint("RIGHT",window,"RIGHT",0,0)
+    compare:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+    compare:SetStatusBarColor(0,0,0,0)
+    compare:EnableMouse(false)
+    local fill=compare:GetStatusBarTexture()
+    if not fill then error("StatusBar fill texture unavailable") end
+    local word=compare:CreateFontString(nil,"OVERLAY","GameFontNormal")
+    word:SetWidth(CLIP_WORD_WIDTH)
+    word:SetJustifyH("CENTER")
+    word:SetPoint("RIGHT",fill,"RIGHT",0,0)
+    word:SetText("DIES")
+    word:SetTextColor(.83,1,.84,1)
+    if type(word.SetFont)=="function" then
+      word:SetFont("Fonts\\FRIZQT__.TTF",11,"OUTLINE")
+    end
+    if type(word.SetShadowColor)=="function" then word:SetShadowColor(0,0,0,1) end
+    if type(word.SetShadowOffset)=="function" then word:SetShadowOffset(1,-1) end
+    window:Hide()
+    return {window=window,bar=compare,word=word}
+  end)
+  if not ok or not clip then return nil end
+  record.clip=clip
+  return clip
+end
+
+function A:ApplyMinimalClip(unit,record,total)
+  if not record or type(UnitHealth)~="function"
+    or type(issecretvalue)~="function" then
+    return false,"clip_health_unavailable"
+  end
+  local ok,health=pcall(UnitHealth,unit)
+  if not ok then return false,"clip_health_unavailable" end
+  local checked,hidden=pcall(issecretvalue,health)
+  if not checked then return false,"clip_health_unavailable" end
+  if not hidden then return false,"health_readable" end
+  local clip=self:EnsureMinimalClip(record)
+  if not clip then return false,"native_clip_unavailable" end
+  -- WoW's StatusBar setters accept opaque HP as a native sink. Never read
+  -- back fill width, max, HP, or a calculated lethal boolean in addon Lua.
+  local applied=pcall(function()
+    clip.bar:SetMinMaxValues(0,health)
+    clip.bar:SetValue(total)
+    clip.window:Show()
+  end)
+  if not applied then
+    clip.window:Hide()
+    return false,"native_clip_rejected"
+  end
+  record.word:Hide()
+  return true,"native_clip_applied"
 end
 function A:EnsureMinimal(cache,key,native)
   if not native then return nil end
@@ -359,6 +433,7 @@ function A:EnsureMinimal(cache,key,native)
   end)
   if not ok or not record then return nil end
   cache[key]=record
+  self:EnsureMinimalClip(record) -- invisible comparison text prepared out of combat
   return record
 end
 -- 0.10.10 RC3: NEVER call Curve:Evaluate* on secret UnitHealth from
@@ -603,7 +678,15 @@ function A:PaintMinimal(cache,key,native,unit)
     self:NoteMinimalReason(unit,"unsupported_frame")
     return
   end
-  local eligible,why=self:ApplyLethalTint(unit,record,record.word,nil,total)
+  if record.clip then record.clip.window:Hide() end
+  record.word:Show()
+  -- Primary secret-HP route: native clipping, no health maximum required.
+  local eligible,why=self:ApplyMinimalClip(unit,record,total)
+  if not eligible then
+    -- Readable HP uses the exact check. Unsupported clipping clients can
+    -- still use the existing secret percent-curve route if max is known.
+    eligible,why=self:ApplyLethalTint(unit,record,record.word,nil,total)
+  end
   if not eligible then
     self:NoteMinimalReason(unit,why)
     hideMinimal(record)

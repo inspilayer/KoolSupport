@@ -9,7 +9,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 ADDONS = ROOT / 'addons'
-VERSION = '0.10.13-rc.1'
+VERSION = '0.10.14-rc.1'
 # Source is separated for maintainability; distribution has one KoolSupport.toc.
 MODULES = {
     'KSMacros': ['KoolSupport'],

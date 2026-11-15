@@ -216,8 +216,10 @@ function A:DiagnosticLine(unit)
   -- Unit token indexes are deliberately not logged; these fields cannot
   -- identify a player or creature and contain no secret health.
   local calibrated=self.KnownMax and self:KnownMax(unit)~=nil
+  local baseline=stage=="native_clip_applied" and "not needed (native clip)"
+    or (calibrated and "ready" or "missing")
   return label..": "..count.." DoT, estimated "..estimate..
-    " remaining; HP "..mode.."; max baseline "..(calibrated and "ready" or "missing")..
+    " remaining; HP "..mode.."; max baseline "..baseline..
     "; gate "..(gate or "ready").."; display "..stage
 end
 
