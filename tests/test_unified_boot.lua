@@ -92,8 +92,13 @@ end
 assert(trackerInitialized,"Afflictions tracker must initialize in the new host addon namespace")
 local K=KoolSupport
 assert(K.API_VERSION==1)
-assert(K.VERSION=="0.10.12-rc.1")
+assert(K.VERSION=="0.10.13-rc.1")
 assert(K.BarTheme and K.CollectLaunchChecks)
+assert(K.XPReminder and K.XPReminder.INTERVAL==900,
+  "XP reminder must be a Base component, not a seventh module")
+assert(K.pages.xp_reminder and K:CanOpenPage("xp_reminder"))
+assert(KoolSupportDB.core.xpReminder==nil,
+  "Cold loading Base must not mutate reminder settings until used")
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
  K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat)
 assert(#K.moduleOrder==6,"exactly six independently managed child modules")
