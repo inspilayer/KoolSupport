@@ -86,3 +86,8 @@ The 0.10.12 candidate extends KS Afflictions centered DIES to prewarm hidden hea
 ## 0.10.13 candidate — Base Time Since XP (November 15, 2026)
 
 This source-only RC adds a **Base** last-XP activity reminder; the package still has **one** root `KoolSupport/`, one root TOC and **six** optional nested modules. Add `XPReminder.lua` after Core in the manifest; no changes to CurseForge listing, dependency graph, third-party vendor license, or existing module SavedVariables. Character preferences are stored additively in Base and default enabled, session reminders are 15-minute local messages only. Require CI Lua tests, one-root development ZIP, real BigWigs dry-run, and Forever live test to validate player XP event timing, max-level suppression and presentation. Do not auto-publish or reuse any prior public tag.
+
+
+## 0.10.14 RC — DIES actual-client regression recovery
+
+This RC repairs the screenshot-confirmed `max_baseline_unavailable` silence for centered DIES, using the native clipped StatusBar technique of MIT DoesItDie (Joe Greive), applied to text-only output on original target/focus/nameplate bars. It no longer depends on nonsecret UnitHealthMax for secret HP. All code still respects Forever's forbidden secret arithmetic and comparisons. Preserve one physical `KoolSupport/` addon folder with six bundled modules and the Base XP reminder; do not publish to CurseForge until the PR and main Lua/real BigWigs package checks pass **and** a player validates with visible DoT damage and HP falling below the threshold in the live game. Existing tags are immutable; manual owner approval for new Beta remains necessary.
