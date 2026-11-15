@@ -46,6 +46,7 @@ end
 tick(899)
 assert(#chat==0,"No nudge earlier than 15 minutes")
 tick(1)
+R:Check() -- real client schedules a bounded check about every 10 seconds
 assert(#chat==1 and #notices==1 and chat[1]:find("15 minutes without XP",1,true))
 driver.OnUpdate(driver,10)
 assert(#chat==1,"No duplicate notification in same 15-min window")
