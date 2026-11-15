@@ -110,6 +110,13 @@ function R:Notify(minutes)
     pcall(UIErrorsFrame.AddMessage,UIErrorsFrame,text,1,.79,.38,1)
   end
 end
+function R:Preview()
+  local text="KoolSupport (preview): Get out of town! It's time to earn some XP."
+  if type(print)=="function" then print("|cffffd87a"..text.."|r") end
+  if UIErrorsFrame and type(UIErrorsFrame.AddMessage)=="function" then
+    pcall(UIErrorsFrame.AddMessage,UIErrorsFrame,text,1,.79,.38,1)
+  end
+end
 function R:Check()
   self:Initialize()
   if not settings().enabled or self:Eligible()~=true then return end
