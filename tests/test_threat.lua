@@ -42,7 +42,11 @@ local function makeFrame(kind)
  function f:SetShown(v)self.hidden=not v end
  function f:Show()self.hidden=false end
  function f:Hide()self.hidden=true end
- function f:CreateFontString()return makeFrame("FontString")end
+ function f:CreateFontString()
+  local item=makeFrame("FontString")
+  frames[#frames+1]=item
+  return item
+ end
  return f
 end
 CreateFrame=function(kind,_,parent)
