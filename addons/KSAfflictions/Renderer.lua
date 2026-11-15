@@ -342,7 +342,8 @@ local CLIP_WORD_WIDTH=38
 function A:EnsureMinimalClip(record)
   if not record or not record.frame then return nil end
   if record.clip then return record.clip end
-  if KoolSupport:IsInCombat() then return nil end
+  -- Prewarmed outside combat when possible. Late nameplates may arrive in
+  -- combat; attempt guarded nonsecure creation rather than silently skipping.
   local ok,clip=pcall(function()
     local window=CreateFrame("Frame",nil,record.frame)
     window:SetSize(CLIP_WORD_WIDTH,16)
