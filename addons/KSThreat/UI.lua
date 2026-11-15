@@ -23,7 +23,7 @@ function A.BuildPage(parent)
  label(parent,GOLD.."KS Threat|r  - Tank Nameplate Colors",20,-20,770,"GameFontNormalLarge")
  label(parent,"One lightweight color layer on Blizzard enemy nameplates. No ThreatPlates required.",20,-57,765)
  label(parent,"Enable KS Threat in Modules to activate this character's tank palette.",20,-83,765,"GameFontHighlightSmall")
- local status=label(parent,"",20,-570,765,"GameFontHighlightSmall")
+ local status=label(parent,"",20,-582,765,"GameFontHighlightSmall")
  local settings=A:Store()
  local function toggle(key,btn,title)
   local ok,reason=A:ChangeSetting(key,not A:Store()[key])
@@ -36,16 +36,23 @@ function A.BuildPage(parent)
  local purple
  purple=button(parent,"",323,-130,285,function()toggle("purpleNoThreat",purple,"Purple for no threat")end)
  purple:SetText("Purple for no threat: "..(settings.purpleNoThreat and "ON" or "OFF"))
- label(parent,GOLD.."Tank palette (4 threat states)|r",20,-204,700,"GameFontNormalLarge")
+ local tagged
+ tagged=button(parent,"",20,-176,285,function()
+  toggle("greyTagged",tagged,"Silver for outside tags")
+ end)
+ tagged:SetText("Silver for outside tags: "..(settings.greyTagged and "ON" or "OFF"))
+ label(parent,"Taps owned outside your party override every threat color.",323,-182,455,"GameFontHighlightSmall")
+ label(parent,GOLD.."Tank colors & tag ownership|r",20,-228,700,"GameFontNormalLarge")
  local rows={
   {3,"RED","You have aggro"},
   {2,"PINK","High threat, not securely tanking"},
   {1,"VIOLET","Some threat, but not tanking"},
   {0,"PURPLE","Little or no threat"},
+  {"tagged","SILVER","Tagged outside your group (not your kill)"},
  }
  for i,entry in ipairs(rows) do
   local c=A.COLORS[entry[1]]
-  local y=-242-(i-1)*55
+  local y=-262-(i-1)*45
   local swatch=CreateFrame("StatusBar",nil,parent)
   swatch:SetSize(138,22)
   swatch:SetPoint("TOPLEFT",parent,"TOPLEFT",20,y)
@@ -56,14 +63,14 @@ function A.BuildPage(parent)
   label(parent,entry[2],175,y-1,102,"GameFontNormal")
   label(parent,entry[3],293,y-1,435,"GameFontHighlightSmall")
  end
- label(parent,MUTED.."Threat states are categorical, not a precise percentage meter.",20,-465,765,"GameFontHighlightSmall")
- local summary=label(parent,"",325,-504,460,"GameFontHighlightSmall")
- local details=label(parent,"",20,-545,765,"GameFontHighlightSmall")
+ label(parent,MUTED.."Tap ownership overrides threat. Threat colors are categorical, not percentages.",20,-481,765,"GameFontHighlightSmall")
+ local summary=label(parent,"",325,-514,460,"GameFontHighlightSmall")
+ local details=label(parent,"",20,-555,765,"GameFontHighlightSmall")
  local function inspect()
   local first,second=A:DiagnosticText()
   summary:SetText(first)
   details:SetText(second)
  end
- button(parent,"Diagnose visible plates",20,-493,293,inspect)
+ button(parent,"Diagnose visible plates",20,-505,293,inspect)
  inspect()
 end
