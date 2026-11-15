@@ -84,7 +84,7 @@ function A:ThreatState(unit)
  -- non-party player owns its tag. Check this FIRST, before combat/threat gates.
  -- UnitIsTapDenied is group-aware on Forever; never infer ownership from aggro.
  local denied,readable=safeCall(UnitIsTapDenied,unit)
- if not readable or (denied~=nil and type(denied)~="boolean") then
+ if not readable or type(denied)~="boolean" then
   return nil,"tap unavailable"
  end
  if denied==true then
