@@ -145,10 +145,10 @@ assert(target.word.text=="DIES" and target.word.point[1]=="CENTER")
 assert(target.word.point[2]==target.frame)
 assert(target.frame.anchor==TargetFrameHealthBar and target.frame.mouse==false)
 assert(lethalPlate and lethalPlate.active and lethalPlate.frame.anchor==plateB.UnitFrame.HealthBar)
-assert(not A.minimalUnits.focus or A.minimalUnits.focus.frame.hidden,
- "Nonlethal focus never displays DIES")
-assert(not A.minimalPlates[plateA] or A.minimalPlates[plateA].frame.hidden,
- "Nonlethal nameplate never displays DIES")
+assert(A.minimalUnits.focus and A.minimalUnits.focus.frame.hidden,
+ "Hidden focus text is prewarmed before combat, without visible HUD clutter")
+assert(A.minimalPlates[plateA] and A.minimalPlates[plateA].frame.hidden,
+ "Nonlethal nameplate should prewarm invisible centered text before combat")
 assert(not A.minimalPlates[plateUnsupported],"Unsupported native bar must not get overlay")
 assert(not A.huds.target and not A.plates[plateA],"Never create extra HUDs in centered mode")
 assert(not TargetFrameHealthBar.nativeMutation and not FocusFrameHealthBar.nativeMutation)
@@ -358,6 +358,14 @@ assert(focus.frame.hidden,"Unknown GUID / plate attribution cannot claim lethali
 keys.focus="guid-2"
 A:RefreshAll()
 assert(focus.active)
+-- Protected unit-existence flags must never be inspected as Lua booleans.
+local priorExists=UnitExists
+UnitExists=function(unit)if unit=="target" then return secret end return priorExists(unit)end
+A:RefreshAll()
+assert(target.frame.hidden,"Protected UnitExists must suppress rather than crash the display")
+UnitExists=priorExists
+A:RefreshAll()
+assert(target.active)
 -- Clearing a target must hide its label before deferred rendering.
 driver.scripts.OnEvent(nil,"PLAYER_TARGET_CHANGED")
 assert(target.frame.hidden)
