@@ -91,3 +91,10 @@ This source-only RC adds a **Base** last-XP activity reminder; the package still
 ## 0.10.14 RC — DIES actual-client regression recovery
 
 This RC repairs the screenshot-confirmed `max_baseline_unavailable` silence for centered DIES, using the native clipped StatusBar technique of MIT DoesItDie (Joe Greive), applied to text-only output on original target/focus/nameplate bars. It no longer depends on nonsecret UnitHealthMax for secret HP. All code still respects Forever's forbidden secret arithmetic and comparisons. Preserve one physical `KoolSupport/` addon folder with six bundled modules and the Base XP reminder; do not publish to CurseForge until the PR and main Lua/real BigWigs package checks pass **and** a player validates with visible DoT damage and HP falling below the threshold in the live game. Existing tags are immutable; manual owner approval for new Beta remains necessary.
+
+
+## November 17, 2026 — version-parser fix after failed 0.10.14 Beta dispatch
+
+The owner confirmed centered DIES works in Forever and explicitly authorized a **0.10.14-rc.1 Beta**. Initial dispatch run [44109728154](https://github.com/inspilayer/KoolSupport/actions/runs/44109728154) failed only during tag creation because the previous sed parser expected `VERSION='...'` and `scripts/check.py` contains `VERSION = '0.10.14-rc.1'`. There was **no new Beta tag** created by that attempt. The Node/Ubuntu warnings did not cause the failure.
+
+Release workflow now calls `python3 scripts/release_version.py`, a validated Python AST reader. CI tests spacing, quoted string styles, the current release manifest and invalid/duplicate version cases to catch future failures before running the tag step. After the fix merges, initiate a **new** manual Beta workflow run on **main**, check the explicit approval checkbox and verify the tag `v0.10.14-rc.1-beta` is created. Do not use `Re-run failed jobs` on the earlier revision; GitHub Actions reruns may retain the workflow code from the failed commit. The external CurseForge webhook may then import the tag; verify the CurseForge project separately before claiming the Beta is publicly available. Do not rewrite any earlier tag.
