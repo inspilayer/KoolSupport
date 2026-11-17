@@ -18,7 +18,11 @@ class ReleaseVersionTests(unittest.TestCase):
             [sys.executable, str(PARSER)], cwd=ROOT,
             check=True, capture_output=True, text=True
         )
-        self.assertEqual(command.stdout.strip(), "0.10.14-rc.1")
+        expected = module.extract_version((ROOT / "scripts" / "check.py").read_text(encoding="utf-8"))
+        self.assertEqual(command.stdout.strip(), expected)
+        # Source manifest and release version must agree for any future RC.
+        manifest = (ROOT / "addons" / "KoolSupport" / "KoolSupport.toc").read_text(encoding="utf-8")
+        self.assertIn(f"## Version: {expected}", manifest)
         self.assertEqual(command.stderr, "")
 
     def test_spaces_and_both_quote_styles(self):
