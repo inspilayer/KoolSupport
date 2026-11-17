@@ -34,6 +34,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate Beta version parser before running slow checks
+        run: |
+          python3 -m unittest discover -s tests -p 'test_release_version.py'
+          python3 scripts/release_version.py
+
       - name: Install Lua for full offline test suite
         run: sudo apt-get update && sudo apt-get install -y lua5.4
 
@@ -51,7 +56,7 @@ jobs:
         with:
           args: -d
 
-      - name: Verify unified five-module package from real packager
+      - name: Verify unified six-module package from real packager
         shell: bash
         run: |
           set -euo pipefail
@@ -73,7 +78,7 @@ jobs:
             echo "::error::main advanced while tests were running; retry on latest main"
             exit 1
           fi
-          version="$(sed -n "s/^VERSION='\([^']*\)'/\1/p" scripts/check.py)"
+          version="$(python3 scripts/release_version.py)"
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]]; then
             echo "::error::Only validated RC versions can create a Beta tag: $version"
             exit 1
