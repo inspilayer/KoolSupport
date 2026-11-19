@@ -9,6 +9,8 @@ KS.Open = function(_, page) opened = page end
 assert(KS.API_VERSION == 1)
 SlashCmdList.KOOLSUPPORT('')
 assert(opened == 'home')
+SlashCmdList.KOOLSUPPORT('quest')
+assert(opened == 'quest_checker')
 SlashCmdList.KOOLSUPPORT('builder')
 assert(opened == 'macro_workshop')
 KS:RegisterModule({id='ks_macros',title='KS Macros',apiVersion=1,defaultEnabled=true})
