@@ -58,7 +58,7 @@ for _,item in ipairs({
  {"macro_workshop","Builder"},{"support_session","Support Sessions"},
  {"afflictions","KS Afflictions"},{"ks_threat","KS Threat"},
  {"stealth","KS Stealth"},{"stealth_talents","Talents"},
- {"campfire_chat","Campfire Chat"},
+ {"campfire_chat","Campfire Chat"},{"quest_checker","Quest Checker"},
 }) do
  K:RegisterPage({id=item[1],title=item[2],build=function()end})
 end
@@ -87,6 +87,7 @@ local tools=findCaption("TOOLS",true)
 assert(tools,"Base Tools group should remain accessible")
 tools.scripts.OnClick()
 assert(findCaption("Time Since XP",true),"XP timer should be visible in Base Tools")
+assert(findCaption("Quest Checker",true),"Quest Checker should appear in Tools")
 findCaption("Time Since XP",true).scripts.OnClick()
 local foundToggle,foundPreview=false,false
 for _,widget in ipairs(widgets) do
