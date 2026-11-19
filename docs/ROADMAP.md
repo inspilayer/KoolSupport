@@ -243,3 +243,8 @@ Regression test on secret max/health for target/focus/nameplate with independent
 ## 0.10.15 RC — searchable KS Quest Checker (November 19, 2026)
 
 Add seventh in-game module, searchable under Tools with optional full QuestieDB-powered quest ID/name catalog; retain a small local/Blizzard fallback without falsely claiming full coverage. Use only Blizzard quest flags to state completed versus not flagged; read-only query, no automation or quest log mutation. Case-insensitive search, duplicate titles, numeric ID, recent searches, source visibility, and module toggle. Match version in Core and every TOC; single physical KoolSupport folder, seven bundled module directories, tests and real CurseForge dry-run. 0.10.14 Beta tag is immutable. **0.10.15-rc.1 is source-only** pending live Forever validation and separate publishing approval.
+
+
+## 0.10.15-rc.2 — KS Stealth draggable combo HUD (Nov 19, 2026)
+
+Add a 5-segment movable, lockable UIParent combo HUD to existing **KS Stealth** (not a new addon). Keep nameplate tracking independently toggleable. Per-character HUD enabled/locked/position/scale, reset button and unlocked preview. Use native StatusBar forwarding for secret points, event-driven target/combo/form updates and fail-closed unavailable states. Block dragging/config changes in combat. Regression test and one-folder seven-module package; live Forever Rogue/Druid smoke test before another owner-approved Beta. Prior tag v0.10.14-rc.1-beta immutable; current development version 0.10.15-rc.2.

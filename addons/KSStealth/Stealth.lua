@@ -87,6 +87,8 @@ function S:UpdatePlate(unit)
   end
 end
 function S:UpdateAll()
+  -- HUD is independent of nameplate visibility, and still updates when nameplate pips are OFF.
+  if type(self.UpdateHUD)=="function" then self:UpdateHUD() end
   if not self:CanDisplay() then self:HideAll();return end
   if not C_NamePlate or type(C_NamePlate.GetNamePlates)~="function" then return end
   local list=C_NamePlate.GetNamePlates()
@@ -166,6 +168,7 @@ end
 function S:OnModuleDisabled()
   self.active=false
   self:HideAll()
+  if type(self.HideHUD)=="function" then self:HideHUD() end
 end
 
 -- Event-driven updates; no secret-value comparisons and no polling for enemies.
@@ -183,11 +186,11 @@ function S:OnEvent(event,unit)
   elseif event=="NAME_PLATE_UNIT_ADDED" then self:UpdatePlate(unit)
   elseif event=="NAME_PLATE_UNIT_REMOVED" then self:RemoveUnit(unit)
   elseif event=="UNIT_COMBO_POINTS" or event=="UNIT_POWER_UPDATE" or event=="UNIT_POWER_FREQUENT" then self:UpdateAll()
-  elseif event=="PLAYER_TARGET_CHANGED" or event=="PLAYER_ENTERING_WORLD" or event=="UPDATE_SHAPESHIFT_FORM" then self:UpdateAll()
+  elseif event=="PLAYER_TARGET_CHANGED" or event=="PLAYER_ENTERING_WORLD" or event=="UPDATE_SHAPESHIFT_FORM" or event=="PLAYER_REGEN_ENABLED" then self:UpdateAll()
   end
 end
 local events=CreateFrame("Frame")
-for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","UNIT_COMBO_POINTS","UNIT_POWER_UPDATE","UNIT_POWER_FREQUENT","PLAYER_TARGET_CHANGED","UPDATE_SHAPESHIFT_FORM"}) do
+for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","UNIT_COMBO_POINTS","UNIT_POWER_UPDATE","UNIT_POWER_FREQUENT","PLAYER_TARGET_CHANGED","UPDATE_SHAPESHIFT_FORM","PLAYER_REGEN_ENABLED"}) do
   events:RegisterEvent(event)
 end
 events:SetScript("OnEvent",function(_,event,unit)S:OnEvent(event,unit)end)

@@ -2,7 +2,7 @@
 ## Title: KoolSupport
 ## Notes: Unified KoolSupport suite with seven optional in-game modules
 ## Author: InspiLayer
-## Version: 0.10.15-rc.1
+## Version: 0.10.15-rc.2
 ## SavedVariablesPerCharacter: KoolSupportDB
 ## SavedVariables: KSAfflictionsTrackerDB
 
@@ -27,6 +27,7 @@ Modules\KSSupportSessions\Module.lua
 
 # Stealth
 Modules\KSStealth\Stealth.lua
+Modules\KSStealth\HUD.lua
 Modules\KSStealth\TalentImpactData.lua
 Modules\KSStealth\TalentResolver.lua
 Modules\KSStealth\TalentTooltip.lua
