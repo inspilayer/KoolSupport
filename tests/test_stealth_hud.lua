@@ -32,6 +32,7 @@ local function frame(kind,parent)
  function f:RegisterForDrag(x)self.dragButton=x end
  function f:SetClampedToScreen(x)self.clamped=x end
  function f:EnableMouse(x)self.mouse=x end
+ function f:RegisterEvent(event)self.events=self.events or {};self.events[event]=true end
  function f:SetScript(name,cb)self[name]=cb end
  function f:SetShown(x)self.hidden=not x end
  function f:Show()self.hidden=false end
