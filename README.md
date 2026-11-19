@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. Source candidate **0.10.10-rc.3** keeps the single `KoolSupport/` install folder introduced in 0.10.8 and makes KS Afflictions' *Centered DIES* mode the default. It is **unpublished**; prior release tags remain unchanged.
+Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. Current source candidate **0.10.15-rc.1** adds the unpublished KS Quest Checker module; do not publish without a Forever client test and separate owner approval.
 
 ## Modules
 
@@ -14,11 +14,12 @@ Last verified GitHub Beta tag: **v0.10.6-rc.1-beta**. Source candidate **0.10.10
 | **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point UI on visible nameplates |
 | **KS Afflictions** | Included; player-toggleable | Minimal centered DIES text on known-lethal native health bars; optional advanced displays (MIT DoesItDie engine) |
 | **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
+| **KS Quest Checker** | Included; player-toggleable | Search quest names and IDs, then check Blizzard's character completion flag; optionally uses a separately installed QuestieDB for a full quest-name index |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
-**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All six module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`).
+**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All seven module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
 
-The **0.10.9 development ZIP contains one top-level folder**, `KoolSupport`, with all six modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
+The **0.10.15 development ZIP contains one top-level folder**, `KoolSupport`, with all seven modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
@@ -138,3 +139,8 @@ Open `/kool` → **Tools → Time Since XP**, or use the **Time Since XP** butto
 A live `/kool dies` test on 0.10.13 showed an enemy with **3 tracked DoTs and 381 damage remaining** but no `DIES`, due solely to `max_baseline_unavailable`. New 0.10.14 no longer requires the enemy's readable maximum HP for the default text-only label. Instead, it adapts the original MIT DoesItDie native clipped-health-bar visual comparison to put only a **small centered DIES word** over the existing target, focus or nameplate health bar when your DoTs are about to finish the mob. The extra StatusBar is transparent and only drives text placement; no additional health bars or windows are shown.
 
 This is a *native visual threshold*, not a Lua health comparison: a tiny fragment of the word may slide in within ~0.38% before the estimate equals HP, while the full word is visible when it reaches lethal. When no DoTs remain, the text is hidden. Use `/kool dies` to confirm `display native_clip_applied` even when the max baseline is missing; that stage means the comparator was installed, **not that the target is already dead**. If unsupported by the actual Forever client's native clipping API, the addon falls back to older curves/known-readable health or hides the label. CI cannot substitute for in-game confirmation. Release still requires approval.
+
+## KS Quest Checker (0.10.15-rc.1 development)
+
+Use `/kool quest` or **Tools → Quest Checker**. Enter a quest name (e.g. *The Prophecy of Mosh'aru*) or numeric ID (`3527`), select a result and read **Completed / turned in**, **Not flagged completed**, or **Unknown** based exclusively on the current character's Blizzard quest flag. The name catalog is broader when the separately installed [QuestieDB](https://github.com/Questie/QuestieDB) is available; without it, the panel searches locally known and game-known quest names, and exact numeric IDs still work. No quest is auto-accepted, turned in, or modified. Recently selected IDs are kept per character. QuestieDB's code/database is not included in KoolSupport's ZIP.
+
