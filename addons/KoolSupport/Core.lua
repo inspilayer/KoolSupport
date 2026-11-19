@@ -2,7 +2,7 @@
 KoolSupport = KoolSupport or {}
 local KS = KoolSupport
 KS.API_VERSION = 1
-KS.VERSION = "0.10.14-rc.1"
+KS.VERSION = "0.10.15-rc.1"
 KS.modules = KS.modules or {}
 KS.moduleOrder = KS.moduleOrder or {}
 KS.pages = KS.pages or {}
@@ -113,6 +113,7 @@ SlashCmdList = SlashCmdList or {}
 SlashCmdList.KOOLSUPPORT = function(text)
   local page = (text or ""):lower():match("^%s*(.-)%s*$")
   if page == "" then page = "home" end
+  if page == "quest" or page == "quests" or page == "qc" then page = "quest_checker" end
   if page == "dies" or page == "diecheck" then
     local A=KSAfflictions
     if not A or type(A.DiagnosticLine)~="function" then

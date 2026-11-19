@@ -31,7 +31,8 @@ local function buildHome(parent)
   button(parent, "Custom Builder", 456, -122, 190, function() KS:ShowPage("macro_workshop") end)
   button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
   button(parent, "Time Since XP", 246, -169, 190, function() KS:ShowPage("xp_reminder") end)
-  label(parent, "One install folder with six independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
+  button(parent, "Quest Checker", 456, -169, 190, function() KS:ShowPage("quest_checker") end)
+  label(parent, "One install folder with seven independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
   label(parent, MUTED .. "Development build. In-game verification is required before a public release.|r", 20, -270, 760)
 end
 -- Base feature: a compact player-only XP inactivity timer, not a child module.
@@ -97,7 +98,7 @@ local function buildLaunchChecks(parent)
   label(parent, "No combat values, SavedVariables, macros or network requests are modified.", 20, -79, 775)
   local rows=KS:CollectLaunchChecks()
   for i,entry in ipairs(rows) do
-    local y=-119-(i-1)*36
+    local y=-115-(i-1)*31
     local tone=(entry.status=="MISSING" or entry.status=="UNAVAILABLE") and "|cffff9a87" or
       (entry.status=="REVIEW" or entry.status=="UNKNOWN" or entry.status=="UNVERIFIED") and "|cffffd87a" or "|cff9bd9ab"
     label(parent, entry.title, 20, y, 225, "GameFontHighlightSmall")
@@ -117,7 +118,7 @@ local categories={
   {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
   {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_talents"}},
   {id="social",label="SOCIAL",pages={"campfire_chat"}},
-  {id="system",label="TOOLS",pages={"xp_reminder","launch_checks"}},
+  {id="system",label="TOOLS",pages={"quest_checker","xp_reminder","launch_checks"}},
 }
 local function groupForPage(id)
   for _,group in ipairs(categories) do

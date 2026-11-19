@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: KS Quest Checker
+## Notes: Read-only searchable quest completion checker.
+## Author: InspiLayer
+## Version: 0.10.15-rc.1
+## Dependencies: KoolSupport
+
+QuestChecker.lua
+UI.lua
+Module.lua
