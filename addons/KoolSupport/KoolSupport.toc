@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: KoolSupport
-## Notes: Unified KoolSupport suite with six optional in-game modules
+## Notes: Unified KoolSupport suite with seven optional in-game modules
 ## Author: InspiLayer
-## Version: 0.10.14-rc.1
+## Version: 0.10.15-rc.1
 ## SavedVariablesPerCharacter: KoolSupportDB
 ## SavedVariables: KSAfflictionsTrackerDB
 
@@ -59,3 +59,8 @@ Modules\KSCampfireChat\Module.lua
 Modules\KSThreat\Threat.lua
 Modules\KSThreat\UI.lua
 Modules\KSThreat\Module.lua
+
+# Quest Checker
+Modules\KSQuestChecker\QuestChecker.lua
+Modules\KSQuestChecker\UI.lua
+Modules\KSQuestChecker\Module.lua
