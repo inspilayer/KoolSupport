@@ -9,7 +9,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 ADDONS = ROOT / 'addons'
-VERSION = '0.10.14-rc.1'
+VERSION = '0.10.15-rc.1'
 # Source is separated for maintainability; distribution has one KoolSupport.toc.
 MODULES = {
     'KSMacros': ['KoolSupport'],
@@ -18,6 +18,7 @@ MODULES = {
     'KSAfflictions': ['KoolSupport'],
     'KSCampfireChat': ['KoolSupport'],
     'KSThreat': ['KoolSupport'],
+    'KSQuestChecker': ['KoolSupport'],
 }
 
 def entries(toc):
@@ -106,7 +107,7 @@ def verify_unified_package(path):
     assert 'KoolSupport/KoolSupport.toc' in names
     assert 'KoolSupport/Modules/KSAfflictions/Vendor/LICENSE' in names
     assert 'KoolSupport/Modules/KSAfflictions/Vendor/NOTICE.md' in names
-    print('PASS one KoolSupport root, six source modules nested, MIT notice retained')
+    print('PASS one KoolSupport root, seven source modules nested, MIT notice retained')
 
 def package():
     zip_unified('KoolSupport_CurseForge_Standard')
