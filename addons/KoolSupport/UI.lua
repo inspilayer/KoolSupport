@@ -98,7 +98,7 @@ local function buildLaunchChecks(parent)
   label(parent, "No combat values, SavedVariables, macros or network requests are modified.", 20, -79, 775)
   local rows=KS:CollectLaunchChecks()
   for i,entry in ipairs(rows) do
-    local y=-119-(i-1)*36
+    local y=-115-(i-1)*31
     local tone=(entry.status=="MISSING" or entry.status=="UNAVAILABLE") and "|cffff9a87" or
       (entry.status=="REVIEW" or entry.status=="UNKNOWN" or entry.status=="UNVERIFIED") and "|cffffd87a" or "|cff9bd9ab"
     label(parent, entry.title, 20, y, 225, "GameFontHighlightSmall")
