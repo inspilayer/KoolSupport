@@ -5,7 +5,7 @@ local A = KSQuestChecker
 A.SEED = {
   [3527] = "The Prophecy of Mosh'aru",
 }
-A.MAX_RESULTS = 11
+A.MAX_RESULTS = 9
 A.MAX_RECENTS = 20
 A.MAX_QUESTS = 100000
 
