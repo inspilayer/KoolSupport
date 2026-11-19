@@ -9,6 +9,7 @@ local NAMES={
  {"KSAfflictions","KS Afflictions","ks_afflictions"},
  {"KSCampfireChat","Campfire Chat","ks_campfire_chat"},
  {"KSThreat","KS Threat","ks_threat"},
+ {"KSQuestChecker","KS Quest Checker","ks_quest_checker"},
 }
 local function available(fn) return type(fn)=="function" end
 local function addonLoaded(name)
@@ -44,7 +45,7 @@ function KS:CollectLaunchChecks()
        rootLoaded==nil and "UNVERIFIED" or "ENABLED",
        rootLoaded==false and "KoolSupport root was not loaded" or
        rootLoaded==nil and "Root loaded state unavailable; UI code is active" or
-       "Single KoolSupport addon loaded; six modules are bundled inside")
+       "Single KoolSupport addon loaded; seven modules are bundled inside")
   else
    local def=self:GetModule(module)
    if not def then
