@@ -103,3 +103,8 @@ Release workflow now calls `python3 scripts/release_version.py`, a validated Pyt
 ## 0.10.15 Quest Checker candidate (November 19, 2026)
 
 This is an **unpublished development RC**, adding seventh optional module KS Quest Checker into the existing single physical KoolSupport folder; no independent CurseForge project or separate install. It uses no embedded third-party QuestieDB content; optional runtime integration with separately installed QuestieDB is not a formal dependency. For broad searchable quest names, install an appropriate compatible QuestieDB build; without it, only locally known/game-known names and numeric IDs are available. Before publication require green Lua and packager checks, on-client 3527 complete/incomplete comparison, fallback with QuestieDB disabled, UI click and module toggle verification, and fresh owner approval. **Never regenerate or retag the already-published v0.10.14-rc.1-beta tag.** GitHub tag webhook HTTP 200 is not proof of a CurseForge file being available.
+
+
+## 0.10.15-rc.2 development build (Nov 19)
+
+This unpublished RC includes **Quest Checker** and a **movable KS Stealth five-pip combo HUD** in the same single KoolSupport install folder with seven existing modules. No extra module or separate CurseForge project, no changes to the already-tagged 0.10.14 Beta. CI must pass full Lua tests and real BigWigs dry-run. Live Rogue/Druid client acceptance is required for target/point updates, frame position persistence, unlocked preview and combat safety. Wait for explicit owner approval before publishing any new tag.
