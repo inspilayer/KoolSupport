@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. Current source candidate **0.10.15-rc.1** adds the unpublished KS Quest Checker module; do not publish without a Forever client test and separate owner approval.
+Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. Current source candidate **0.10.15-rc.2** adds the unpublished KS Quest Checker and movable KS Stealth combo HUD; do not publish without a Forever client test and separate owner approval.
 
 ## Modules
 
@@ -11,7 +11,7 @@ Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. Current source candidate
 | **KoolSupport Base** | Included | Home, navigation, settings, module manager |
 | **KS Macros** | Included and on by default | Generic Macro Suite, Full Spellbook, Custom Builder |
 | **KS Support Sessions** | Included; player-toggleable | Healer class presets, named focus, heals, battle rez, follow/assist |
-| **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point UI on visible nameplates |
+| **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point pips on visible nameplates **and a separately movable HUD**, with saved per-character position, scale, visibility and lock |
 | **KS Afflictions** | Included; player-toggleable | Minimal centered DIES text on known-lethal native health bars; optional advanced displays (MIT DoesItDie engine) |
 | **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
 | **KS Quest Checker** | Included; player-toggleable | Search quest names and IDs, then check Blizzard's character completion flag; optionally uses a separately installed QuestieDB for a full quest-name index |
@@ -144,3 +144,7 @@ This is a *native visual threshold*, not a Lua health comparison: a tiny fragmen
 
 Use `/kool quest` or **Tools → Quest Checker**. Enter a quest name (e.g. *The Prophecy of Mosh'aru*) or numeric ID (`3527`), select a result and read **Completed / turned in**, **Not flagged completed**, or **Unknown** based exclusively on the current character's Blizzard quest flag. The name catalog is broader when the separately installed [QuestieDB](https://github.com/Questie/QuestieDB) is available; without it, the panel searches locally known and game-known quest names, and exact numeric IDs still work. No quest is auto-accepted, turned in, or modified. Recently selected IDs are kept per character. QuestieDB's code/database is not included in KoolSupport's ZIP.
 
+
+## KS Stealth movable combo HUD (0.10.15-rc.2 development)
+
+Go to `/kool` → **Combat → KS Stealth**. Toggle **HUD: ON**, click **Unlock / move HUD**, drag the **DRAG COMBO POINTS** label to the desired position, then **Lock HUD position**. Optional independent controls resize or reset the HUD. It shows five gold native combo-point pips for your current target on Druid/Rogue, and disappears when target is lost while locked. Unlocked mode always shows empty positioning pips. Its visibility and position are independent from nameplate combo pips. All settings persist per character and cannot be changed while in combat. Combo values are forwarded directly to native Blizzard StatusBars without Lua comparing restricted secret values. Live Forever verification required before Beta.
