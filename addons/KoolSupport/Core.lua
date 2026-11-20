@@ -108,6 +108,24 @@ function KS:CanOpenPage(id)
   return self:IsModuleEnabled(page.moduleId)
 end
 
+-- Convenient ledger shortcut; only stages a note, never ignores a player.
+SLASH_KSGUILTYFOREVER1="/gf"
+SlashCmdList=SlashCmdList or {}
+SlashCmdList.KSGUILTYFOREVER=function(raw)
+ local verb,name=(raw or ""):match("^%s*(%S+)%s+(.+)%s*$")
+ if verb and verb:lower()=="enemy" then
+  name=name:match("^%s*(.-)%s*$")
+  if KSGuiltyForever and KSGuiltyForever.PrepareEditor
+    and KSGuiltyForever:PrepareEditor(name,"enemy") then
+   KS:Open("guilty_forever")
+   return
+  end
+  if print then print("Guilty Forever: enter a valid character name. Usage: /gf enemy CharacterName") end
+  return
+ end
+ KS:Open("guilty_forever")
+end
+
 SLASH_KOOLSUPPORT1 = "/kool"
 SlashCmdList = SlashCmdList or {}
 SlashCmdList.KOOLSUPPORT = function(text)
