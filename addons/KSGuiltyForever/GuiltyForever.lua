@@ -12,11 +12,44 @@ local function safe(v)
  end
  return true
 end
-function A:Key(name)
+-- Forever character identity is First Surname, NOT Name-Realm.
+-- Old saved First-Surname keys remain readable for backwards compatibility.
+function A:NormalizeName(name)
  if not safe(name) or type(name)~="string" then return nil end
  name=name:match("^%s*(.-)%s*$")
- if #name<2 or #name>100 or name:find("[%c|]") or not name:match("^[%w'%-]+$") then return nil end
- return name:lower()
+ if not name or #name<2 or #name>100 or name:find("[%c|]") then return nil end
+ -- Accept older Name-Surname notes and chat/API hyphenated spellings.
+ if not name:find("%s") then
+  local first,last=name:match("^([^%-]+)%-([^%-]+)$")
+  if first and last then name=first.." "..last end
+ end
+ name=name:gsub("%s+"," ")
+ local first,last=name:match("^([^%s]+)%s+([^%s]+)$")
+ if first and last then
+  if not first:match("^[%w'\128-\255%-]+$") or not last:match("^[%w'\128-\255%-]+$") then return nil end
+ elseif not name:match("^[%w'\128-\255%-]+$") then return nil end
+ return name
+end
+function A:Key(name)
+ local full=self:NormalizeName(name)
+ return full and full:lower() or nil
+end
+function A:IsFullName(name)
+ local full=self:NormalizeName(name)
+ return full and full:find(" ",1,true)~=nil or false
+end
+function A:UnitFullName(name,surname)
+ if not safe(name) or not safe(surname) or type(name)~="string" then return nil end
+ -- Some Forever paths already include both names in the first return.
+ if name:find(" ",1,true) then return self:NormalizeName(name) end
+ if type(surname)=="string" and surname~="" then
+  return self:NormalizeName(name.." "..surname)
+ end
+ return self:NormalizeName(name)
+end
+function A:LegacyKey(name)
+ local key=self:Key(name)
+ return key and key:gsub(" ","-") or nil
 end
 function A:Store()
  local db=KoolSupport:GetDatabase()
@@ -31,17 +64,28 @@ function A:Save(name,reason,kind)
  if not key or not safe(reason) or type(reason)~="string" then return false end
  reason=reason:sub(1,500):match("^%s*(.-)%s*$")
  if reason=="" then return false end
- local old=self:Store().notes[key]
- self:Store().notes[key]={name=name,reason=reason,kind=(kind=="enemy" and "enemy" or (kind=="ignore" and "ignore" or (old and old.kind) or "ignore")),created=(old and old.created) or (time and time() or 0)}
+ if kind=="enemy" and not self:IsFullName(name) then return false end
+ local notes=self:Store().notes
+ local legacy=self:LegacyKey(name)
+ local old=notes[key] or (legacy and notes[legacy])
+ local display=self:NormalizeName(name)
+ notes[key]={name=display,reason=reason,kind=(kind=="enemy" and "enemy" or (kind=="ignore" and "ignore" or (old and old.kind) or "ignore")),created=(old and old.created) or (time and time() or 0)}
+ if legacy and legacy~=key then notes[legacy]=nil end
  return true
 end
 function A:Get(name)
  local key=self:Key(name)
- return key and self:Store().notes[key] or nil
+ if not key then return nil end
+ local notes=self:Store().notes
+ return notes[key] or notes[self:LegacyKey(name)]
 end
 function A:Delete(name)
  local key=self:Key(name)
- if key then self:Store().notes[key]=nil;return true end
+ if key then
+  local notes=self:Store().notes
+  notes[key]=nil;notes[self:LegacyKey(name)]=nil
+  return true
+ end
  return false
 end
 function A:IgnoreSnapshot()
@@ -92,7 +136,7 @@ end
 function A:OnIgnoreRequested(raw)
  if not KoolSupport:IsModuleEnabled("ks_guilty_forever") then return end
  if not safe(raw) or type(raw)~="string" then return end
- local name=raw:match("^%s*([^%s]+)")
+ local name=raw:match("^%s*(.-)%s*$")
  local key=self:Key(name)
  if not key or self:Get(name) or self.pending[key] then return end
  self.pending[key]=true
@@ -142,10 +186,9 @@ function A:CheckGroup()
   if UnitExists and UnitExists(unit) and UnitName then
    local name,realm=UnitName(unit)
    if safe(name) and safe(realm) and type(name)=="string" then
-    local full=(type(realm)=="string" and realm~="") and name.."-"..realm or name
-    local key=self:Key(full)
-    local entry=key and self:Store().notes[key]
-    if not entry then key=self:Key(name);entry=key and self:Store().notes[key] end
+    local full=self:UnitFullName(name,realm)
+    local key=full and self:Key(full)
+    local entry=key and self:Get(full)
     if entry then
      present[key]=true
      if not self.warned[key] then
@@ -171,8 +214,8 @@ function A:EnemyTarget(unit)
   and safe(enemy) and exists==true and player==true and enemy==true) then return nil end
  local name,realm=UnitName(unit)
  if not safe(name) or not safe(realm) or type(name)~="string" then return nil end
- local full=(type(realm)=="string" and realm~="") and name.."-"..realm or name
- if not self:Key(full) then return nil end
+ local full=self:UnitFullName(name,realm)
+ if not full or not self:IsFullName(full) then return nil end
  return full
 end
 function A:TagEnemyTarget(reason)
@@ -186,10 +229,7 @@ function A:CheckEnemyTarget()
  local name=self:EnemyTarget("target")
  if not name then return end
  local entry=self:Get(name)
- if not entry then
-  local short=name:match("^([^-]+)")
-  if short then entry=self:Get(short) end
- end
+ -- Never match a first-name-only note against a different surname.
  if not entry or entry.kind~="enemy" then return end
  -- One reminder per player per session, rather than chat spam while PvPing.
  local key=self:Key(entry.name)
