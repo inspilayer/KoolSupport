@@ -171,6 +171,7 @@ local categories={
   {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_talents"}},
   {id="social",label="SOCIAL",pages={"campfire_chat","guilty_forever"}},
   {id="system",label="TOOLS",pages={"quest_checker","xp_reminder","launch_checks"}},
+  {id="help",label="FAQ / HELP",pages={"faq"}},
 }
 local function groupForPage(id)
   for _,group in ipairs(categories) do
@@ -183,11 +184,12 @@ local function makeNavRow(key,action)
   local b=navButtons[key]
   if b then return b end
   b=CreateFrame("Button",nil,navigation)
-  b:SetSize(177,29)
+  b:SetSize(250,40)
   b:EnableMouse(true)
-  local name=b:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+  local name=b:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+  enlarge(name,19)
   name:SetPoint("LEFT",b,"LEFT",9,0)
-  name:SetWidth(165)
+  name:SetWidth(235)
   name:SetJustifyH("LEFT")
   b:SetFontString(name)
   b.caption=name
@@ -198,7 +200,7 @@ end
 local function redrawNavigation()
   if not navigation then return end
   for _,item in pairs(navButtons) do item:Hide() end
-  local y=-14
+  local y=-18
   local used={}
   local function drawPage(id,indent)
     if used[id] or not KS:CanOpenPage(id) then return end
@@ -211,7 +213,7 @@ local function redrawNavigation()
     b.caption:SetText((currentPage==id and GOLD or "|cffced8d3")..
       (p.title or id).."|r")
     b:Show()
-    y=y-31
+    y=y-44
   end
   drawPage("home")
   drawPage("modules")
@@ -231,7 +233,7 @@ local function redrawNavigation()
       b:SetPoint("TOPLEFT",navigation,"TOPLEFT",0,y)
       b.caption:SetText((openGroup==group.id and GOLD.."v " or MUTED.."> ")..group.label.."|r")
       b:Show()
-      y=y-33
+      y=y-48
       if openGroup==group.id then
         for _,page in ipairs(group.pages) do drawPage(page,true) end
         y=y-8
@@ -259,6 +261,7 @@ function KS:ShowPage(id)
   pageWidgets = pane
   if id == "home" then buildHome(pane)
   elseif id == "modules" then buildModules(pane)
+  elseif id == "faq" then buildFAQ(pane)
   elseif id == "launch_checks" then buildLaunchChecks(pane)
   elseif id == "xp_reminder" then buildXPReminder(pane)
   else
@@ -271,7 +274,7 @@ end
 function KS:Open(page)
   if not window then
     window = CreateFrame("Frame", "KoolSupportMainPanel", UIParent, "BackdropTemplate")
-    window:SetSize(1090, 740)
+    window:SetSize(1280, 830)
     window:SetPoint("CENTER")
     window:SetFrameStrata("DIALOG")
     window:SetMovable(true)
@@ -282,22 +285,24 @@ function KS:Open(page)
     window:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",edgeSize=26,insets={left=8,right=8,top=8,bottom=8}})
     if UIParent and UIParent.GetWidth and UIParent.GetHeight then
       local w, h = UIParent:GetWidth(), UIParent:GetHeight()
-      if w and h and w > 0 and h > 0 then window:SetScale(math.min(1, w / 1120, h / 770)) end
+      if w and h and w > 0 and h > 0 then window:SetScale(math.min(1, w / 1310, h / 860)) end
     end
-    label(window, "KoolSupport  " .. KS.VERSION, 30, -23, 780, "GameFontNormalLarge")
-    button(window, "X", 1030, -19, 37, function() window:Hide() end)
+    if window.SetBackdropColor then window:SetBackdropColor(0.06,0.07,0.09,0.96) end
+    label(window, GOLD.."KoolSupport|r  "..KS.VERSION, 34, -27, 950, "GameFontNormalLarge")
+    button(window, "X", 1216, -23, 40, function() window:Hide() end)
     navigation = CreateFrame("Frame", nil, window)
-    navigation:SetPoint("TOPLEFT", window, "TOPLEFT", 25, -90)
-    navigation:SetSize(200, 615)
+    navigation:SetPoint("TOPLEFT", window, "TOPLEFT", 26, -100)
+    navigation:SetSize(250, 680)
     content = CreateFrame("Frame", nil, window)
-    content:SetPoint("TOPLEFT", window, "TOPLEFT", 235, -92)
-    content:SetSize(824, 605)
+    content:SetPoint("TOPLEFT", window, "TOPLEFT", 292, -100)
+    content:SetSize(950, 695)
     if UISpecialFrames then table.insert(UISpecialFrames, "KoolSupportMainPanel") end
   end
   window:Show()
   self:ShowPage(page or "home")
 end
 KS:RegisterPage({id="home",title="Home",build=buildHome})
+KS:RegisterPage({id="faq",title="FAQ",build=buildFAQ})
 KS:RegisterPage({id="modules",title="Modules",build=buildModules})
 KS:RegisterPage({id="launch_checks",title="Launch Checks",build=buildLaunchChecks})
 KS:RegisterPage({id="xp_reminder",title="Time Since XP",build=buildXPReminder})
