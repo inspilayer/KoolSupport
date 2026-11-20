@@ -86,6 +86,36 @@ function A:Prompt(name)
  }
  StaticPopup_Show("KS_GUILTY_FOREVER",name,nil,name)
 end
+-- Observe the player's explicit /ignore request without replacing Blizzard's
+-- slash command or calling ignore APIs ourselves. Some client versions route
+-- /ignore through different handlers, so retain the list-update fallback.
+function A:OnIgnoreRequested(raw)
+ if not KoolSupport:IsModuleEnabled("ks_guilty_forever") then return end
+ if not safe(raw) or type(raw)~="string" then return end
+ local name=raw:match("^%s*([^%s]+)")
+ local key=self:Key(name)
+ if not key or self:Get(name) or self.pending[key] then return end
+ self.pending[key]=true
+ self:Prompt(name)
+end
+function A:InstallIgnoreHooks()
+ if self.ignoreHooksInstalled then return end
+ self.ignoreHooksInstalled=true
+ if type(hooksecurefunc)~="function" then return end
+ local function tryHook(tbl,key)
+  if type(tbl)~="table" or type(tbl[key])~="function" then return false end
+  local ok=pcall(hooksecurefunc,tbl,key,function(name)
+   A:OnIgnoreRequested(name)
+  end)
+  return ok
+ end
+ -- On supported clients this runs immediately after /ignore executes.
+ tryHook(SlashCmdList,"IGNORE")
+ -- Catch the alternate built-in ignore paths where available. These are
+ -- secure post-hooks only; failures fall back to IGNORELIST_UPDATE.
+ tryHook(C_FriendList,"AddIgnore")
+ tryHook(C_FriendList,"AddOrDelIgnore")
+end
 function A:Sync(first)
  local now=self:IgnoreSnapshot()
  if not now then return end
@@ -175,13 +205,14 @@ function A:Start()
   self.frame:RegisterEvent(event)
  end
  self.frame:SetScript("OnEvent",function(_,event)
-  if event=="PLAYER_LOGIN" then A:Sync(true)
+  if event=="PLAYER_LOGIN" then A:InstallIgnoreHooks(); A:Sync(true)
   elseif event=="IGNORELIST_UPDATE" then
    if C_Timer and C_Timer.After then C_Timer.After(0.2,function() A:Sync() end)
    else A:Sync() end
   elseif event=="PLAYER_TARGET_CHANGED" then A:CheckEnemyTarget()
   else A:CheckGroup(); A:CheckEnemyTarget() end
  end)
+ self:InstallIgnoreHooks()
  if IsLoggedIn and IsLoggedIn() then self:Sync(true);self:CheckGroup() end
 end
 A:Start()
