@@ -230,3 +230,6 @@ A seventh independent registered module, `ks_quest_checker`, owns `quest_checker
 ## Guilty Forever
 
 `KSGuiltyForever` is a unified source module registered through Base. `KoolSupportDB.modules.ks_guilty_forever.notes` is per-character persistent and additive. All ignore API calls are read-only; native ignore behavior belongs exclusively to Blizzard. Group scan uses current party/raid unit tokens and no automated group decisions. Notification suppression is session-only, not a deletion of any stored reason. The module supports `/kool guilty` and a manual edit page; updates require normal release validation.
+
+
+Enemy-faction tagging stores `kind="enemy"` in the existing Guilty Forever note entries without a schema replacement. A manual UI action accepts only `UnitIsPlayer` and `UnitIsEnemy("player", "target")` validated targets. A read-only `PLAYER_TARGET_CHANGED` callback reminds for saved enemy-tag notes once per session. It does not create a Blizzard ignore, query hidden units, or perform PvP actions.
