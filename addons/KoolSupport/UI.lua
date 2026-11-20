@@ -3,6 +3,20 @@ local KS = KoolSupport
 local window, content, pageWidgets, currentPage, navigation
 local navButtons = {}
 local openGroup=nil
+local FONT=STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+local function enlarge(obj,size)
+ if obj and obj.SetFont then pcall(obj.SetFont,obj,FONT,size,"") end
+end
+local function tile(parent,x,y,w,h)
+ local p=CreateFrame("Frame",nil,parent,"BackdropTemplate")
+ p:SetSize(w,h);p:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
+ if p.SetBackdrop then
+  p:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+  if p.SetBackdropColor then p:SetBackdropColor(0.08,0.10,0.13,0.94) end
+  if p.SetBackdropBorderColor then p:SetBackdropBorderColor(0.45,0.34,0.19,0.8) end
+ end
+ return p
+end
 local GOLD = "|cffffd87a"
 local MUTED = "|cff9fb4ad"
 
@@ -12,28 +26,42 @@ local function label(parent, text, x, y, width, font)
   item:SetWidth(width)
   item:SetJustifyH("LEFT")
   item:SetText(text)
+  enlarge(item,font=="GameFontNormalLarge" and 25 or font=="GameFontHighlightSmall" and 15 or 18)
   return item
 end
 local function button(parent, text, x, y, width, onClick)
   local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-  b:SetSize(width or 160, 31)
+  b:SetSize(width or 160, 43)
   b:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
   b:SetText(text)
+  if b.GetFontString then enlarge(b:GetFontString(),17) end
   b:SetScript("OnClick", onClick)
   return b
 end
 
 local function buildHome(parent)
-  label(parent, GOLD .. "KoolSupport|r  - Addon Workshop", 20, -22, 660, "GameFontNormalLarge")
-  label(parent, "Build macros and enable only the tools you actually want.", 20, -64, 690)
-  button(parent, "Open Macro Suite", 20, -122, 208, function() KS:ShowPage("macro_suite") end)
-  button(parent, "Full Spellbook", 246, -122, 190, function() KS:ShowPage("full_spellbook") end)
-  button(parent, "Custom Builder", 456, -122, 190, function() KS:ShowPage("macro_workshop") end)
-  button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
-  button(parent, "Time Since XP", 246, -169, 190, function() KS:ShowPage("xp_reminder") end)
-  button(parent, "Quest Checker", 456, -169, 190, function() KS:ShowPage("quest_checker") end)
-  label(parent, "One install folder with eight independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
-  label(parent, MUTED .. "Development build. In-game verification is required before a public release.|r", 20, -270, 760)
+ label(parent,GOLD.."KoolSupport|r  Addon Workshop",26,-25,880,"GameFontNormalLarge")
+ label(parent,"All your tools, organized and ready to use.",26,-70,870)
+ local cards={
+  {"MACRO WORKSHOP","Presets, spellbook and custom macro creation.","Open Macro Suite","macro_suite"},
+  {"COMBAT","Afflictions, stealth, tracking and threat.","Open Afflictions","afflictions"},
+  {"SOCIAL","Guilty Forever and Campfire Chat.","Open Guilty Forever","guilty_forever"},
+  {"QUESTS & TOOLS","Quest checker, launch checks and reminders.","Open Quest Checker","quest_checker"},
+ }
+ for i,c in ipairs(cards) do
+  local x=25+((i-1)%2)*455
+  local y=-125-math.floor((i-1)/2)*222
+  local box=tile(parent,x,y,430,204)
+  label(box,GOLD..c[1].."|r",18,-20,390,"GameFontNormalLarge")
+  label(box,c[2],18,-71,391)
+  button(box,c[3],18,-134,391,function()
+   KS:ShowPage(KS:CanOpenPage(c[4]) and c[4] or "modules")
+  end)
+ end
+ label(parent,MUTED.."TIP: Expand a category on the left, or browse the FAQ.|r",25,-583,885)
+ button(parent,"Module Manager",25,-620,272,function()KS:ShowPage("modules")end)
+ button(parent,"FAQ / Help",311,-620,272,function()KS:ShowPage("faq")end)
+ button(parent,"Launch Checks",597,-620,272,function()KS:ShowPage("launch_checks")end)
 end
 -- Base feature: a compact player-only XP inactivity timer, not a child module.
 local function buildXPReminder(parent)
@@ -77,21 +105,45 @@ local function buildXPReminder(parent)
 end
 
 local function buildModules(parent)
-  label(parent, GOLD .. "Module Manager|r", 20, -22, 660, "GameFontNormalLarge")
-  label(parent, "Disabling a module hides its UI; loaded Lua remains until reload.", 20, -60, 730)
-  for i, id in ipairs(KS.moduleOrder) do
-    local def = KS.modules[id]
-    local y = -106 - (i - 1) * 69
-    local enabled, why = KS:IsModuleEnabled(id)
-    label(parent, def.title, 20, y, 310)
-    label(parent, enabled and "Enabled" or (why or "Disabled"), 349, y, 190)
-    button(parent, enabled and "Disable" or "Enable", 592, y + 9, 110, function()
-      local ok, reason = KS:SetModuleEnabled(id, not enabled)
-      if not ok and type(print) == "function" then print("KoolSupport: " .. tostring(reason)) end
-    end)
-  end
+ label(parent,GOLD.."Module Manager|r",25,-25,875,"GameFontNormalLarge")
+ label(parent,"Enable the tools you need. Disabled features disappear from navigation.",25,-72,885)
+ for i,id in ipairs(KS.moduleOrder) do
+  local def=KS.modules[id]
+  local enabled=KS:IsModuleEnabled(id)
+  local x=25+((i-1)%2)*455
+  local y=-121-math.floor((i-1)/2)*135
+  local box=tile(parent,x,y,430,122)
+  label(box,def.title,17,-15,390,"GameFontNormalLarge")
+  label(box,enabled and "|cff7ddca1ENABLED|r" or "|cffffaa77DISABLED|r",17,-61,230)
+  button(box,enabled and "Disable" or "Enable",287,-61,127,function()
+   local ok,reason=KS:SetModuleEnabled(id,not enabled)
+   if not ok and print then print("KoolSupport: "..tostring(reason)) end
+  end)
+ end
+ label(parent,MUTED.."Your module preferences are stored per character.|r",25,-668,885)
 end
-
+local FAQ={
+ {"GETTING STARTED","Click a left-side category, then choose a tool. The Modules page lets you enable or disable features."},
+ {"GUILTY FOREVER","Use /kool guilty. Type /gf enemy First Surname to open an enemy record with the name filled in."},
+ {"IGNORE REMINDERS","Using /ignore can ask for a reason. Your notes stay private; no party-leaving or chat messages are sent."},
+ {"ENEMY TAGS","Save both first name and surname, select Enemy Faction and write a reason. This does not ignore the player."},
+ {"MACRO WORKSHOP","Choose presets or create a custom macro. Review each macro before installing."},
+ {"AFFLICTIONS","Open Combat > KS Afflictions for damage-over-time tracking and optional DIES estimates."},
+ {"QUEST CHECKER","Find quests by name and check their reported completion status."},
+ {"UPDATES & DATA","Settings are per character. Back up SavedVariables when reinstalling or removing addon folders."},
+}
+local function buildFAQ(parent)
+ label(parent,GOLD.."Frequently Asked Questions|r",25,-25,890,"GameFontNormalLarge")
+ label(parent,"Quick answers for KoolSupport and World of Warcraft: Forever.",25,-72,880)
+ for i,q in ipairs(FAQ) do
+  local x=25+((i-1)%2)*455
+  local y=-121-math.floor((i-1)/2)*135
+  local box=tile(parent,x,y,430,124)
+  label(box,GOLD..q[1].."|r",16,-14,395,"GameFontNormalLarge")
+  local answer=label(box,q[2],16,-57,396)
+  if answer.SetWordWrap then answer:SetWordWrap(true) end
+ end
+end
 local function buildLaunchChecks(parent)
   label(parent, GOLD .. "Launch Checks  -  World of Warcraft: Forever", 20, -19, 775, "GameFontNormalLarge")
   label(parent, "Read-only snapshot: installed modules and API presence, NOT proof features work.", 20, -54, 775)
