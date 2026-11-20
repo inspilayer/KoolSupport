@@ -4,6 +4,7 @@ local A=KSGuiltyForever
 A.pending={}
 A.seen={}
 A.warned={}
+A.enemyWarned={}
 local function safe(v)
  if type(issecretvalue)=="function" then
   local ok,secret=pcall(issecretvalue,v)
@@ -25,13 +26,13 @@ function A:Store()
  s.notes=s.notes or {}
  return s
 end
-function A:Save(name,reason)
+function A:Save(name,reason,kind)
  local key=self:Key(name)
  if not key or not safe(reason) or type(reason)~="string" then return false end
  reason=reason:sub(1,500):match("^%s*(.-)%s*$")
  if reason=="" then return false end
  local old=self:Store().notes[key]
- self:Store().notes[key]={name=name,reason=reason,created=(old and old.created) or (time and time() or 0)}
+ self:Store().notes[key]={name=name,reason=reason,kind=(kind=="enemy" and "enemy" or (kind=="ignore" and "ignore" or (old and old.kind) or "ignore")),created=(old and old.created) or (time and time() or 0)}
  return true
 end
 function A:Get(name)
@@ -75,7 +76,7 @@ function A:Prompt(name)
   end,
   OnAccept=function(d,data)
    local e=d.editBox or d.EditBox
-   if e then A:Save(data,e:GetText()) end
+   if e then A:Save(data,e:GetText(),"ignore") end
    A.pending[A:Key(data)]=nil
   end,
   OnCancel=function(_,data)
@@ -128,10 +129,45 @@ function A:CheckGroup()
  end
  for key in pairs(self.warned) do if not present[key] then self.warned[key]=nil end end
 end
+-- Enemy-faction players cannot reliably be added to Blizzard's ignore list.
+-- Use a separate private note kind and inspect only explicitly available unit IDs.
+function A:EnemyTarget(unit)
+ unit=unit or "target"
+ if not (UnitExists and UnitExists(unit) and UnitIsPlayer and UnitIsPlayer(unit)
+  and UnitIsEnemy and UnitIsEnemy("player",unit) and UnitName) then return nil end
+ local name,realm=UnitName(unit)
+ if not safe(name) or not safe(realm) or type(name)~="string" then return nil end
+ local full=(type(realm)=="string" and realm~="") and name.."-"..realm or name
+ if not self:Key(full) then return nil end
+ return full
+end
+function A:TagEnemyTarget(reason)
+ local name=self:EnemyTarget("target")
+ if not name then return false,"Target an enemy-faction player first." end
+ if not self:Save(name,reason,"enemy") then return false,"Enter a reason for the enemy tag." end
+ return true,name
+end
+function A:CheckEnemyTarget()
+ if not KoolSupport:IsModuleEnabled("ks_guilty_forever") then return end
+ local name=self:EnemyTarget("target")
+ if not name then return end
+ local entry=self:Get(name)
+ if not entry then
+  local short=name:match("^([^-]+)")
+  if short then entry=self:Get(short) end
+ end
+ if not entry or entry.kind~="enemy" then return end
+ -- One reminder per player per session, rather than chat spam while PvPing.
+ local key=self:Key(entry.name)
+ if self.enemyWarned[key] then return end
+ self.enemyWarned[key]=true
+ if print then print("|cffff8877Guilty Forever|r: Enemy player "..entry.name.." spotted. Reason: "..entry.reason) end
+ if UIErrorsFrame then UIErrorsFrame:AddMessage("Guilty Forever: "..entry.name.." (see chat)",1,0.4,0.3) end
+end
 function A:Start()
  if self.frame or type(CreateFrame)~="function" then return end
  self.frame=CreateFrame("Frame")
- for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","IGNORELIST_UPDATE","GROUP_ROSTER_UPDATE"}) do
+ for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","IGNORELIST_UPDATE","GROUP_ROSTER_UPDATE","PLAYER_TARGET_CHANGED"}) do
   self.frame:RegisterEvent(event)
  end
  self.frame:SetScript("OnEvent",function(_,event)
@@ -139,7 +175,8 @@ function A:Start()
   elseif event=="IGNORELIST_UPDATE" then
    if C_Timer and C_Timer.After then C_Timer.After(0.2,function() A:Sync() end)
    else A:Sync() end
-  else A:CheckGroup() end
+  elseif event=="PLAYER_TARGET_CHANGED" then A:CheckEnemyTarget()
+  else A:CheckGroup(); A:CheckEnemyTarget() end
  end)
  if IsLoggedIn and IsLoggedIn() then self:Sync(true);self:CheckGroup() end
 end
