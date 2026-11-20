@@ -1,5 +1,6 @@
 -- Guilty Forever: native WoW grudge ledger. Presentation only; core owns persistence.
 local A=KSGuiltyForever
+local FONT=STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 local C={
  gold={0.94,0.76,0.40}, pale={0.87,0.90,0.87}, muted={0.60,0.67,0.67},
  red={0.88,0.32,0.30}, violet={0.66,0.47,0.90}, teal={0.27,0.75,0.66},
@@ -16,6 +17,7 @@ local function text(parent,words,x,y,width,size,c)
  t:SetJustifyH("LEFT")
  t:SetText(words)
  if c then color(t,c) end
+ if t.SetFont then pcall(t.SetFont,t,FONT,size=="GameFontNormalLarge" and 23 or size=="GameFontHighlightSmall" and 14 or 17,"") end
  return t
 end
 local function panel(parent,x,y,w,h,bg,edge)
@@ -45,6 +47,7 @@ local function button(parent,title,x,y,w,action,accent)
  b:SetSize(w,29)
  b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
  b:SetText(title)
+ if b.GetFontString then local label=b:GetFontString();if label and label.SetFont then pcall(label.SetFont,label,FONT,15,"") end end
  b:SetScript("OnClick",action)
  if accent then
   local mark=b:CreateTexture(nil,"OVERLAY")
@@ -61,6 +64,7 @@ local function edit(parent,x,y,w,h,multiline)
  box:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",-10,7)
  box:SetAutoFocus(false)
  box:SetFontObject("ChatFontNormal")
+ if box.SetFont then pcall(box.SetFont,box,FONT,17,"") end
  box:SetTextColor(0.92,0.91,0.86)
  box:SetMaxLetters(multiline and 500 or 100)
  box:SetMultiLine(multiline or false)
