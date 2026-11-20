@@ -65,3 +65,8 @@ Modules\KSThreat\Module.lua
 Modules\KSQuestChecker\QuestChecker.lua
 Modules\KSQuestChecker\UI.lua
 Modules\KSQuestChecker\Module.lua
+
+# Guilty Forever
+Modules\KSGuiltyForever\GuiltyForever.lua
+Modules\KSGuiltyForever\UI.lua
+Modules\KSGuiltyForever\Module.lua
