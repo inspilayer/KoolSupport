@@ -133,8 +133,12 @@ end
 -- Use a separate private note kind and inspect only explicitly available unit IDs.
 function A:EnemyTarget(unit)
  unit=unit or "target"
- if not (UnitExists and UnitExists(unit) and UnitIsPlayer and UnitIsPlayer(unit)
-  and UnitIsEnemy and UnitIsEnemy("player",unit) and UnitName) then return nil end
+ if not (UnitExists and UnitIsPlayer and UnitIsEnemy and UnitName) then return nil end
+ local okExists,exists=pcall(UnitExists,unit)
+ local okPlayer,player=pcall(UnitIsPlayer,unit)
+ local okEnemy,enemy=pcall(UnitIsEnemy,"player",unit)
+ if not (okExists and okPlayer and okEnemy and safe(exists) and safe(player)
+  and safe(enemy) and exists==true and player==true and enemy==true) then return nil end
  local name,realm=UnitName(unit)
  if not safe(name) or not safe(realm) or type(name)~="string" then return nil end
  local full=(type(realm)=="string" and realm~="") and name.."-"..realm or name
