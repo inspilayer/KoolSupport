@@ -89,8 +89,8 @@ local function entries()
 end
 local function isEnemy(e)return e.kind=="enemy"end
 function A:PrepareEditor(name,kind)
- if not A:Key(name) then return false end
- A.editorPrefill={name=name,kind=kind=="enemy" and "enemy" or "ignore"}
+ if not A:Key(name) or (kind=="enemy" and not A:IsFullName(name)) then return false end
+ A.editorPrefill={name=A:NormalizeName(name),kind=kind=="enemy" and "enemy" or "ignore"}
  return true
 end
 
@@ -123,7 +123,7 @@ function A.BuildPage(parent)
  local headline=text(right,"NEW ENTRY",15,-16,385,"GameFontNormalLarge",C.gold)
  local kindLabel=text(right,"",15,-47,395,"GameFontHighlightSmall",C.muted)
  local setKind
- text(right,"PLAYER NAME",15,-76,385,"GameFontHighlightSmall",C.muted)
+ text(right,"FIRST NAME + SURNAME",15,-76,385,"GameFontHighlightSmall",C.muted)
  text(right,"REASON FOR RECORD",15,-153,385,"GameFontHighlightSmall",C.muted)
  local stateLine=text(right,"",15,-447,398,"GameFontHighlightSmall",C.muted)
  local footer=text(right,"",15,-469,400,"GameFontHighlightSmall",C.muted)
@@ -246,7 +246,8 @@ function A.BuildPage(parent)
   if not ok or exists~=true then stateLine:SetText("Target a player first.");return end
   local n,r=UnitName("target")
   if type(n)~="string" then stateLine:SetText("Couldn't read target name.");return end
-  local full=(type(r)=="string" and r~="") and (n.."-"..r) or n
+  local full=A:UnitFullName(n,r)
+  if not full then stateLine:SetText("Could not read the full character name.");return end
   player:SetText(full)
   local old=A:Get(full)
   if old then showEntry(old) else state.selected=nil end
@@ -280,10 +281,14 @@ function A.BuildPage(parent)
    stateLine:SetText("Name changed. Create a NEW record instead of renaming.")
    return
   end
+  if not A:IsFullName(currentName) then
+   stateLine:SetText("Enter both first name and surname.")
+   return
+  end
   if A:Save(currentName,note:GetText(),state.kind) then
    showEntry(A:Get(currentName));refresh()
    stateLine:SetText("Saved. The grudge has been recorded.")
-  else stateLine:SetText("Enter a player name and a reason.") end
+  else stateLine:SetText("Enter a full name and a reason.") end
  end,C.teal)
  button(right,"DELETE NOTE",220,-411,199,function()
   if not state.selected then stateLine:SetText("Select a record to delete.");return end
