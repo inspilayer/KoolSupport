@@ -125,8 +125,8 @@ function A.BuildPage(parent)
  local setKind
  text(right,"PLAYER NAME",15,-76,385,"GameFontHighlightSmall",C.muted)
  text(right,"REASON FOR RECORD",15,-153,385,"GameFontHighlightSmall",C.muted)
- local stateLine=text(right,"",15,-318,398,"GameFontHighlightSmall",C.muted)
- local footer=text(right,"",15,-350,400,"GameFontHighlightSmall",C.muted)
+ local stateLine=text(right,"",15,-447,398,"GameFontHighlightSmall",C.muted)
+ local footer=text(right,"",15,-469,400,"GameFontHighlightSmall",C.muted)
  local rows={}
  for i=1,7 do
   local y=-148-(i-1)*43
