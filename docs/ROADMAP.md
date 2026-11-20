@@ -253,3 +253,6 @@ Add a 5-segment movable, lockable UIParent combo HUD to existing **KS Stealth** 
 ## Guilty Forever — development (Nov 19, 2026)
 
 An opt-out KoolSupport social module saves private notes for ignored players, prompts when a fresh Blizzard ignore is detected, and reminds the player if a noted name appears in a future party/raid. Notes persist per character even after Blizzard ignore removal. No auto-leave, networking or chat transmission. Verify Forever's ignore event/API and popup behavior in-game before release; CI/package checks required.
+
+
+Enemy-faction extension: manually tag a hostile player through the current target and save a reason in the same private directory. Print an informational reminder when selecting a previously tagged enemy player (once/session). Pending real Forever PvP and cross-realm tests; no automation or scan of hidden enemies.
