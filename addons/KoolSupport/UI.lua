@@ -117,7 +117,7 @@ end
 local categories={
   {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
   {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_talents"}},
-  {id="social",label="SOCIAL",pages={"campfire_chat"}},
+  {id="social",label="SOCIAL",pages={"campfire_chat","guilty_forever"}},
   {id="system",label="TOOLS",pages={"quest_checker","xp_reminder","launch_checks"}},
 }
 local function groupForPage(id)
