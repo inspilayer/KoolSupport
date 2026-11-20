@@ -40,18 +40,23 @@ function A.BuildPage(parent)
   end
   status:SetText("Saved notes: "..#entries..". Click a row to edit (first 7 displayed).")
  end
- button(parent,"Save note",20,-223,155,function()
+ button(parent,"Save note",20,-223,120,function()
   if A:Save(name:GetText(),reason:GetText()) then refresh() else status:SetText("Enter a valid name and reason.") end
  end)
- button(parent,"Delete note",192,-223,155,function()
+ button(parent,"Delete note",151,-223,120,function()
   A:Delete(name:GetText());name:SetText("");reason:SetText("");refresh()
  end)
- button(parent,"Use target",365,-223,155,function()
+ button(parent,"Use target",284,-223,120,function()
   if UnitExists and UnitExists("target") and UnitName then
    local n,r=UnitName("target")
    if type(n)=="string" then name:SetText((type(r)=="string" and r~="") and n.."-"..r or n) end
   end
  end)
- label(parent,"|cff9fb4adNew ignores prompt for a note. Skipping never cancels Blizzard's ignore.|r",20,-292,770,"GameFontHighlightSmall")
+ button(parent,"Tag enemy target",416,-223,200,function()
+  local ok,value=A:TagEnemyTarget(reason:GetText())
+  if ok then name:SetText(value);refresh();status:SetText("Tagged enemy player "..value..".")
+  else status:SetText(value or "Unable to tag enemy.") end
+ end)
+ label(parent,"|cff9fb4ad/ignore prompts for a private note. Enemy tags do not use Blizzard's ignore list.|r",20,-292,770,"GameFontHighlightSmall")
  refresh()
 end
