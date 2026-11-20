@@ -32,7 +32,7 @@ local function buildHome(parent)
   button(parent, "Launch Checks", 20, -169, 208, function() KS:ShowPage("launch_checks") end)
   button(parent, "Time Since XP", 246, -169, 190, function() KS:ShowPage("xp_reminder") end)
   button(parent, "Quest Checker", 456, -169, 190, function() KS:ShowPage("quest_checker") end)
-  label(parent, "One install folder with seven independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
+  label(parent, "One install folder with eight independent tools. Pick a section in the sidebar to get started.", 20, -227, 775)
   label(parent, MUTED .. "Development build. In-game verification is required before a public release.|r", 20, -270, 760)
 end
 -- Base feature: a compact player-only XP inactivity timer, not a child module.
