@@ -114,6 +114,7 @@ SlashCmdList.KOOLSUPPORT = function(text)
   local page = (text or ""):lower():match("^%s*(.-)%s*$")
   if page == "" then page = "home" end
   if page == "quest" or page == "quests" or page == "qc" then page = "quest_checker" end
+  if page == "guilty" or page == "gf" or page == "ignore" then page = "guilty_forever" end
   if page == "dies" or page == "diecheck" then
     local A=KSAfflictions
     if not A or type(A.DiagnosticLine)~="function" then
