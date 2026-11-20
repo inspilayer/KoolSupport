@@ -11,12 +11,12 @@ local function button(parent,text,x,y,w,fn)
 end
 function A.BuildPage(parent)
  label(parent,"|cffffd87aGuilty Forever|r",20,-22,755,"GameFontNormalLarge")
- label(parent,"Private notes on ignored players. You'll get a reminder if a saved name joins your group.",20,-59,770)
+ label(parent,"Private notes for ignored and enemy-faction players. Encounter reminders stay private.",20,-59,770)
  label(parent,"Player or Name-Realm",20,-96,400,"GameFontHighlightSmall")
  local name=CreateFrame("EditBox",nil,parent,"InputBoxTemplate")
  name:SetSize(380,30);name:SetPoint("TOPLEFT",parent,"TOPLEFT",30,-113)
  name:SetAutoFocus(false);name:SetMaxLetters(100)
- label(parent,"Why you ignored them",20,-155,700,"GameFontHighlightSmall")
+ label(parent,"Reason / what they did",20,-155,700,"GameFontHighlightSmall")
  local reason=CreateFrame("EditBox",nil,parent,"InputBoxTemplate")
  reason:SetSize(730,30);reason:SetPoint("TOPLEFT",parent,"TOPLEFT",30,-175)
  reason:SetAutoFocus(false);reason:SetMaxLetters(500)
@@ -36,17 +36,17 @@ function A.BuildPage(parent)
     rows[i]=b
    end
    b.entry=entries[i]
-   b:SetText(entries[i].name.." — "..entries[i].reason:gsub("[\r\n]"," "):sub(1,84));b:Show()
+   b:SetText((entries[i].kind=="enemy" and "[ENEMY] " or "[IGNORE] ")..entries[i].name.." — "..entries[i].reason:gsub("[\r\n]"," "):sub(1,84));b:Show()
   end
   status:SetText("Saved notes: "..#entries..". Click a row to edit (first 7 displayed).")
  end
- button(parent,"Save reason",20,-223,180,function()
+ button(parent,"Save note",20,-223,155,function()
   if A:Save(name:GetText(),reason:GetText()) then refresh() else status:SetText("Enter a valid name and reason.") end
  end)
- button(parent,"Delete selected",225,-223,180,function()
+ button(parent,"Delete note",192,-223,155,function()
   A:Delete(name:GetText());name:SetText("");reason:SetText("");refresh()
  end)
- button(parent,"Use target",429,-223,180,function()
+ button(parent,"Use target",365,-223,155,function()
   if UnitExists and UnitExists("target") and UnitName then
    local n,r=UnitName("target")
    if type(n)=="string" then name:SetText((type(r)=="string" and r~="") and n.."-"..r or n) end
