@@ -88,6 +88,11 @@ local function entries()
  return result
 end
 local function isEnemy(e)return e.kind=="enemy"end
+function A:PrepareEditor(name,kind)
+ if not A:Key(name) then return false end
+ A.editorPrefill={name=name,kind=kind=="enemy" and "enemy" or "ignore"}
+ return true
+end
 
 function A.BuildPage(parent)
  -- All dimensions fit the 824x605 KoolSupport content panel.
@@ -117,7 +122,8 @@ function A.BuildPage(parent)
  local note=edit(right,15,-174,395,119,true)
  local headline=text(right,"NEW ENTRY",15,-16,385,"GameFontNormalLarge",C.gold)
  local kindLabel=text(right,"",15,-47,395,"GameFontHighlightSmall",C.muted)
- text(right,"PLAYER NAME  /  REALM",15,-76,385,"GameFontHighlightSmall",C.muted)
+ local setKind
+ text(right,"PLAYER NAME",15,-76,385,"GameFontHighlightSmall",C.muted)
  text(right,"REASON FOR RECORD",15,-153,385,"GameFontHighlightSmall",C.muted)
  local stateLine=text(right,"",15,-318,398,"GameFontHighlightSmall",C.muted)
  local footer=text(right,"",15,-350,400,"GameFontHighlightSmall",C.muted)
@@ -162,16 +168,17 @@ function A.BuildPage(parent)
    note:SetText(e.reason)
    state.kind=isEnemy(e) and "enemy" or "ignore"
    headline:SetText("EDIT RECORD")
-   kindLabel:SetText(isEnemy(e) and "ENEMY FACTION  -  TARGET TAG" or "IGNORED PLAYER  -  PRIVATE NOTE")
+   kindLabel:SetText(isEnemy(e) and "ENEMY FACTION  -  PRIVATE TAG" or "IGNORED PLAYER  -  PRIVATE NOTE")
   else
    player:SetText("")
    note:SetText("")
    state.kind="ignore"
    headline:SetText("NEW ENTRY")
-   kindLabel:SetText("Record a player and the reason you want to remember.")
+   kindLabel:SetText("Choose a category and record your reason.")
   end
   stateLine:SetText("")
   state.dirty=false
+  if setKind then setKind(state.kind) end
  end
  local function refresh()
   totals()
@@ -246,6 +253,17 @@ function A.BuildPage(parent)
   stateLine:SetText("Target selected: "..full)
   refresh()
  end
+ local ignoreKind=button(right,"IGNORED PLAYER",15,-298,188,function()
+  state.kind="ignore";setKind(state.kind)
+ end,C.red)
+ local enemyKind=button(right,"ENEMY FACTION",222,-298,197,function()
+  state.kind="enemy";setKind(state.kind)
+ end,C.violet)
+ setKind=function(kind)
+  ignoreKind:SetText(kind=="ignore" and "[ IGNORED PLAYER ]" or "IGNORED PLAYER")
+  enemyKind:SetText(kind=="enemy" and "[ ENEMY FACTION ]" or "ENEMY FACTION")
+  kindLabel:SetText(kind=="enemy" and "ENEMY FACTION  -  PRIVATE TAG" or "IGNORED PLAYER  -  PRIVATE NOTE")
+ end
  button(right,"NEW RECORD",15,-372,127,function()showEntry(nil);refresh()end,C.gold)
  button(right,"USE TARGET",155,-372,127,selectTarget,C.teal)
  button(right,"TAG ENEMY",296,-372,123,function()
@@ -277,5 +295,18 @@ function A.BuildPage(parent)
  text(bg,"Private and saved per character. No messages, ignores, attacks or party actions are sent automatically.",
   16,-579,770,"GameFontHighlightSmall",C.muted)
  showEntry(nil)
+ if A.editorPrefill then
+  local prefill=A.editorPrefill
+  A.editorPrefill=nil
+  local existing=A:Get(prefill.name)
+  if existing then showEntry(existing)
+  else
+   player:SetText(prefill.name)
+   state.kind=prefill.kind
+   setKind(state.kind)
+  end
+  stateLine:SetText("Enter a reason, then SAVE NOTE.")
+  player:SetFocus()
+ end
  refresh()
 end
