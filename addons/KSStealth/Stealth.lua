@@ -131,17 +131,21 @@ function S:ComboDiagnosticText()
   " | Source: "..tostring(info.source or "not read")
 end
 function S:UpdateTargetNameplate()
- self:HideAll()
  if not self:CanDisplay() then
+  self:HideAll()
   self.comboDiagnostic={phase="Display disabled or unsupported class"}
   return
  end
  local plate,method=targetPlate()
  if not plate then
+  self:HideAll()
   self.comboDiagnostic={phase=method or "Target nameplate not found"}
   return
  end
  local record=self:MakePlate(plate,"target")
+ for other,entry in pairs(self.plates) do
+  if other~=plate then entry.holder:Hide() end
+ end
  self.comboDiagnostic={phase="Nameplate found ("..method..")"}
  -- No branching on or formatting of the secret combo count.
  local ok,points=false,nil
@@ -161,6 +165,7 @@ function S:UpdateTargetNameplate()
  for _,bar in ipairs(record.bars) do
   if not pcall(bar.SetValue,bar,points) then
    self.comboDiagnostic.phase="Nameplate found; StatusBar:SetValue rejected"
+   record.holder:Hide()
    return
   end
  end
@@ -256,3 +261,19 @@ for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","NAME_PLATE_UNIT_A
   events:RegisterEvent(event)
 end
 events:SetScript("OnEvent",function(_,event,unit)S:OnEvent(event,unit)end)
+-- Forever's target-bound combo points can change without the registered
+-- UNIT_POWER/UNIT_COMBO events arriving. A low-frequency read-only refresh
+-- ensures the native five bars stay live after builders, finishers and swaps.
+-- No Lua branching or math is performed on the (possibly secret) point count.
+local elapsedSinceUpdate=0
+events:SetScript("OnUpdate",function(_,elapsed)
+ if type(elapsed)~="number" or elapsed<=0 then return end
+ elapsedSinceUpdate=elapsedSinceUpdate+elapsed
+ if elapsedSinceUpdate<0.15 then return end
+ elapsedSinceUpdate=0
+ if not S:CanDisplay() then
+  if next(S.plates) then S:HideAll() end
+  return
+ end
+ S:UpdateTargetNameplate()
+end)
