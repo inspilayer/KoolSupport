@@ -87,6 +87,12 @@ assert(not hud.hidden,"HUD must remain visible when independent nameplates disab
 target=false
 S:OnEvent("PLAYER_TARGET_CHANGED")
 assert(hud.hidden,"locked HUD hides without selected target")
+assert(S:ShowHUDForPositioning())
+assert(S:HUDSettings().hudEnabled and not S:HUDSettings().hudLocked)
+assert(not hud.hidden and hud.mouse,"Show HUD must display idle five-pip preview")
+for _,bar in ipairs(hud.bars) do assert(bar.value==0) end
+assert(S:FinishHUDPositioning())
+assert(S:HUDSettings().hudLocked and hud.hidden,"Done hides idle preview")
 assert(S:SetHUDLocked(false))
 assert(not hud.hidden and hud.mouse and not hud.dragLabel.hidden,
   "unlocked HUD must show empty preview for dragging even without target")
@@ -114,6 +120,8 @@ assert(not hud.hidden)
 assert(S:ResetHUDPosition())
 assert(config.hudX==0 and config.hudY==-170)
 InCombatLockdown=function()return true end
+assert(not S:ShowHUDForPositioning(),"can't force preview during combat")
+assert(not S:FinishHUDPositioning(),"can't finish preview during combat")
 assert(not S:SetHUDLocked(false),"can't unlock while in combat")
 assert(not S:SetHUDScale(1.2),"can't resize while in combat")
 assert(not S:SetHUDEnabled(false),"can't hide/show via settings while in combat")
@@ -129,7 +137,15 @@ local unlock
 for _,w in ipairs(frames) do
  if w.kind=="Button" and w.text=="Unlock / move HUD" then unlock=w end
 end
+local showPreview
+for _,w in ipairs(frames) do
+ if w.kind=="Button" and w.text=="SHOW HUD / MOVE" then showPreview=w end
+end
+assert(showPreview and showPreview.OnClick,"Show HUD button must exist")
 assert(unlock and unlock.OnClick,"HUD lock control must be exposed in Stealth settings")
+showPreview.OnClick(showPreview)
+assert(not S:HUDSettings().hudLocked and hud.mouse and not hud.hidden)
+assert(S:FinishHUDPositioning())
 unlock.OnClick(unlock)
 assert(not S:HUDSettings().hudLocked and hud.mouse)
 assert(S:SetHUDLocked(true))
