@@ -21,6 +21,8 @@ function S:HUDSettings()
   local db=self:Store()
   if db.hudEnabled==nil then db.hudEnabled=true end
   if db.hudLocked==nil then db.hudLocked=true end
+  -- The target-frame location is the new default, including old installs.
+  if db.hudAnchor~="custom" then db.hudAnchor="target" end
   if not validNumber(db.hudX) then db.hudX=0 end
   if not validNumber(db.hudY) then db.hudY=-170 end
   if not validNumber(db.hudScale) then db.hudScale=1 end
@@ -33,7 +35,11 @@ function S:PositionHUD()
   if not holder then return end
   local db=self:HUDSettings()
   holder:ClearAllPoints()
-  holder:SetPoint("CENTER",UIParent,"CENTER",db.hudX,db.hudY)
+  if db.hudAnchor=="target" and TargetFrame then
+    holder:SetPoint("TOP",TargetFrame,"BOTTOM",0,-4)
+  else
+    holder:SetPoint("CENTER",UIParent,"CENTER",db.hudX,db.hudY)
+  end
   holder:SetScale(db.hudScale)
 end
 
@@ -65,6 +71,7 @@ function S:SaveHUDPosition()
     end
   end
   db.hudX,db.hudY=math.floor(dx+.5),math.floor(dy+.5)
+  db.hudAnchor="custom"
   self:PositionHUD()
   return true
 end
@@ -136,9 +143,14 @@ function S:HideHUD()
   if self.comboHUD then self.comboHUD:Hide() end
 end
 
+function S:HUDModuleReady()
+  local enabled=KoolSupport:IsModuleEnabled("ks_stealth")
+  if self.active~=enabled then self.active=enabled end
+  return enabled and self:IsSupportedClass()
+end
 function S:UpdateHUD()
   local db=self:HUDSettings()
-  if not (self.active and self:IsSupportedClass() and db.hudEnabled) then
+  if not (self:HUDModuleReady() and db.hudEnabled) then
     self:HideHUD()
     return
   end
@@ -194,12 +206,14 @@ function S:ShowHUDForPositioning()
   if KoolSupport:IsInCombat() then
     return false,"Show and move the HUD outside combat."
   end
-  if not self.active or not self:IsSupportedClass() then
+  if not self:HUDModuleReady() then
     return false,"Enable KS Stealth on a Druid or Rogue to position the HUD."
   end
   local db=self:HUDSettings()
   db.hudEnabled=true
   db.hudLocked=false
+  -- A preview should never be stuck behind or clipped by a hidden target frame.
+  if db.hudAnchor=="target" and not TargetFrame then db.hudAnchor="custom" end
   self.hudPositionPreview=true
   self:UpdateHUD()
   return true
@@ -241,6 +255,7 @@ function S:ResetHUDPosition()
   if KoolSupport:IsInCombat() then return false,"Reset HUD position outside combat" end
   local db=self:HUDSettings()
   db.hudX,db.hudY=0,-170
+  db.hudAnchor="target"
   self:PositionHUD()
   self:UpdateHUD()
   return true
