@@ -95,7 +95,7 @@ end
 
 function S:MakePlate(plate,unit)
  local old=self.plates[plate]
- if old then old.unit=unit; self:Layout(old);return old end
+ if old then old.unit=unit;return old end
  local holder=CreateFrame("Frame",nil,plate)
  holder:SetFrameLevel((plate.GetFrameLevel and plate:GetFrameLevel() or 1)+20)
  local record={plate=plate,holder=holder,unit=unit,bars={}}
