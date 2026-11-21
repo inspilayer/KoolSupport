@@ -271,7 +271,7 @@ events:SetScript("OnEvent",function(_,event,unit)S:OnEvent(event,unit)end)
 -- No Lua branching or math is performed on the (possibly secret) point count.
 local elapsedSinceUpdate=0
 S.comboEventFrame=events
-events:Show()
+if type(events.Show)=="function" then events:Show() end
 events:SetScript("OnUpdate",function(_,elapsed)
  if type(elapsed)~="number" or elapsed<=0 then return end
  elapsedSinceUpdate=elapsedSinceUpdate+elapsed
