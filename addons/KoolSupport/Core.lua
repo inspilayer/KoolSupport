@@ -133,6 +133,16 @@ SlashCmdList.KOOLSUPPORT = function(text)
   if page == "" then page = "home" end
   if page == "quest" or page == "quests" or page == "qc" then page = "quest_checker" end
   if page == "guilty" or page == "gf" or page == "ignore" then page = "guilty_forever" end
+  -- Passive status: does NOT invoke a refresh (unlike /kool combo).
+  if page == "combostatus" or page == "combostats" then
+    if KSStealth and type(KSStealth.ComboHealthText)=="function" then
+      print("KoolSupport "..KS.VERSION.."  "..KSStealth:ComboHealthText())
+      if type(KSStealth.ComboDiagnosticText)=="function" then
+        print("  "..KSStealth:ComboDiagnosticText())
+      end
+    else print("KoolSupport: combo status unavailable.") end
+    return
+  end
   if page == "combo" or page == "combodiag" then
     if KSStealth and KSStealth.UpdateAll and KSStealth.ComboDiagnosticText then
       KSStealth:UpdateAll()
