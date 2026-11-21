@@ -4,6 +4,7 @@
 KSStealth=KSStealth or {}
 local S=KSStealth
 S.plates=S.plates or {}
+S.comboHealth={ticks=0,events=0,autoUpdates=0,failures=0,lastEvent='none',lastAuto='none'}
 local CAP=5
 local TEX="Interface\\TARGETINGFRAME\\UI-StatusBar"
 
@@ -130,7 +131,7 @@ function S:ComboDiagnosticText()
  return "Combo diagnostics: "..tostring(info.phase or "not initialized")..
   " | Source: "..tostring(info.source or "not read")
 end
-function S:UpdateTargetNameplate()
+function S:UpdateTargetNameplate(origin)
  if not self:CanDisplay() then
   self:HideAll()
   self.comboDiagnostic={phase="Display disabled or unsupported class"}
@@ -170,6 +171,7 @@ function S:UpdateTargetNameplate()
   end
  end
  self.comboDiagnostic.phase="Five StatusBars updated"
+ if origin=="auto" then self.comboHealth.autoUpdates=self.comboHealth.autoUpdates+1 end
  record.holder:Show()
 end
 
@@ -240,6 +242,8 @@ end
 
 -- Event-driven updates; no secret-value comparisons and no polling for enemies.
 function S:OnEvent(event,unit)
+  self.comboHealth.events=self.comboHealth.events+1
+  self.comboHealth.lastEvent=event
   if event=="PLAYER_LOGIN" then
     self.active=KoolSupport:IsModuleEnabled("ks_stealth")
     if self.active and self:Store().talentImpactOverlay and self.RefreshTalentInsights and not KoolSupport:IsInCombat() then
@@ -266,14 +270,35 @@ events:SetScript("OnEvent",function(_,event,unit)S:OnEvent(event,unit)end)
 -- ensures the native five bars stay live after builders, finishers and swaps.
 -- No Lua branching or math is performed on the (possibly secret) point count.
 local elapsedSinceUpdate=0
+S.comboEventFrame=events
+events:Show()
 events:SetScript("OnUpdate",function(_,elapsed)
  if type(elapsed)~="number" or elapsed<=0 then return end
  elapsedSinceUpdate=elapsedSinceUpdate+elapsed
  if elapsedSinceUpdate<0.15 then return end
  elapsedSinceUpdate=0
+ S.comboHealth.ticks=S.comboHealth.ticks+1
  if not S:CanDisplay() then
   if next(S.plates) then S:HideAll() end
   return
  end
- S:UpdateTargetNameplate()
+ local ok=pcall(S.UpdateTargetNameplate,S,"auto")
+ if not ok then
+  S.comboHealth.failures=S.comboHealth.failures+1
+  S.comboHealth.lastAuto="callback error"
+ elseif S.comboDiagnostic then
+  S.comboHealth.lastAuto=S.comboDiagnostic.phase or "unknown"
+ end
 end)
+function S:ComboHealthText()
+ local h=self.comboHealth
+ local frameState="unknown"
+ if self.comboEventFrame and type(self.comboEventFrame.IsShown)=="function" then
+  local ok,shown=pcall(self.comboEventFrame.IsShown,self.comboEventFrame)
+  if ok then frameState=shown and "shown" or "hidden" end
+ end
+ return "Combo automation: frame="..frameState.." ticks="..h.ticks..
+  " auto-updates="..h.autoUpdates.." failures="..h.failures..
+  " events="..h.events.." last-event="..h.lastEvent..
+  " last-auto="..h.lastAuto
+end
