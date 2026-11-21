@@ -67,6 +67,25 @@ for i,bar in ipairs(record.bars) do
  assert(bar.values[#bar.values]==SECRET,"opaque combo points must reach native status bars")
 end
 assert(reads>0)
+-- Simulate the Forever client not sending UNIT_COMBO_POINTS after a builder.
+-- Only the OnUpdate safety net should refresh the native bars.
+local eventFrame
+for _,widget in ipairs(frames) do
+ if widget.OnUpdate and widget.OnEvent then eventFrame=widget;break end
+end
+assert(eventFrame and eventFrame.OnUpdate,"combo fallback must register OnUpdate")
+local originalReads=reads
+eventFrame.OnUpdate(eventFrame,.10)
+assert(reads==originalReads,"refresh must be throttled")
+eventFrame.OnUpdate(eventFrame,.06)
+assert(reads==originalReads+1,"combo bars must update without any event or manual /kool combo")
+assert(record.bars[1].values[#record.bars[1].values]==SECRET)
+selected=nil
+eventFrame.OnUpdate(eventFrame,.16)
+assert(record.holder.hidden,"target loss must automatically hide display without manual refresh")
+selected=nameplate
+eventFrame.OnUpdate(eventFrame,.16)
+assert(not record.holder.hidden,"target reappearance must automatically restore pips")
 assert(S:HUDSettings().hudPlacement=="below")
 assert(S:SetHUDPlacement("above"))
 assert(record.holder.anchor[2]==health and record.holder.anchor[1]=="BOTTOM")
