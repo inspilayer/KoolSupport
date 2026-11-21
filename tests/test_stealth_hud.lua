@@ -1,139 +1,130 @@
--- KS Stealth movable combo HUD: character settings, target changes, opaque points,
--- independent nameplates, drag lock, no combat mutations and module teardown.
+-- Target-only overhead combo point nameplate, secret-safe, no draggable HUD.
 SlashCmdList={}
-local original={unrelated={keep=true}}
-KoolSupportDB=original
+KoolSupportDB={other={untouched=true}}
 InCombatLockdown=function()return false end
-UnitClass=function()return "Rogue","ROGUE" end
-local target=true
-UnitExists=function(unit)assert(unit=="target");return target end
-local SECRET=setmetatable({opaque=true},{
-  __eq=function()error("never compare combo secret in Lua")end,
-  __lt=function()error("never compare combo secret in Lua")end,
-  __le=function()error("never compare combo secret in Lua")end,
-  __tostring=function()error("never stringify combo secret")end,
-})
-local reads=0
-GetComboPoints=function(src,dst)
- assert(src=="player" and dst=="target","HUD should query selected target only")
- reads=reads+1
- return SECRET
-end
+UnitClass=function()return "Druid","DRUID" end
+local SECRET=setmetatable({opaque=true},{__eq=function()error("secret compared")end,
+ __lt=function()error("secret compared")end,__tostring=function()error("secret printed")end})
 local frames={}
 local function frame(kind,parent)
- local f={kind=kind,hidden=false,children={},parent=parent}
- function f:SetSize(w,h)self.width,self.height=w,h end
+ local f={kind=kind,parent=parent,hidden=false,children={},values={}}
  function f:SetPoint(...)self.anchor={...}end
  function f:ClearAllPoints()self.anchor=nil end
- function f:SetScale(x)self.scale=x end
- function f:SetFrameStrata(x)self.stratum=x end
- function f:SetFrameLevel(x)self.level=x end
- function f:SetMovable(x)self.movable=x end
- function f:RegisterForDrag(x)self.dragButton=x end
- function f:SetClampedToScreen(x)self.clamped=x end
- function f:EnableMouse(x)self.mouse=x end
- function f:RegisterEvent(event)self.events=self.events or {};self.events[event]=true end
- function f:SetScript(name,cb)self[name]=cb end
- function f:SetShown(x)self.hidden=not x end
+ function f:SetSize(w,h)self.w,self.h=w,h end
+ function f:SetFrameLevel(n)self.level=n end
+ function f:GetFrameLevel()return 3 end
+ function f:CreateTexture()return frame("Texture",self)end
+ function f:CreateFontString()return frame("FontString",self)end
+ function f:SetStatusBarTexture(path)self.texture=path end
+ function f:SetStatusBarColor(...)self.color={...}end
+ function f:SetMinMaxValues(lo,hi)self.min,self.max=lo,hi end
+ function f:SetValue(value)self.values[#self.values+1]=value end
+ function f:SetAllPoints()end
+ function f:SetColorTexture(...)self.color={...}end
+ function f:SetBackdrop()end
+ function f:SetBackdropColor()end
+ function f:SetBackdropBorderColor()end
+ function f:SetFont()end
+ function f:SetText(v)self.text=v end
+ function f:SetWidth(w)self.w=w end
+ function f:SetJustifyH()end
+ function f:SetScript(key,fn)self[key]=fn end
+ function f:RegisterEvent(e)self.events=self.events or {};self.events[e]=true end
  function f:Show()self.hidden=false end
  function f:Hide()self.hidden=true end
- function f:SetText(x)self.text=x end
- function f:GetText()return self.text end
- function f:SetStatusBarTexture(x)self.barTexture=x end
- function f:SetStatusBarColor(...)self.color={...}end
- function f:SetMinMaxValues(a,b)self.min,self.max=a,b end
- function f:SetValue(v)self.value=v;self.values=self.values or {};self.values[#self.values+1]=v end
- function f:SetAllPoints()end
- function f:SetTexture(x)self.texture=x end
- function f:SetVertexColor(...)self.vertexColor={...}end
- function f:SetWidth(x)self.width=x end
- function f:SetJustifyH()end
- function f:SetAutoFocus()end
- function f:SetMaxLetters()end
- function f:ClearFocus()end
- function f:GetCenter()return self.centerX or 500,self.centerY or 500 end
- function f:GetWidth()return self.width or 1000 end
- function f:GetHeight()return self.height or 1000 end
- function f:StartMoving()self.moving=true end
- function f:StopMovingOrSizing()self.moving=false end
- function f:CreateTexture()local child=frame("Texture",self);return child end
- function f:CreateFontString()local child=frame("FontString",self);return child end
  if parent then parent.children[#parent.children+1]=f end
  frames[#frames+1]=f
  return f
 end
-UIParent=frame("UIParent")
-UIParent.centerX,UIParent.centerY=500,500
-UIParent.width,UIParent.height=1000,1000
+UIParent=frame("Frame")
 CreateFrame=function(kind,_,parent)return frame(kind,parent)end
+local nameplate=frame("Frame",UIParent)
+local health=frame("StatusBar",nameplate)
+nameplate.UnitFrame={healthBar=health}
+local selected=nameplate
+C_NamePlate={
+ GetNamePlateForUnit=function(unit)assert(unit=="target");return selected end,
+ GetNamePlates=function()return {nameplate}end
+}
+local reads=0
+GetComboPoints=function(src,dst)
+ assert(src=="player" and dst=="target")
+ reads=reads+1
+ return SECRET
+end
 assert(loadfile("addons/KoolSupport/Core.lua"))()
 assert(loadfile("addons/KSStealth/Stealth.lua"))()
 assert(loadfile("addons/KSStealth/HUD.lua"))()
+KoolSupport:RegisterModule({id="ks_stealth",title="KS Stealth",apiVersion=1,defaultEnabled=true})
 local S=KSStealth
-S.active=true
+S.active=false
 S:UpdateAll()
-local hud=S.comboHUD
-assert(hud and not hud.hidden and #hud.bars==5,"HUD must render five segments without nameplates")
-assert(hud.anchor[1]=="CENTER" and hud.anchor[4]==0 and hud.anchor[5]==-170)
-assert(not hud.mouse and hud.dragLabel.hidden,"HUD starts locked")
-assert(reads>=1 and hud.bars[1].min==0 and hud.bars[5].max==5)
-for _,bar in ipairs(hud.bars) do
- assert(bar.value==SECRET,"opaque point value must pass to Blizzard statusbar without inspection")
+local record=S.plates[nameplate]
+assert(record and record.holder.hidden==false and #record.bars==5)
+assert(record.holder.anchor[2]==health and record.holder.anchor[3]=="BOTTOM")
+for i,bar in ipairs(record.bars) do
+ assert(bar.min==i-1 and bar.max==i)
+ assert(bar.values[#bar.values]==SECRET,"opaque combo points must reach native status bars")
 end
-assert(KoolSupportDB.unrelated.keep==true)
-assert(S:Store().hudEnabled and S:Store().hudLocked)
-assert(S:SetNameplates(false))
-assert(not hud.hidden,"HUD must remain visible when independent nameplates disabled")
-target=false
-S:OnEvent("PLAYER_TARGET_CHANGED")
-assert(hud.hidden,"locked HUD hides without selected target")
-assert(S:SetHUDLocked(false))
-assert(not hud.hidden and hud.mouse and not hud.dragLabel.hidden,
-  "unlocked HUD must show empty preview for dragging even without target")
-for _,bar in ipairs(hud.bars) do assert(bar.value==0,"preview pips reset with no target")end
-hud.OnDragStart(hud)
-assert(hud.moving)
-hud.centerX,hud.centerY=620,410
-hud.OnDragStop(hud)
-assert(hud.moving==false)
-local config=S:HUDSettings()
-assert(config.hudX==120 and config.hudY==-90,"drag should save UIParent-relative location")
-assert(hud.anchor[4]==120 and hud.anchor[5]==-90)
-assert(S:SetHUDScale(1.4) and hud.scale==1.4)
-assert(S:SetHUDScale(4) and hud.scale==1.8,"scale must clamp")
-assert(S:SetHUDScale(0.1) and hud.scale==0.7)
-assert(S:SetHUDLocked(true))
-assert(hud.hidden and hud.mouse==false)
-target=true
-S:OnEvent("PLAYER_REGEN_ENABLED")
-assert(not hud.hidden and hud.bars[1].value==SECRET)
-assert(S:SetHUDEnabled(false))
-assert(hud.hidden)
-assert(S:SetHUDEnabled(true))
-assert(not hud.hidden)
+assert(reads>0)
+-- Simulate the Forever client not sending UNIT_COMBO_POINTS after a builder.
+-- Only the OnUpdate safety net should refresh the native bars.
+local eventFrame
+for _,widget in ipairs(frames) do
+ if widget.OnUpdate and widget.OnEvent then eventFrame=widget;break end
+end
+assert(eventFrame and eventFrame.OnUpdate,"combo fallback must register OnUpdate")
+local originalReads=reads
+eventFrame.OnUpdate(eventFrame,.10)
+assert(reads==originalReads,"refresh must be throttled")
+eventFrame.OnUpdate(eventFrame,.06)
+assert(reads==originalReads+1,"combo bars must update without any event or manual /kool combo")
+assert(S.comboHealth.ticks==1 and S.comboHealth.autoUpdates==1)
+local readBeforeStatus=reads
+local healthText=S:ComboHealthText()
+assert(healthText:find("ticks=1",1,true) and healthText:find("auto-updates=1",1,true))
+assert(reads==readBeforeStatus,"status must not trigger a refresh")
+assert(record.bars[1].values[#record.bars[1].values]==SECRET)
+selected=nil
+eventFrame.OnUpdate(eventFrame,.16)
+assert(record.holder.hidden,"target loss must automatically hide display without manual refresh")
+selected=nameplate
+eventFrame.OnUpdate(eventFrame,.16)
+assert(not record.holder.hidden,"target reappearance must automatically restore pips")
+assert(S:HUDSettings().hudPlacement=="below")
+assert(S:SetHUDPlacement("above"))
+assert(record.holder.anchor[2]==health and record.holder.anchor[1]=="BOTTOM")
+assert(S:SetHUDPlacement("below"))
+assert(record.holder.anchor[1]=="TOP")
+assert(S:SetHUDScale(1.3))
+assert(record.bars[1].w>19)
 assert(S:ResetHUDPosition())
-assert(config.hudX==0 and config.hudY==-170)
+assert(S:HUDSettings().hudScale==1 and S:HUDSettings().hudPlacement=="below")
+assert(S:SetHUDEnabled(false))
+assert(record.holder.hidden)
+assert(S:SetHUDEnabled(true))
+assert(not record.holder.hidden)
+selected=nil
+S:UpdateAll()
+assert(record.holder.hidden,"no selected visible nameplate must hide points")
 InCombatLockdown=function()return true end
-assert(not S:SetHUDLocked(false),"can't unlock while in combat")
-assert(not S:SetHUDScale(1.2),"can't resize while in combat")
-assert(not S:SetHUDEnabled(false),"can't hide/show via settings while in combat")
-assert(not S:ResetHUDPosition(),"can't reset while in combat")
-assert(not S:SaveHUDPosition(),"can't save dragging while in combat")
+assert(not S:SetHUDPlacement("above"))
+assert(not S:SetHUDScale(1.5))
+assert(not S:SetHUDEnabled(false))
+assert(not S:ResetHUDPosition())
 InCombatLockdown=function()return false end
-
--- Native options UI must expose an unlock action, without creating any addon.
 assert(loadfile("addons/KSStealth/UI.lua"))()
 local parent=frame("Frame",UIParent)
 S.BuildPage(parent)
-local unlock
-for _,w in ipairs(frames) do
- if w.kind=="Button" and w.text=="Unlock / move HUD" then unlock=w end
+local above,below
+for _,widget in ipairs(frames) do
+ if widget.kind=="Button" and widget.text=="ABOVE HEALTH BAR" then above=widget end
+ if widget.kind=="Button" and (widget.text=="[ BELOW HEALTH BAR ]" or widget.text=="BELOW HEALTH BAR") then below=widget end
 end
-assert(unlock and unlock.OnClick,"HUD lock control must be exposed in Stealth settings")
-unlock.OnClick(unlock)
-assert(not S:HUDSettings().hudLocked and hud.mouse)
-assert(S:SetHUDLocked(true))
-S:OnModuleDisabled()
-assert(hud.hidden,"disabling KS Stealth hides the movable HUD")
-assert(KoolSupportDB.unrelated.keep==true,"all previous character data preserved")
-print("PASS KS Stealth HUD: five opaque pips, independent nameplates, preview, move, resize, lock, persist, no combat mutation")
+assert(above and below and above.OnClick and below.OnClick)
+above.OnClick(above)
+assert(S:HUDSettings().hudPlacement=="above")
+below.OnClick(below)
+assert(S:HUDSettings().hudPlacement=="below")
+assert(KoolSupportDB.other.untouched)
+print("PASS target-nameplate HUD: five native secret-safe bars, placement, scale, toggles, combat")

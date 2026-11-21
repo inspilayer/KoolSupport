@@ -248,3 +248,11 @@ Add seventh in-game module, searchable under Tools with optional full QuestieDB-
 ## 0.10.15-rc.2 — KS Stealth draggable combo HUD (Nov 19, 2026)
 
 Add a 5-segment movable, lockable UIParent combo HUD to existing **KS Stealth** (not a new addon). Keep nameplate tracking independently toggleable. Per-character HUD enabled/locked/position/scale, reset button and unlocked preview. Use native StatusBar forwarding for secret points, event-driven target/combo/form updates and fail-closed unavailable states. Block dragging/config changes in combat. Regression test and one-folder seven-module package; live Forever Rogue/Druid smoke test before another owner-approved Beta. Prior tag v0.10.14-rc.1-beta immutable; current development version 0.10.15-rc.2.
+
+
+## Guilty Forever — development (Nov 19, 2026)
+
+An opt-out KoolSupport social module saves private notes for ignored players, prompts when a fresh Blizzard ignore is detected, and reminds the player if a noted name appears in a future party/raid. Notes persist per character even after Blizzard ignore removal. No auto-leave, networking or chat transmission. Verify Forever's ignore event/API and popup behavior in-game before release; CI/package checks required.
+
+
+Enemy-faction extension: manually tag a hostile player through the current target and save a reason in the same private directory. Print an informational reminder when selecting a previously tagged enemy player (once/session). Pending real Forever PvP and cross-realm tests; no automation or scan of hidden enemies.
