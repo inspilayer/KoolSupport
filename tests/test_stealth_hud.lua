@@ -65,16 +65,20 @@ end
 UIParent=frame("UIParent")
 UIParent.centerX,UIParent.centerY=500,500
 UIParent.width,UIParent.height=1000,1000
+TargetFrame=frame("Frame",UIParent)
 CreateFrame=function(kind,_,parent)return frame(kind,parent)end
 assert(loadfile("addons/KoolSupport/Core.lua"))()
+KoolSupport:RegisterModule({id="ks_stealth",title="KS Stealth",apiVersion=1,defaultEnabled=true})
 assert(loadfile("addons/KSStealth/Stealth.lua"))()
 assert(loadfile("addons/KSStealth/HUD.lua"))()
 local S=KSStealth
-S.active=true
+S.active=false -- stale lifecycle state must self-heal from enabled module
 S:UpdateAll()
+assert(S.active,"enabled module should initialize HUD even if PLAYER_LOGIN fired early")
 local hud=S.comboHUD
 assert(hud and not hud.hidden and #hud.bars==5,"HUD must render five segments without nameplates")
-assert(hud.anchor[1]=="CENTER" and hud.anchor[4]==0 and hud.anchor[5]==-170)
+assert(hud.anchor[1]=="TOP" and hud.anchor[2]==TargetFrame and hud.anchor[3]=="BOTTOM" and hud.anchor[5]==-4,
+ "HUD should be anchored beneath Blizzard target frame by default")
 assert(not hud.mouse and hud.dragLabel.hidden,"HUD starts locked")
 assert(reads>=1 and hud.bars[1].min==0 and hud.bars[5].max==5)
 for _,bar in ipairs(hud.bars) do
@@ -104,6 +108,7 @@ hud.OnDragStop(hud)
 assert(hud.moving==false)
 local config=S:HUDSettings()
 assert(config.hudX==120 and config.hudY==-90,"drag should save UIParent-relative location")
+assert(config.hudAnchor=="custom","drag should opt in to custom positioning")
 assert(hud.anchor[4]==120 and hud.anchor[5]==-90)
 assert(S:SetHUDScale(1.4) and hud.scale==1.4)
 assert(S:SetHUDScale(4) and hud.scale==1.8,"scale must clamp")
@@ -119,6 +124,8 @@ assert(S:SetHUDEnabled(true))
 assert(not hud.hidden)
 assert(S:ResetHUDPosition())
 assert(config.hudX==0 and config.hudY==-170)
+assert(config.hudAnchor=="target" and hud.anchor[2]==TargetFrame,
+ "Reset position must put combo HUD beneath target frame")
 InCombatLockdown=function()return true end
 assert(not S:ShowHUDForPositioning(),"can't force preview during combat")
 assert(not S:FinishHUDPositioning(),"can't finish preview during combat")
