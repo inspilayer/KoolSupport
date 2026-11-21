@@ -13,6 +13,8 @@ function S:Store()
   d.modules.ks_stealth=d.modules.ks_stealth or {}
   local s=d.modules.ks_stealth
   if s.nameplates==nil then s.nameplates=true end
+  if s.hudEnabled==nil then s.hudEnabled=true end
+  if s.hudPlacement~="above" then s.hudPlacement="below" end
   if s.talentImpactOverlay==nil then s.talentImpactOverlay=false end
   if s.talentAnnotate==nil then s.talentAnnotate=false end
   if s.talentCritEstimate==nil then s.talentCritEstimate=false end
@@ -25,101 +27,133 @@ function S:IsSupportedClass()
   local _,class=UnitClass("player")
   return class=="ROGUE" or class=="DRUID"
 end
+-- Forever combo points are target-bound. We only display the selected
+-- target on its actual overhead nameplate health bar, never on a floating HUD.
 function S:CanDisplay()
-  return self.active and self:IsSupportedClass() and self:Store().nameplates and type(GetComboPoints)=="function"
+  return KoolSupport:IsModuleEnabled("ks_stealth") and self:IsSupportedClass()
+   and self:Store().hudEnabled~=false
 end
+
+local function readable(value)
+ if type(issecretvalue)=="function" then
+  local ok,secret=pcall(issecretvalue,value)
+  if not ok or secret then return false end
+ end
+ return true
+end
+local function targetPlate()
+ if not C_NamePlate then return nil end
+ local plate
+ if type(C_NamePlate.GetNamePlateForUnit)=="function" then
+  local ok,result=pcall(C_NamePlate.GetNamePlateForUnit,"target")
+  if ok and readable(result) then plate=result end
+ end
+ if plate then return plate end
+ -- Some Forever layouts only expose a nameplate1..N unit token.
+ if type(C_NamePlate.GetNamePlates)~="function" or type(UnitIsUnit)~="function" then return nil end
+ local ok,plates=pcall(C_NamePlate.GetNamePlates)
+ if not ok or type(plates)~="table" then return nil end
+ for _,candidate in ipairs(plates) do
+  local unit=candidate.namePlateUnitToken or candidate.unitToken
+  if type(unit)=="string" then
+   local works,same=pcall(UnitIsUnit,unit,"target")
+   if works and readable(same) and same==true then return candidate end
+  end
+ end
+ return nil
+end
+local function healthBar(plate)
+ local unit=plate and (plate.UnitFrame or plate.unitFrame)
+ if not unit then return plate end
+ local bars=unit.healthBar or unit.HealthBar or
+  (unit.HealthBarsContainer and (unit.HealthBarsContainer.healthBar or unit.HealthBarsContainer.HealthBar))
+ return bars or plate
+end
+
 function S:Layout(record)
-  local db=self:Store()
-  local w,h,g=15*db.scale,10*db.scale,3*db.scale
-  local holder=record.holder
-  holder:SetSize(CAP*w+(CAP-1)*g,h)
-  holder:ClearAllPoints()
-  holder:SetPoint("BOTTOM",record.plate,"TOP",0,db.offsetY)
-  for i,bar in ipairs(record.bars) do
-    bar:ClearAllPoints()
-    bar:SetPoint("LEFT",holder,"LEFT",(i-1)*(w+g),0)
-    bar:SetSize(w,h)
-  end
+ local db=self:Store()
+ local size=type(db.hudScale)=="number" and db.hudScale or 1
+ size=math.max(.7,math.min(1.8,size))
+ local w,h,g=19*size,12*size,4*size
+ local holder=record.holder
+ holder:SetSize(CAP*w+(CAP-1)*g,h)
+ holder:ClearAllPoints()
+ local anchor=healthBar(record.plate)
+ if db.hudPlacement=="above" then
+  holder:SetPoint("BOTTOM",anchor,"TOP",0,4)
+ else
+  holder:SetPoint("TOP",anchor,"BOTTOM",0,-5)
+ end
+ for i,bar in ipairs(record.bars) do
+  bar:ClearAllPoints()
+  bar:SetPoint("LEFT",holder,"LEFT",(i-1)*(w+g),0)
+  bar:SetSize(w,h)
+ end
 end
+
 function S:MakePlate(plate,unit)
-  local old=self.plates[plate]
-  if old then
-    old.unit=unit
-    self:Layout(old)
-    return old
-  end
-  local holder=CreateFrame("Frame",nil,plate)
-  holder:SetFrameLevel((plate.GetFrameLevel and plate:GetFrameLevel() or 1)+5)
-  local record={plate=plate,holder=holder,unit=unit,bars={}}
-  for i=1,CAP do
-    local bar=CreateFrame("StatusBar",nil,holder)
-    if KoolSupport.BarTheme then
-      KoolSupport.BarTheme:StyleBar(bar,"bleed")
-    else -- old test mocks and early development clients
-      bar:SetStatusBarTexture(TEX)
-      bar:SetStatusBarColor(1,.25,.12,1)
-    end
-    bar:SetMinMaxValues(i-1,i)
-    bar:SetValue(0)
-    record.bars[i]=bar
-  end
-  self.plates[plate]=record
-  self:Layout(record)
-  return record
+ local old=self.plates[plate]
+ if old then old.unit=unit; self:Layout(old);return old end
+ local holder=CreateFrame("Frame",nil,plate)
+ holder:SetFrameLevel((plate.GetFrameLevel and plate:GetFrameLevel() or 1)+20)
+ local record={plate=plate,holder=holder,unit=unit,bars={}}
+ for i=1,CAP do
+  local bar=CreateFrame("StatusBar",nil,holder)
+  bar:SetStatusBarTexture(TEX)
+  bar:SetStatusBarColor(1,.72,.20,1)
+  bar:SetMinMaxValues(i-1,i)
+  bar:SetValue(0)
+  local backing=bar:CreateTexture(nil,"BACKGROUND")
+  backing:SetAllPoints(bar)
+  backing:SetColorTexture(.10,.11,.13,.88)
+  record.bars[i]=bar
+ end
+ self.plates[plate]=record
+ self:Layout(record)
+ return record
+end
+
+function S:HideAll()
+ for _,record in pairs(self.plates) do record.holder:Hide() end
+end
+
+function S:UpdateTargetNameplate()
+ self:HideAll()
+ if not self:CanDisplay() then return end
+ local plate=targetPlate()
+ if not plate then return end
+ local record=self:MakePlate(plate,"target")
+ -- No branching on or formatting of the secret combo count.
+ local ok,points=false,nil
+ if type(GetComboPoints)=="function" then
+  ok,points=pcall(GetComboPoints,"player","target")
+ end
+ -- The alternative resource API is useful only when the native target-bound
+ -- getter is not available. Never inspect its value to decide a fallback.
+ if not ok and type(UnitPower)=="function" then
+  ok,points=pcall(UnitPower,"player",4)
+ end
+ if not ok then return end
+ for _,bar in ipairs(record.bars) do
+  if not pcall(bar.SetValue,bar,points) then return end
+ end
+ record.holder:Show()
+end
+
+function S:UpdateAll()
+ self:UpdateTargetNameplate()
 end
 function S:UpdatePlate(unit)
-  if not self:CanDisplay() then return end
-  if not C_NamePlate or type(C_NamePlate.GetNamePlateForUnit)~="function" then return end
-  local plate=C_NamePlate.GetNamePlateForUnit(unit)
-  if not plate then return end
-  local record=self:MakePlate(plate,unit)
-  record.holder:Show()
-  -- A secret numeric value is safe as a StatusBar value, but NOT in a Lua test.
-  -- Each bar clamps the same secret value to its own [i-1, i] interval.
-  local ok,points=pcall(GetComboPoints,"player",unit)
-  if not ok then
-    record.holder:Hide()
-    return
-  end
-  for _,bar in ipairs(record.bars) do
-    local works=pcall(bar.SetValue,bar,points)
-    if not works then record.holder:Hide();return end
-  end
-end
-function S:UpdateAll()
-  -- HUD is independent of nameplate visibility, and still updates when nameplate pips are OFF.
-  if type(self.UpdateHUD)=="function" then self:UpdateHUD() end
-  if not self:CanDisplay() then self:HideAll();return end
-  if not C_NamePlate or type(C_NamePlate.GetNamePlates)~="function" then return end
-  local list=C_NamePlate.GetNamePlates()
-  if type(list)~="table" then return end
-  local visible={}
-  for _,plate in ipairs(list) do
-    local unit=plate.namePlateUnitToken or plate.unitToken
-    if not unit and type(plate.GetUnit)=="function" then unit=plate:GetUnit() end
-    if type(unit)=="string" then
-      visible[plate]=true
-      self:UpdatePlate(unit)
-    end
-  end
-  for plate,record in pairs(self.plates) do
-    if not visible[plate] then record.holder:Hide() end
-  end
+ -- Nameplate events can occur when the target walks into nameplate range.
+ -- Always resolve the currently selected target, not arbitrary units.
+ self:UpdateTargetNameplate()
 end
 function S:RemoveUnit(unit)
-  for _,record in pairs(self.plates) do
-    if record.unit==unit then
-      record.holder:Hide()
-      record.unit=nil
-    end
-  end
-end
-function S:HideAll()
-  for _,record in pairs(self.plates) do record.holder:Hide() end
+ self:UpdateTargetNameplate()
 end
 function S:Relayout()
-  for _,record in pairs(self.plates) do self:Layout(record) end
-  self:UpdateAll()
+ for _,record in pairs(self.plates) do self:Layout(record) end
+ self:UpdateAll()
 end
 function S:SetNameplates(enabled)
   if KoolSupport:IsInCombat() then return false,"Change display settings outside combat" end
@@ -182,7 +216,7 @@ function S:OnEvent(event,unit)
       self:InstallTalentTooltipHook()
     end
     self:UpdateAll()
-  elseif not self.active then return
+  elseif not KoolSupport:IsModuleEnabled("ks_stealth") then self:HideAll();return
   elseif event=="NAME_PLATE_UNIT_ADDED" then self:UpdatePlate(unit)
   elseif event=="NAME_PLATE_UNIT_REMOVED" then self:RemoveUnit(unit)
   elseif event=="UNIT_COMBO_POINTS" or event=="UNIT_POWER_UPDATE" or event=="UNIT_POWER_FREQUENT" then self:UpdateAll()
