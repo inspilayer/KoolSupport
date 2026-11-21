@@ -368,7 +368,7 @@ function KS:Open(page)
     window:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",edgeSize=26,insets={left=8,right=8,top=8,bottom=8}})
     if UIParent and UIParent.GetWidth and UIParent.GetHeight then
       local w, h = UIParent:GetWidth(), UIParent:GetHeight()
-      if w and h and w > 0 and h > 0 then window:SetScale(math.min(1, w / 1310, h / 860)) end
+      if w and h and w > 0 and h > 0 then window:SetScale(math.min(.84, w / 1310, h / 860)) end
     end
     if window.SetBackdropColor then window:SetBackdropColor(0.06,0.07,0.09,0.96) end
     label(window, GOLD.."KoolSupport|r  "..KS.VERSION, 34, -27, 950, "GameFontNormalLarge")
