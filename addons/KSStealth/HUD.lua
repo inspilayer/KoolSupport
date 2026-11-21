@@ -30,17 +30,39 @@ function S:HUDSettings()
   return db
 end
 
+-- GetCenter is in each frame's effective coordinate system, while the
+-- saved offsets are normalized to UIParent. Convert both directions to avoid
+-- positional jumps when the HUD or UI is scaled.
+local function scales(holder)
+  local parentScale,holderScale=1,1
+  if UIParent and type(UIParent.GetEffectiveScale)=="function" then
+    local ok,value=pcall(UIParent.GetEffectiveScale,UIParent)
+    if ok and validNumber(value) and value>0 then parentScale=value end
+  end
+  if holder and type(holder.GetEffectiveScale)=="function" then
+    local ok,value=pcall(holder.GetEffectiveScale,holder)
+    if ok and validNumber(value) and value>0 then holderScale=value
+    else holderScale=parentScale end
+  else
+    holderScale=parentScale
+  end
+  return parentScale,holderScale
+end
+
 function S:PositionHUD()
   local holder=self.comboHUD
   if not holder then return end
   local db=self:HUDSettings()
+  -- Apply scale first, so anchoring uses the final effective scale.
+  holder:SetScale(db.hudScale)
   holder:ClearAllPoints()
   if db.hudAnchor=="target" and TargetFrame then
     holder:SetPoint("TOP",TargetFrame,"BOTTOM",0,-4)
   else
-    holder:SetPoint("CENTER",UIParent,"CENTER",db.hudX,db.hudY)
+    local parentScale,holderScale=scales(holder)
+    local ratio=parentScale/holderScale
+    holder:SetPoint("CENTER",UIParent,"CENTER",db.hudX*ratio,db.hudY*ratio)
   end
-  holder:SetScale(db.hudScale)
 end
 
 function S:SaveHUDPosition()
@@ -60,7 +82,10 @@ function S:SaveHUDPosition()
     return false,"Position unavailable"
   end
   local db=self:HUDSettings()
-  local dx,dy=x-ox,y-oy
+  local parentScale,holderScale=scales(self.comboHUD)
+  -- Convert HUD coordinates to UIParent units before subtracting centers.
+  local factor=holderScale/parentScale
+  local dx,dy=x*factor-ox,y*factor-oy
   if type(UIParent.GetWidth)=="function" and type(UIParent.GetHeight)=="function" then
     local width,height=UIParent:GetWidth(),UIParent:GetHeight()
     if validNumber(width) and validNumber(height) then
@@ -70,7 +95,7 @@ function S:SaveHUDPosition()
       dy=math.max(-maxY,math.min(maxY,dy))
     end
   end
-  db.hudX,db.hudY=math.floor(dx+.5),math.floor(dy+.5)
+  db.hudX,db.hudY=dx,dy
   db.hudAnchor="custom"
   self:PositionHUD()
   return true
