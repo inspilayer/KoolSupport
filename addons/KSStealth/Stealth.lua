@@ -103,9 +103,15 @@ function S:MakePlate(plate,unit)
   bar:SetStatusBarColor(1,.72,.20,1)
   bar:SetMinMaxValues(i-1,i)
   bar:SetValue(0)
-  local backing=bar:CreateTexture(nil,"BACKGROUND")
-  backing:SetAllPoints(bar)
-  backing:SetColorTexture(.10,.11,.13,.88)
+  if type(bar.CreateTexture)=="function" then
+   local backing=bar:CreateTexture(nil,"BACKGROUND")
+   backing:SetAllPoints(bar)
+   if backing.SetColorTexture then backing:SetColorTexture(.10,.11,.13,.88)
+   elseif backing.SetTexture and backing.SetVertexColor then
+    backing:SetTexture("Interface\\Buttons\\WHITE8X8")
+    backing:SetVertexColor(.10,.11,.13,.88)
+   end
+  end
   record.bars[i]=bar
  end
  self.plates[plate]=record
