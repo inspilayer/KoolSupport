@@ -160,6 +160,87 @@ local function buildLaunchChecks(parent)
   label(parent, MUTED .. "API presence is preliminary; verify gameplay, tooltips and persistence in-client.|r",20,-540,775,"GameFontHighlightSmall")
   button(parent, "Re-run checks", 20, -565, 186, function()KS:ShowPage("launch_checks")end)
 end
+-- Common visual system based on the Guilty Forever ledger. Additive only:
+-- module layouts, saved settings and click handlers remain owned by each module.
+local themePageIDs={
+ macro_suite=true,full_spellbook=true,macro_workshop=true,
+ support_session=true,afflictions=true,campfire_chat=true,
+ quest_checker=true,ks_threat=true,stealth=true,stealth_talents=true,
+}
+local function themeTexture(parent,x,y,w,h,r,g,b,a)
+ if not parent or type(parent.CreateTexture)~="function" then return end
+ local t=parent:CreateTexture(nil,"BACKGROUND")
+ if not t or type(t.SetColorTexture)~="function" then return end
+ t:SetColorTexture(r,g,b,a)
+ t:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
+ t:SetSize(w,h)
+ return t
+end
+local function themePageBackground(pane,id)
+ if not themePageIDs[id] then return end
+ -- Background textures never block buttons or input fields.
+ themeTexture(pane,7,-7,928,679,.045,.063,.079,.94)
+ themeTexture(pane,7,-7,928,3,.82,.61,.33,.91)
+ themeTexture(pane,15,-85,912,1,.38,.31,.22,.72)
+ local zones={
+  macro_suite={{16,-118,909,444}},
+  full_spellbook={{16,-124,909,466}},
+  macro_workshop={{16,-125,909,327},{16,-460,909,146}},
+  support_session={{16,-151,909,380}},
+  afflictions={{16,-94,909,258},{16,-369,909,239}},
+  campfire_chat={{16,-140,909,336}},
+  quest_checker={{16,-187,909,356}},
+  ks_threat={{16,-112,909,105},{16,-232,909,335}},
+  stealth_talents={{16,-159,909,403}},
+ }
+ for _,r in ipairs(zones[id] or {}) do
+  themeTexture(pane,r[1],r[2],r[3],r[4],.095,.125,.149,.62)
+  themeTexture(pane,r[1],r[2],3,r[4],.68,.51,.28,.72)
+ end
+end
+local function themePageFonts(pane,id)
+ if not themePageIDs[id] then return end
+ -- Increase text size consistently, without touching gameplay methods.
+ local seen={}
+ local function visit(node,depth)
+  if not node or seen[node] or depth>6 then return end
+  seen[node]=true
+  local kind
+  if type(node.GetObjectType)=="function" then
+   local ok,k=pcall(node.GetObjectType,node)
+   if ok then kind=k end
+  end
+  if (kind=="FontString" or kind=="EditBox") and type(node.GetFont)=="function" and type(node.SetFont)=="function" then
+   local ok,path,size,flags=pcall(node.GetFont,node)
+   if ok and type(size)=="number" then
+    local target=kind=="EditBox" and math.max(16,size) or math.max(16,math.min(23,size*1.22))
+    pcall(node.SetFont,node,path or FONT,target,flags or "")
+   end
+  elseif (kind=="Button" or kind=="CheckButton") then
+   if type(node.GetFontString)=="function" then
+    local ok,font=pcall(node.GetFontString,node)
+    if ok and font then visit(font,depth+1) end
+   end
+   -- Native button surfaces remain interactive, but adopt slate/gold.
+   if kind=="Button" and type(node.GetNormalTexture)=="function" then
+    local ok,texture=pcall(node.GetNormalTexture,node)
+    if ok and texture and type(texture.SetVertexColor)=="function" then
+     pcall(texture.SetVertexColor,texture,.33,.35,.38,1)
+    end
+   end
+  end
+  if type(node.GetRegions)=="function" then
+   local ok,regions=pcall(function()return {node:GetRegions()}end)
+   if ok then for _,region in ipairs(regions) do visit(region,depth+1) end end
+  end
+  if type(node.GetChildren)=="function" then
+   local ok,children=pcall(function()return {node:GetChildren()}end)
+   if ok then for _,child in ipairs(children) do visit(child,depth+1) end end
+  end
+ end
+ visit(pane,0)
+end
+
 local function clearCurrent()
   if pageWidgets then pageWidgets:Hide() end
   pageWidgets = nil
@@ -259,6 +340,7 @@ function KS:ShowPage(id)
   local pane = CreateFrame("Frame", nil, content)
   pane:SetAllPoints(content)
   pageWidgets = pane
+  themePageBackground(pane,id)
   if id == "home" then buildHome(pane)
   elseif id == "modules" then buildModules(pane)
   elseif id == "faq" then buildFAQ(pane)
@@ -268,6 +350,7 @@ function KS:ShowPage(id)
     local page = self.pages[id]
     if page then page.build(pane, self) else buildHome(pane) end
   end
+  themePageFonts(pane,id)
   redrawNavigation()
   pane:Show()
 end
