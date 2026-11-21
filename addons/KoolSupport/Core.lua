@@ -133,6 +133,15 @@ SlashCmdList.KOOLSUPPORT = function(text)
   if page == "" then page = "home" end
   if page == "quest" or page == "quests" or page == "qc" then page = "quest_checker" end
   if page == "guilty" or page == "gf" or page == "ignore" then page = "guilty_forever" end
+  if page == "combo" or page == "combodiag" then
+    if KSStealth and KSStealth.UpdateAll and KSStealth.ComboDiagnosticText then
+      KSStealth:UpdateAll()
+      print("KoolSupport "..KS.VERSION.."  "..KSStealth:ComboDiagnosticText())
+    else
+      print("KoolSupport: combo diagnostics unavailable.")
+    end
+    return
+  end
   if page == "dies" or page == "diecheck" then
     local A=KSAfflictions
     if not A or type(A.DiagnosticLine)~="function" then
