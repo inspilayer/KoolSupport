@@ -51,6 +51,9 @@ local function frame(kind,parent)
  function f:SetAutoFocus()end
  function f:SetMaxLetters()end
  function f:ClearFocus()end
+ function f:GetEffectiveScale()
+  return (self.parent and self.parent.GetEffectiveScale and self.parent:GetEffectiveScale() or 1)*(self.scale or 1)
+ end
  function f:GetCenter()return self.centerX or 500,self.centerY or 500 end
  function f:GetWidth()return self.width or 1000 end
  function f:GetHeight()return self.height or 1000 end
@@ -110,7 +113,25 @@ local config=S:HUDSettings()
 assert(config.hudX==120 and config.hudY==-90,"drag should save UIParent-relative location")
 assert(config.hudAnchor=="custom","drag should opt in to custom positioning")
 assert(hud.anchor[4]==120 and hud.anchor[5]==-90)
+-- HUD scale changes must not make the dragged HUD jump to a different spot.
+-- GetCenter reports HUD-local coordinates; UIParent center reports parent coords.
 assert(S:SetHUDScale(1.4) and hud.scale==1.4)
+hud.centerX,hud.centerY=510,325 -- center in HUD-local units, NOT UIParent units
+hud.OnDragStart(hud)
+hud.OnDragStop(hud)
+local expectedX=510*1.4-500
+local expectedY=325*1.4-500
+assert(math.abs(config.hudX-expectedX)<.01 and math.abs(config.hudY-expectedY)<.01,
+ "drag must store screen-consistent offsets, compensating for effective HUD scale")
+assert(math.abs(hud.anchor[4]-expectedX/1.4)<.01 and math.abs(hud.anchor[5]-expectedY/1.4)<.01,
+ "re-anchoring must not snap when scaled")
+-- A scaled UIParent must be compensated too.
+UIParent.scale=.8
+hud.centerX,hud.centerY=510,325
+hud.OnDragStart(hud);hud.OnDragStop(hud)
+assert(math.abs(config.hudX-expectedX)<.01 and math.abs(hud.anchor[4]-expectedX/1.4)<.01,
+ "UIParent UI scale must not perturb stored position")
+UIParent.scale=1
 assert(S:SetHUDScale(4) and hud.scale==1.8,"scale must clamp")
 assert(S:SetHUDScale(0.1) and hud.scale==0.7)
 assert(S:SetHUDLocked(true))
