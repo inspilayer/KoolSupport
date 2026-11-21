@@ -43,7 +43,7 @@ local p2=makeFrame(nil);p2.namePlateUnitToken='nameplate2'
 local plates={["nameplate1"]=p1,["nameplate2"]=p2}
 C_NamePlate={
  GetNamePlates=function()return {p1,p2}end,
- GetNamePlateForUnit=function(unit)return plates[unit]end,
+ GetNamePlateForUnit=function(unit)return unit=="target" and p1 or plates[unit]end,
 }
 local calls={}
 GetComboPoints=function(player,unit)
@@ -59,24 +59,25 @@ assert(loadfile('addons/KSStealth/TalentImpactUI.lua'))()
 assert(loadfile('addons/KSStealth/Module.lua'))()
 local S=KSStealth
 S:OnEvent('PLAYER_LOGIN')
-assert(calls.nameplate1 and calls.nameplate2,'must update ALL visible nameplate units')
-assert(styled==10,'Stealth must use shared KS bar theme on all ten segments')
-assert(#S.plates[p1].bars==5 and #S.plates[p2].bars==5)
+assert(calls.target and not calls.nameplate2,'must use only selected target combo points')
+assert(#S.plates[p1].bars==5,'must create five visible target segments')
+assert(S.plates[p2]==nil,'never create a display on unrelated nameplates')
 for _,b in ipairs(S.plates[p1].bars) do
  assert(b.values[#b.values]==SECRET,'secret passes through to StatusBar with no Lua math')
 end
 assert(S.plates[p1].bars[1].min==0 and S.plates[p1].bars[1].max==1)
 assert(S.plates[p1].bars[5].min==4 and S.plates[p1].bars[5].max==5)
+C_NamePlate.GetNamePlateForUnit=function()return nil end
 S:OnEvent('NAME_PLATE_UNIT_REMOVED','nameplate1')
 assert(S.plates[p1].holder.hidden)
 assert(KoolSupport:SetModuleEnabled('ks_stealth',false))
-assert(S.plates[p2].holder.hidden)
+assert(S.plates[p1].holder.hidden)
 assert(not KoolSupport:CanOpenPage('stealth'))
 assert(KoolSupport:SetModuleEnabled('ks_stealth',true))
 assert(KoolSupport:CanOpenPage('stealth'))
-assert(S:SetNameplates(false))
-assert(S.plates[p2].holder.hidden)
+assert(S:SetHUDEnabled(false))
+assert(S.plates[p1].holder.hidden)
 InCombatLockdown=function()return true end
 local ok=S:SetNameplates(true)
 assert(not ok,'combat blocks display setting toggles')
-print('PASS stealth: multi-nameplate, secret passthrough, removal, toggles, combat')
+print('PASS stealth: exact target nameplate, secret passthrough, removal, toggles, combat')
