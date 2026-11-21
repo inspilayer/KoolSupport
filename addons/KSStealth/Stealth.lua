@@ -42,25 +42,27 @@ local function readable(value)
  return true
 end
 local function targetPlate()
- if not C_NamePlate then return nil end
+ if not C_NamePlate then return nil,"Nameplate API unavailable" end
  local plate
  if type(C_NamePlate.GetNamePlateForUnit)=="function" then
   local ok,result=pcall(C_NamePlate.GetNamePlateForUnit,"target")
   if ok and readable(result) then plate=result end
  end
- if plate then return plate end
+ if plate then return plate,"target lookup" end
  -- Some Forever layouts only expose a nameplate1..N unit token.
- if type(C_NamePlate.GetNamePlates)~="function" or type(UnitIsUnit)~="function" then return nil end
+ if type(C_NamePlate.GetNamePlates)~="function" or type(UnitIsUnit)~="function" then
+  return nil,"Target lookup returned nil; fallback unavailable"
+ end
  local ok,plates=pcall(C_NamePlate.GetNamePlates)
- if not ok or type(plates)~="table" then return nil end
+ if not ok or type(plates)~="table" then return nil,"Cannot enumerate visible nameplates" end
  for _,candidate in ipairs(plates) do
   local unit=candidate.namePlateUnitToken or candidate.unitToken
   if type(unit)=="string" then
    local works,same=pcall(UnitIsUnit,unit,"target")
-   if works and readable(same) and same==true then return candidate end
+   if works and readable(same) and same==true then return candidate,"nameplate unit match" end
   end
  end
- return nil
+ return nil,"No visible nameplate matched target"
 end
 local function healthBar(plate)
  local unit=plate and (plate.UnitFrame or plate.unitFrame)
@@ -123,12 +125,24 @@ function S:HideAll()
  for _,record in pairs(self.plates) do record.holder:Hide() end
 end
 
+function S:ComboDiagnosticText()
+ local info=self.comboDiagnostic or {}
+ return "Combo diagnostics: "..tostring(info.phase or "not initialized")..
+  " | Source: "..tostring(info.source or "not read")
+end
 function S:UpdateTargetNameplate()
  self:HideAll()
- if not self:CanDisplay() then return end
- local plate=targetPlate()
- if not plate then return end
+ if not self:CanDisplay() then
+  self.comboDiagnostic={phase="Display disabled or unsupported class"}
+  return
+ end
+ local plate,method=targetPlate()
+ if not plate then
+  self.comboDiagnostic={phase=method or "Target nameplate not found"}
+  return
+ end
  local record=self:MakePlate(plate,"target")
+ self.comboDiagnostic={phase="Nameplate found ("..method..")"}
  -- No branching on or formatting of the secret combo count.
  local ok,points=false,nil
  if type(GetComboPoints)=="function" then
@@ -138,11 +152,19 @@ function S:UpdateTargetNameplate()
  -- getter is not available. Never inspect its value to decide a fallback.
  if not ok and type(UnitPower)=="function" then
   ok,points=pcall(UnitPower,"player",4)
+  if ok then self.comboDiagnostic.source="UnitPower fallback" end
+ elseif ok then self.comboDiagnostic.source="GetComboPoints" end
+ if not ok then
+  self.comboDiagnostic.phase="Nameplate found; combo API calls failed"
+  return
  end
- if not ok then return end
  for _,bar in ipairs(record.bars) do
-  if not pcall(bar.SetValue,bar,points) then return end
+  if not pcall(bar.SetValue,bar,points) then
+   self.comboDiagnostic.phase="Nameplate found; StatusBar:SetValue rejected"
+   return
+  end
  end
+ self.comboDiagnostic.phase="Five StatusBars updated"
  record.holder:Show()
 end
 
