@@ -33,7 +33,7 @@ local function button(parent,words,x,y,w,fn)
  return b
 end
 function S.BuildPage(parent)
- local status=label(parent,"",22,-641,893,"small")
+ local status=label(parent,"",22,-623,893,"small")
  label(parent,GOLD.."KS STEALTH  /  COMBO POINTS|r",23,-19,900,"title")
  label(parent,MUTED.."Configure two independent displays: nameplate pips and your movable HUD.|r",23,-59,884)
  local np=panel(parent,23,-106,896,182)
@@ -120,6 +120,6 @@ function S.BuildPage(parent)
   redraw()
  end)
  redraw()
- button(parent,"Browse Talent Impacts",23,-665,291,function()KoolSupport:ShowPage("stealth_talents")end)
- label(parent,MUTED.."Changes are blocked in combat. Combo points remain secret-safe native StatusBars.|r",333,-671,595,"small")
+ button(parent,"Browse Talent Impacts",23,-651,291,function()KoolSupport:ShowPage("stealth_talents")end)
+ label(parent,MUTED.."Changes are blocked in combat. Combo points remain secret-safe native StatusBars.|r",333,-663,595,"small")
 end
