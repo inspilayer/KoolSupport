@@ -79,6 +79,11 @@ eventFrame.OnUpdate(eventFrame,.10)
 assert(reads==originalReads,"refresh must be throttled")
 eventFrame.OnUpdate(eventFrame,.06)
 assert(reads==originalReads+1,"combo bars must update without any event or manual /kool combo")
+assert(S.comboHealth.ticks==1 and S.comboHealth.autoUpdates==1)
+local readBeforeStatus=reads
+local healthText=S:ComboHealthText()
+assert(healthText:find("ticks=1",1,true) and healthText:find("auto-updates=1",1,true))
+assert(reads==readBeforeStatus,"status must not trigger a refresh")
 assert(record.bars[1].values[#record.bars[1].values]==SECRET)
 selected=nil
 eventFrame.OnUpdate(eventFrame,.16)
