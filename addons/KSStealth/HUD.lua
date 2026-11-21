@@ -147,7 +147,7 @@ function S:UpdateHUD()
   self:RefreshHUDDragState()
   -- Unlocked HUD stays visible with empty pips even without a target, so it
   -- can be positioned during a quiet moment outside combat.
-  local preview=not db.hudLocked
+  local preview=not db.hudLocked or self.hudPositionPreview
   if type(GetComboPoints)~="function" then
     if preview then
       for _,bar in ipairs(holder.bars) do bar:SetValue(0) end
@@ -188,6 +188,31 @@ function S:UpdateHUD()
   holder:Show()
 end
 
+-- Explicit edit-mode affordance: visible even while idle with no target.
+-- Reuses the existing unlocked five-pip preview. No combat data is read.
+function S:ShowHUDForPositioning()
+  if KoolSupport:IsInCombat() then
+    return false,"Show and move the HUD outside combat."
+  end
+  if not self.active or not self:IsSupportedClass() then
+    return false,"Enable KS Stealth on a Druid or Rogue to position the HUD."
+  end
+  local db=self:HUDSettings()
+  db.hudEnabled=true
+  db.hudLocked=false
+  self.hudPositionPreview=true
+  self:UpdateHUD()
+  return true
+end
+
+function S:FinishHUDPositioning()
+  if KoolSupport:IsInCombat() then
+    return false,"Lock the HUD outside combat."
+  end
+  self.hudPositionPreview=false
+  return self:SetHUDLocked(true)
+end
+
 function S:SetHUDEnabled(enabled)
   if KoolSupport:IsInCombat() then return false,"Change HUD settings outside combat" end
   self:HUDSettings().hudEnabled=not not enabled
@@ -198,6 +223,7 @@ end
 function S:SetHUDLocked(locked)
   if KoolSupport:IsInCombat() then return false,"Unlock or lock the HUD outside combat" end
   self:HUDSettings().hudLocked=not not locked
+  if locked then self.hudPositionPreview=false end
   self:RefreshHUDDragState()
   self:UpdateHUD()
   return true
