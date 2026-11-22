@@ -517,3 +517,8 @@ Branch: release/1.0-ui-rc1, based on feature/guilty-forever-ignore-notes (the ei
 4. Only after owner acceptance create stable 1.0.0 on main, tag v1.0.0 through explicit user-approved release flow, and independently verify CurseForge public file and its version.
 
 Public release blockers: full in-client visual and module smoke test, verified non-taint and macro safety, and public artifact validation. CI alone cannot satisfy these gates.
+
+
+### Stable 1.0.0 release automation (prepared, NOT executed)
+
+Added .github/workflows/publish-stable.yml: manual workflow_dispatch, main branch only, two independent owner checkboxes for public approval and actual 8-module Forever live smoke. It validates exact stable VERSION 1.0.0, tests all Lua/security/packaging, checks upstream packager-generated ZIP, refuses tag overwrite or advanced main, creates immutable v1.0.0, and publishes a GitHub release with the native ZIP. A linked CurseForge push webhook is outside the GitHub workflow and its public published file must be verified separately. scripts/release_version.py now parses exact 1.0.0 stable as well as candidate RCs; the existing publish-beta workflow still rejects stable versions in its own RC regex. The workflow is inert while the checkout is 1.0.0-rc.1; do not trigger before RC2 and live acceptance.
