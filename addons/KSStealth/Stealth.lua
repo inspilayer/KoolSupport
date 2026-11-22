@@ -111,12 +111,7 @@ function S:Layout(record)
   energy:ClearAllPoints()
   energy:SetPoint("TOP",holder,"BOTTOM",0,-3)
   energy:SetSize(CAP*w+(CAP-1)*g,db.energyHeight*self:HUDSettings().hudScale)
-  local palette={
-   gold={1,.79,.16},lime={.54,.94,.19},
-   amber={1,.46,.12},cyan={.24,.81,.96},
-  }
-  local rgb=palette[db.energyColor] or palette.gold
-  energy:SetStatusBarColor(rgb[1],rgb[2],rgb[3],.98)
+  if self.StyleEnergyBar then self:StyleEnergyBar(energy) end
  end
 end
 
