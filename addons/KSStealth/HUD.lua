@@ -89,6 +89,21 @@ function S:SetEnergyColor(color)
  return true
 end
 
+function S:StyleEnergyBar(bar)
+ local db=self:HUDSettings()
+ local palette={
+  gold={1,.79,.16},lime={.54,.94,.19},
+  amber={1,.46,.12},cyan={.24,.81,.96},
+ }
+ local rgb=palette[db.energyColor] or palette.gold
+ if type(bar.SetStatusBarTexture)=="function" then
+  bar:SetStatusBarTexture("Interface\\TARGETINGFRAME\\UI-StatusBar")
+ end
+ if type(bar.SetStatusBarColor)=="function" then
+  bar:SetStatusBarColor(rgb[1],rgb[2],rgb[3],.98)
+ end
+end
+
 -- Pip Designer: all settings are presentation-only and saved per character.
 -- This code never reads, inspects or branches on the possibly secret combo value.
 local PRESETS={
