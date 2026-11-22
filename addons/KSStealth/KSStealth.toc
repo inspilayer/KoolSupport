@@ -11,5 +11,6 @@ TalentImpactData.lua
 TalentResolver.lua
 TalentTooltip.lua
 UI.lua
+PipDesigner.lua
 TalentImpactUI.lua
 Module.lua
