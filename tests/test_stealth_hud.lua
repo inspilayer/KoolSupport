@@ -29,7 +29,10 @@ local function frame(kind,parent)
  function f:SetWidth(w)self.w=w end
  function f:SetJustifyH()end
  function f:SetScript(key,fn)self[key]=fn end
- function f:RegisterEvent(e)self.events=self.events or {};self.events[e]=true end
+ function f:RegisterEvent(e)
+  if e=="UNIT_COMBO_POINTS" then error("Event does not exist in Forever") end
+  self.events=self.events or {};self.events[e]=true
+ end
  function f:Show()self.hidden=false end
  function f:Hide()self.hidden=true end
  if parent then parent.children[#parent.children+1]=f end
@@ -74,6 +77,8 @@ for _,widget in ipairs(frames) do
  if widget.OnUpdate and widget.OnEvent then eventFrame=widget;break end
 end
 assert(eventFrame and eventFrame.OnUpdate,"combo fallback must register OnUpdate")
+assert(type(S.ComboHealthText)=="function","one rejected event must not truncate the script")
+assert(S:ComboHealthText():find("rejected%-events=UNIT_COMBO_POINTS"),"unsupported event must be reported")
 local originalReads=reads
 eventFrame.OnUpdate(eventFrame,.10)
 assert(reads==originalReads,"refresh must be throttled")
