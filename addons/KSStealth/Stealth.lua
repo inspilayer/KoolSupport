@@ -260,9 +260,16 @@ function S:OnEvent(event,unit)
   elseif event=="PLAYER_TARGET_CHANGED" or event=="PLAYER_ENTERING_WORLD" or event=="UPDATE_SHAPESHIFT_FORM" or event=="PLAYER_REGEN_ENABLED" then self:UpdateAll()
   end
 end
+-- A single unsupported Forever event must not abort this file before OnUpdate.
 local events=CreateFrame("Frame")
+S.comboRegistration={accepted={},rejected={}}
 for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","UNIT_COMBO_POINTS","UNIT_POWER_UPDATE","UNIT_POWER_FREQUENT","PLAYER_TARGET_CHANGED","UPDATE_SHAPESHIFT_FORM","PLAYER_REGEN_ENABLED"}) do
-  events:RegisterEvent(event)
+ local ok=pcall(events.RegisterEvent,events,event)
+ if ok then
+  S.comboRegistration.accepted[#S.comboRegistration.accepted+1]=event
+ else
+  S.comboRegistration.rejected[#S.comboRegistration.rejected+1]=event
+ end
 end
 events:SetScript("OnEvent",function(_,event,unit)S:OnEvent(event,unit)end)
 -- Forever's target-bound combo points can change without the registered
@@ -300,5 +307,7 @@ function S:ComboHealthText()
  return "Combo automation: frame="..frameState.." ticks="..h.ticks..
   " auto-updates="..h.autoUpdates.." failures="..h.failures..
   " events="..h.events.." last-event="..h.lastEvent..
-  " last-auto="..h.lastAuto
+  " last-auto="..h.lastAuto..
+  " rejected-events="..(self.comboRegistration and
+  (#self.comboRegistration.rejected>0 and table.concat(self.comboRegistration.rejected,",") or "none") or "unknown")
 end
