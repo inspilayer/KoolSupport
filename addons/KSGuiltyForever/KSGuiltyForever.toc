@@ -2,7 +2,7 @@
 ## Title: Guilty Forever
 ## Notes: Private ignore reasons and group reminders
 ## Author: InspiLayer
-## Version: 0.10.15-rc.2
+## Version: 1.0.0-rc.1
 ## Dependencies: KoolSupport
 GuiltyForever.lua
 UI.lua
