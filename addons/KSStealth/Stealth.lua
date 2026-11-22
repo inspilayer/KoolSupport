@@ -76,18 +76,31 @@ local function healthBar(plate)
  return bars or plate
 end
 
+-- Nameplate frame pools can replace their UnitFrame/healthBar while keeping
+-- the outer nameplate reference. Track the *actual* healthBar anchor, and
+-- re-anchor only when it really changes. Repeated ClearAllPoints during
+-- combat caused inconsistent offsets on some Forever nameplate layouts.
 function S:Layout(record)
  local db=self:Store()
  local w,h,g,offset=self:PipDimensions()
  local appearance=self:PipStyle()
  local holder=record.holder
- holder:SetSize(CAP*w+(CAP-1)*g,h)
- holder:ClearAllPoints()
+ local width=CAP*w+(CAP-1)*g
+ holder:SetSize(width,h)
  local anchor=healthBar(record.plate)
- if db.hudPlacement=="above" then
-  holder:SetPoint("BOTTOM",anchor,"TOP",0,offset)
- else
-  holder:SetPoint("TOP",anchor,"BOTTOM",0,-offset)
+ local placement=db.hudPlacement=="above" and "above" or "below"
+ local anchorChanged=record.anchorFrame~=anchor or record.anchorPlacement~=placement
+  or record.anchorOffset~=offset
+ if anchorChanged then
+  holder:ClearAllPoints()
+  if placement=="above" then
+   holder:SetPoint("BOTTOM",anchor,"TOP",0,offset)
+  else
+   holder:SetPoint("TOP",anchor,"BOTTOM",0,-offset)
+  end
+  record.anchorFrame=anchor
+  record.anchorPlacement=placement
+  record.anchorOffset=offset
  end
  for i,bar in ipairs(record.bars) do
   bar:ClearAllPoints()
@@ -109,15 +122,26 @@ function S:Layout(record)
  if record.energyBar then
   local energy=record.energyBar
   energy:ClearAllPoints()
-  energy:SetPoint("TOP",holder,"BOTTOM",0,-3)
-  energy:SetSize(CAP*w+(CAP-1)*g,db.energyHeight*self:HUDSettings().hudScale)
+  -- The Energy bar always sits on the outside of the stack, never
+  -- between the combo points and the monster's health bar.
+  if placement=="above" then
+   energy:SetPoint("BOTTOM",holder,"TOP",0,3)
+  else
+   energy:SetPoint("TOP",holder,"BOTTOM",0,-3)
+  end
+  energy:SetSize(width,db.energyHeight*self:HUDSettings().hudScale)
   if self.StyleEnergyBar then self:StyleEnergyBar(energy) end
  end
 end
 
 function S:MakePlate(plate,unit)
  local old=self.plates[plate]
- if old then old.unit=unit;return old end
+ if old then
+  old.unit=unit
+  -- Nameplate pools can swap UnitFrame.healthBar behind the same plate.
+  if old.anchorFrame~=healthBar(plate) then self:Layout(old) end
+  return old
+ end
  local holder=CreateFrame("Frame",nil,plate)
  holder:SetFrameLevel((plate.GetFrameLevel and plate:GetFrameLevel() or 1)+20)
  local record={plate=plate,holder=holder,unit=unit,bars={}}
@@ -256,7 +280,11 @@ function S:RemoveUnit(unit)
  self:UpdateTargetNameplate()
 end
 function S:Relayout()
- for _,record in pairs(self.plates) do self:Layout(record) end
+ for _,record in pairs(self.plates) do
+  -- Explicit settings changes rebuild bar geometry, but retain the exact
+  -- current nameplate healthBar reference and saved placement.
+  self:Layout(record)
+ end
  self:UpdateAll()
 end
 function S:SetNameplates(enabled)
