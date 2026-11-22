@@ -4,10 +4,12 @@ local window, content, pageWidgets, currentPage, navigation
 local navButtons = {}
 local openGroup=nil
 local FONT=STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+local KIT=KS.UIKit
 local function enlarge(obj,size)
  if obj and obj.SetFont then pcall(obj.SetFont,obj,FONT,size,"") end
 end
 local function tile(parent,x,y,w,h)
+ if KIT then return KIT:Panel(parent,x,y,w,h) end
  local p=CreateFrame("Frame",nil,parent,"BackdropTemplate")
  p:SetSize(w,h);p:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
  if p.SetBackdrop then
@@ -26,15 +28,16 @@ local function label(parent, text, x, y, width, font)
   item:SetWidth(width)
   item:SetJustifyH("LEFT")
   item:SetText(text)
-  enlarge(item,font=="GameFontNormalLarge" and 25 or font=="GameFontHighlightSmall" and 15 or 18)
+  enlarge(item,font=="GameFontNormalLarge" and 21 or font=="GameFontHighlightSmall" and 12 or 14)
   return item
 end
 local function button(parent, text, x, y, width, onClick)
+  if KIT then return KIT:Button(parent,text,x,y,width,onClick,"secondary",33) end
   local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-  b:SetSize(width or 160, 43)
+  b:SetSize(width or 160, 33)
   b:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
   b:SetText(text)
-  if b.GetFontString then enlarge(b:GetFontString(),17) end
+  if b.GetFontString then enlarge(b:GetFontString(),13) end
   b:SetScript("OnClick", onClick)
   return b
 end
@@ -213,10 +216,11 @@ local function themePageFonts(pane,id)
   if (kind=="FontString" or kind=="EditBox") and type(node.GetFont)=="function" and type(node.SetFont)=="function" then
    local ok,path,size,flags=pcall(node.GetFont,node)
    if ok and type(size)=="number" then
-    local target=kind=="EditBox" and math.max(16,size) or math.max(16,math.min(23,size*1.22))
+    local target=kind=="EditBox" and math.min(15,math.max(12,size)) or math.max(11,math.min(15,size))
     pcall(node.SetFont,node,path or FONT,target,flags or "")
    end
   elseif (kind=="Button" or kind=="CheckButton") then
+   if KIT and kind=="Button" then KIT:StyleExistingButton(node) end
    if type(node.GetFontString)=="function" then
     local ok,font=pcall(node.GetFontString,node)
     if ok and font then visit(font,depth+1) end
@@ -249,7 +253,7 @@ end
 -- stack of bulky buttons with simple text rows. Page IDs/dependencies unchanged.
 local categories={
   {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
-  {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_talents"}},
+  {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_designer","stealth_talents"}},
   {id="social",label="SOCIAL",pages={"campfire_chat","guilty_forever"}},
   {id="system",label="TOOLS",pages={"quest_checker","xp_reminder","launch_checks"}},
   {id="help",label="FAQ / HELP",pages={"faq"}},
@@ -265,10 +269,10 @@ local function makeNavRow(key,action)
   local b=navButtons[key]
   if b then return b end
   b=CreateFrame("Button",nil,navigation)
-  b:SetSize(250,40)
+  b:SetSize(250,34)
   b:EnableMouse(true)
   local name=b:CreateFontString(nil,"OVERLAY","GameFontHighlight")
-  enlarge(name,19)
+  enlarge(name,14)
   name:SetPoint("LEFT",b,"LEFT",9,0)
   name:SetWidth(235)
   name:SetJustifyH("LEFT")
@@ -281,7 +285,7 @@ end
 local function redrawNavigation()
   if not navigation then return end
   for _,item in pairs(navButtons) do item:Hide() end
-  local y=-18
+  local y=-14
   local used={}
   local function drawPage(id,indent)
     if used[id] or not KS:CanOpenPage(id) then return end
@@ -294,11 +298,11 @@ local function redrawNavigation()
     b.caption:SetText((currentPage==id and GOLD or "|cffced8d3")..
       (p.title or id).."|r")
     b:Show()
-    y=y-44
+    y=y-34
   end
   drawPage("home")
   drawPage("modules")
-  y=y-8
+  y=y-5
   for _,group in ipairs(categories) do
     local hasPages=false
     for _,page in ipairs(group.pages) do
@@ -314,7 +318,7 @@ local function redrawNavigation()
       b:SetPoint("TOPLEFT",navigation,"TOPLEFT",0,y)
       b.caption:SetText((openGroup==group.id and GOLD.."v " or MUTED.."> ")..group.label.."|r")
       b:Show()
-      y=y-48
+      y=y-39
       if openGroup==group.id then
         for _,page in ipairs(group.pages) do drawPage(page,true) end
         y=y-8
