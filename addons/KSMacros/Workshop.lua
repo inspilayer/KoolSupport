@@ -43,6 +43,7 @@ local function label(parent,text,x,y,w)
   t:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);t:SetWidth(w or 400);t:SetJustifyH("LEFT");t:SetText(text);return t
 end
 local function button(parent,text,x,y,w,fn)
+  if KoolSupport.UIKit then return KoolSupport.UIKit:Button(parent,text,x,y,w,fn,"secondary",28) end
   local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
   b:SetSize(w,30);b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);b:SetText(text);b:SetScript("OnClick",fn);return b
 end
