@@ -60,3 +60,119 @@ end
 function S:SetHUDLocked(_)
  return false,"Combo points are attached to your target nameplate; no drag lock needed."
 end
+
+
+-- Pip Designer: all settings are presentation-only and saved per character.
+-- This code never reads, inspects or branches on the possibly secret combo value.
+local PRESETS={
+ classic={shape="bars",palette="gold",texture="smooth",width=19,height=12,gap=4,opacity=1,emptyAlpha=.88},
+ assassin={shape="slim",palette="crimson",texture="flat",width=24,height=7,gap=3,opacity=1,emptyAlpha=.65},
+ jewels={shape="square",palette="violet",texture="smooth",width=15,height=15,gap=6,opacity=1,emptyAlpha=.78},
+ nature={shape="chunky",palette="emerald",texture="smooth",width=22,height=16,gap=3,opacity=.95,emptyAlpha=.72},
+ frost={shape="slim",palette="frost",texture="flat",width=27,height=7,gap=5,opacity=.95,emptyAlpha=.56},
+ minimal={shape="square",palette="silver",texture="flat",width=10,height=10,gap=3,opacity=.85,emptyAlpha=.35},
+}
+local PALETTES={
+ gold={1,.72,.20},crimson={.97,.22,.28},emerald={.20,.86,.50},
+ violet={.71,.43,1},frost={.28,.77,1},silver={.88,.91,.95},
+ ember={1,.42,.13},rose={1,.47,.70},toxic={.73,1,.18},
+}
+local TEXTURES={
+ smooth="Interface\\TARGETINGFRAME\\UI-StatusBar",
+ flat="Interface\\Buttons\\WHITE8X8",
+}
+local SHAPES={bars=true,slim=true,square=true,chunky=true}
+local ALLOWED={shape=SHAPES,palette=PALETTES,texture=TEXTURES,
+ growth={right=true,left=true},border={none=true,subtle=true,strong=true}}
+local NUMBERS={
+ width={8,42,1},height={5,26,1},gap={0,16,1},
+ opacity={.35,1,.05},emptyAlpha={.1,1,.05},
+ offset={0,32,1},
+}
+local function clamp(value,min,max)
+ return math.max(min,math.min(max,value))
+end
+function S:PipPresets() return PRESETS end
+function S:PipPalettes() return PALETTES end
+function S:PipStyle()
+ local d=self:HUDSettings()
+ d.pipStyle=d.pipStyle or {}
+ local style=d.pipStyle
+ local base=PRESETS.classic
+ for k,v in pairs(base) do if style[k]==nil then style[k]=v end end
+ if style.growth~="left" then style.growth="right" end
+ if not ALLOWED.border[style.border] then style.border="subtle" end
+ if style.offset==nil then style.offset=5 end
+ return style
+end
+function S:PresetPips(name)
+ if KoolSupport:IsInCombat() then return false,"Change pip designs outside combat" end
+ local preset=PRESETS[name]
+ if not preset then return false,"Unknown preset" end
+ local style=self:PipStyle()
+ for key,value in pairs(preset) do style[key]=value end
+ style.growth="right"
+ style.border="subtle"
+ self:Relayout()
+ return true
+end
+function S:CustomizePips(key,value)
+ if KoolSupport:IsInCombat() then return false,"Change pip designs outside combat" end
+ local options=ALLOWED[key]
+ local range=NUMBERS[key]
+ if options then
+  if options[value]==nil then return false,"Invalid "..tostring(key) end
+ elseif range then
+  if type(value)~="number" or value~=value or value==math.huge or value==-math.huge then
+   return false,"Invalid "..tostring(key)
+  end
+  value=clamp(value,range[1],range[2])
+  local step=range[3]
+  value=math.floor(value/step+.5)*step
+  value=clamp(value,range[1],range[2])
+ else
+  return false,"Unknown pip setting"
+ end
+ self:PipStyle()[key]=value
+ self:Relayout()
+ return true
+end
+function S:ResetPipDesign()
+ if KoolSupport:IsInCombat() then return false,"Reset outside combat" end
+ self:HUDSettings().pipStyle={}
+ self:Relayout()
+ return true
+end
+function S:PipTexture()
+ local style=self:PipStyle()
+ return TEXTURES[style.texture] or TEXTURES.smooth
+end
+function S:StyleComboBar(bar,i)
+ local style=self:PipStyle()
+ local palette=PALETTES[style.palette] or PALETTES.gold
+ if bar.SetStatusBarTexture then bar:SetStatusBarTexture(self:PipTexture()) end
+ if bar.SetStatusBarColor then
+  bar:SetStatusBarColor(palette[1],palette[2],palette[3],style.opacity)
+ end
+ if bar.backing and bar.backing.SetColorTexture then
+  bar.backing:SetColorTexture(.065,.077,.095,style.emptyAlpha)
+ elseif bar.backing and bar.backing.SetTexture and bar.backing.SetVertexColor then
+  bar.backing:SetTexture(TEXTURES.flat)
+  bar.backing:SetVertexColor(.065,.077,.095,style.emptyAlpha)
+ end
+ if bar.borderArt and bar.borderArt.SetColorTexture then
+  local alpha=style.border=="none" and 0 or style.border=="strong" and .95 or .5
+  bar.borderArt:SetColorTexture(palette[1],palette[2],palette[3],alpha)
+ end
+end
+function S:PipDimensions()
+ local style=self:PipStyle()
+ local w,h=style.width,style.height
+ if style.shape=="slim" then h=math.min(h,7)
+ elseif style.shape=="square" then
+  local side=math.min(w,h)
+  w,h=side,side
+ elseif style.shape=="chunky" then h=math.max(h,14) end
+ local size=self:HUDSettings().hudScale
+ return w*size,h*size,style.gap*size,style.offset*size
+end
