@@ -256,3 +256,13 @@ An opt-out KoolSupport social module saves private notes for ignored players, pr
 
 
 Enemy-faction extension: manually tag a hostile player through the current target and save a reason in the same private directory. Print an informational reminder when selecting a previously tagged enemy player (once/session). Pending real Forever PvP and cross-realm tests; no automation or scan of hidden enemies.
+
+## 1.0.0 RC program (November 22, 2026)
+
+| Iteration | Implementation | Gate |
+| --- | --- | --- |
+| RC1 — UI foundations | 1.0.0-rc.1 branch: reusable dark/gold UI kit; compact typography; neutral buttons across module screens; active sidebar; preserve Guilty Forever visual language | Lua + CurseForge dry run; visual acceptance in Forever |
+| RC2 — in-client polish | Incorporate observed screenshots, address clipping/spacing, resize or retab dense pages, complete remaining UI inconsistencies | Player sign-off at 1080p and reduced UI scale |
+| Stable 1.0.0 | Merge verified candidate, update exact version, publish immutable public GitHub release tag / CurseForge stable package | Live feature smoke (all 8 modules), secure macro behavior, saved data, license, version and artifact checks |
+
+Explicit rule: DO NOT promote RC1 directly to the public 1.0.0 release simply because mocked Lua and packaging checks pass. Review in the actual Forever client first. Stable publish must be separately authenticated and its public CurseForge file verified.
