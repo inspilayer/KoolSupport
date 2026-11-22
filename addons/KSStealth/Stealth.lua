@@ -4,9 +4,6 @@
 KSStealth=KSStealth or {}
 local S=KSStealth
 S.plates=S.plates or {}
--- Only a validated current-target plate may be cached. Never infer identity by name.
-S.cachedTargetPlate=nil
-S.plateByUnit=S.plateByUnit or {}
 S.comboHealth={ticks=0,events=0,autoUpdates=0,failures=0,lastEvent='none',lastAuto='none'}
 local CAP=5
 local TEX="Interface\\TARGETINGFRAME\\UI-StatusBar"
@@ -53,14 +50,6 @@ local function targetPlate()
   if ok and readable(result) then plate=result end
  end
  if plate then return plate,"target lookup" end
- -- Prefer the event-registered token mapping when the returned plate does
- -- not expose a public unitToken; this may happen on Forever.
- if type(UnitIsUnit)=="function" then
-  for unit,candidate in pairs(S.plateByUnit) do
-   local ok,same=pcall(UnitIsUnit,unit,"target")
-   if ok and readable(same) and same==true then return candidate,"registered nameplate token" end
-  end
- end
  -- Some Forever layouts only expose a nameplate1..N unit token.
  if type(C_NamePlate.GetNamePlates)~="function" or type(UnitIsUnit)~="function" then
   return nil,"Target lookup returned nil; fallback unavailable"
@@ -149,15 +138,7 @@ function S:UpdateTargetNameplate(origin)
   return
  end
  local plate,method=targetPlate()
- if plate then
-  -- A real target lookup is authoritative, even when a prior plate was cached.
-  self.cachedTargetPlate=plate
- elseif self.cachedTargetPlate then
-  -- Some Forever combat contexts cannot resolve "target" to a nameplate.
-  -- Continue updating the *already validated* plate; never cache from a name.
-  plate=self.cachedTargetPlate
-  method="cached target (combat-safe)"
- else
+ if not plate then
   self:HideAll()
   self.comboDiagnostic={phase=method or "Target nameplate not found"}
   return
@@ -198,26 +179,11 @@ function S:UpdateAll()
  self:UpdateTargetNameplate()
 end
 function S:UpdatePlate(unit)
- -- Capture the nameplate while its stable nameplateN event token is valid.
- -- The target token itself may not be resolvable during combat.
- if type(unit)=="string" and C_NamePlate and type(C_NamePlate.GetNamePlateForUnit)=="function" then
-  local ok,plate=pcall(C_NamePlate.GetNamePlateForUnit,unit)
-  if ok and plate and readable(plate) then self.plateByUnit[unit]=plate end
- end
+ -- Nameplate events can occur when the target walks into nameplate range.
+ -- Always resolve the currently selected target, not arbitrary units.
  self:UpdateTargetNameplate()
 end
 function S:RemoveUnit(unit)
- -- Nameplate removal is a lifecycle boundary. A plate object can be recycled
- -- for another monster, so never keep it as the target across removal.
- if type(unit)=="string" then
-  local plate=self.plateByUnit[unit]
-  self.plateByUnit[unit]=nil
-  if plate and plate==self.cachedTargetPlate then
-   self.cachedTargetPlate=nil
-   local record=self.plates[plate]
-   if record then record.holder:Hide() end
-  end
- end
  self:UpdateTargetNameplate()
 end
 function S:Relayout()
@@ -269,8 +235,6 @@ function S:OnModuleEnabled()
   self:UpdateAll()
 end
 function S:OnModuleDisabled()
-  self.cachedTargetPlate=nil
-  self.plateByUnit={}
   self.active=false
   self:HideAll()
   if type(self.HideHUD)=="function" then self:HideHUD() end
@@ -278,10 +242,6 @@ end
 
 -- Event-driven updates; no secret-value comparisons and no polling for enemies.
 function S:OnEvent(event,unit)
-  -- Do not allow a target change to reuse the previous monster's plate.
-  if event=="PLAYER_TARGET_CHANGED" or event=="PLAYER_ENTERING_WORLD" then
-   self.cachedTargetPlate=nil
-  end
   self.comboHealth.events=self.comboHealth.events+1
   self.comboHealth.lastEvent=event
   if event=="PLAYER_LOGIN" then
