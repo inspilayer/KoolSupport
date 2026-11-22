@@ -51,6 +51,7 @@ function S.BuildDesignerPage(parent)
  local demoEnergy=CreateFrame("StatusBar",nil,preview)
  demoEnergy:SetMinMaxValues(0,100)
  demoEnergy:SetValue(65)
+ local energyPills,energyBars=S:CreateEnergySegments(preview)
  local syncControls={}
  for i=1,5 do
   local bar=CreateFrame("StatusBar",nil,preview)
@@ -74,7 +75,18 @@ function S.BuildDesignerPage(parent)
   demoEnergy:SetPoint("TOP",preview,"BOTTOM",0,-3)
   demoEnergy:SetSize(w*5+g*4,resource.energyHeight*resource.hudScale)
   S:StyleEnergyBar(demoEnergy)
-  if resource.energyEnabled then demoEnergy:Show() else demoEnergy:Hide() end
+  energyPills:ClearAllPoints()
+  energyPills:SetPoint("CENTER",demoEnergy,"CENTER",0,0)
+  energyPills:SetSize(w*5+g*4,resource.energyHeight*resource.hudScale)
+  local activePills=S:LayoutEnergySegments(energyBars,w*5+g*4,resource.energyHeight*resource.hudScale)
+  for _,energy in ipairs(energyBars) do energy:SetValue(65) end
+  if resource.energyEnabled then
+   if activePills then demoEnergy:Hide();energyPills:Show()
+   else energyPills:Hide();demoEnergy:Show() end
+  else
+   demoEnergy:Hide()
+   energyPills:Hide()
+  end
   local style=S:PipStyle()
   for i,bar in ipairs(bars) do
    bar:ClearAllPoints()
@@ -109,13 +121,13 @@ function S.BuildDesignerPage(parent)
   refresh()
  end
  local nav=box(parent,22,-238,895,51)
- for i,name in ipairs({"themes","geometry","colors","finish"}) do
-  tabs[name]=button(nav,name:upper(),13+(i-1)*220,-8,207,function()
+ for i,name in ipairs({"themes","geometry","colors","finish","energy"}) do
+  tabs[name]=button(nav,name:upper(),13+(i-1)*177,-8,163,function()
    activeTab=name;refresh()
   end)
  end
  local area=box(parent,22,-299,895,321)
- for _,name in ipairs({"themes","geometry","colors","finish"}) do
+ for _,name in ipairs({"themes","geometry","colors","finish","energy"}) do
   bodies[name]=CreateFrame("Frame",nil,area)
   bodies[name]:SetAllPoints(area)
  end
@@ -219,6 +231,71 @@ function S.BuildDesignerPage(parent)
  stepper(finish,"emptyAlpha","Empty opacity",455,-210,.1)
  label(finish,MUTED.."Style changes are visual-only; combo values still go directly into native WoW StatusBars.|r",
   15,-280,870)
+ local energy=bodies.energy
+ label(energy,GOLD.."ENERGY PILL BREAKPOINTS|r",15,-14,600,true)
+ label(energy,MUTED.."Type Energy thresholds separated by commas. Example: 35, 70 creates 3 rounded segments.|r",
+  15,-48,860)
+ local breaks=CreateFrame("EditBox",nil,energy,"InputBoxTemplate")
+ breaks:SetPoint("TOPLEFT",energy,"TOPLEFT",23,-83)
+ breaks:SetSize(437,29)
+ if breaks.SetAutoFocus then breaks:SetAutoFocus(false) end
+ if breaks.SetMaxLetters then breaks:SetMaxLetters(120) end
+ if breaks.SetText then breaks:SetText(S:EnergySettings().energyBreakpoints) end
+ local function saveBreaks()
+  local ok,why=S:SetEnergyBreakpoints(breaks:GetText() or "")
+  if ok then
+   breaks:SetText(S:EnergySettings().energyBreakpoints)
+   status:SetText("Energy breakpoints saved. Segments update on target.")
+  else status:SetText(why or "Invalid Energy breakpoints") end
+  if breaks.ClearFocus then breaks:ClearFocus() end
+  refresh()
+ end
+ breaks:SetScript("OnEnterPressed",saveBreaks)
+ button(energy,"APPLY BREAKS",476,-80,182,saveBreaks)
+ button(energy,"NO BREAKS",672,-80,206,function()
+  apply(S.SetEnergyBreakpoints,"")
+  breaks:SetText(S:EnergySettings().energyBreakpoints)
+ end)
+ label(energy,GOLD.."MAX ENERGY|r",15,-140,220)
+ label(energy,MUTED.."Use 100 normally; change to 120 or more if talents increase your Energy maximum.|r",
+  233,-144,645)
+ local ceiling=CreateFrame("EditBox",nil,energy,"InputBoxTemplate")
+ ceiling:SetPoint("TOPLEFT",energy,"TOPLEFT",23,-176)
+ ceiling:SetSize(160,29)
+ if ceiling.SetAutoFocus then ceiling:SetAutoFocus(false) end
+ if ceiling.SetMaxLetters then ceiling:SetMaxLetters(3) end
+ ceiling:SetText(tostring(S:EnergySettings().energyCeiling))
+ local function saveCeiling()
+  local value=tonumber(ceiling:GetText())
+  local ok,why=S:SetEnergyCeiling(value)
+  status:SetText(ok and "Maximum Energy updated." or why)
+  ceiling:SetText(tostring(S:EnergySettings().energyCeiling))
+  if ceiling.ClearFocus then ceiling:ClearFocus() end
+  refresh()
+ end
+ ceiling:SetScript("OnEnterPressed",saveCeiling)
+ button(energy,"SET MAX",204,-173,149,saveCeiling)
+ button(energy,"100",369,-173,92,function()
+  apply(S.SetEnergyCeiling,100)
+  ceiling:SetText(tostring(S:EnergySettings().energyCeiling))
+ end)
+ button(energy,"120",473,-173,92,function()
+  apply(S.SetEnergyCeiling,120)
+  ceiling:SetText(tostring(S:EnergySettings().energyCeiling))
+ end)
+ button(energy,"150",577,-173,92,function()
+  apply(S.SetEnergyCeiling,150)
+  ceiling:SetText(tostring(S:EnergySettings().energyCeiling))
+ end)
+ label(energy,GOLD.."SPACE BETWEEN PILL TIPS|r",15,-237,365)
+ local function gapButton(value,x)
+  button(energy,tostring(value).." px",x,-232,88,function()
+   apply(S.SetEnergySegmentGap,value)
+  end)
+ end
+ for i=0,4 do gapButton(i,392+i*98) end
+ label(energy,MUTED.."Each pill fills with real Energy using native StatusBars. No casting or calculations on protected values.|r",
+  15,-282,860)
  button(parent,"RESET DESIGN",22,-638,180,function()
   apply(S.ResetPipDesign)
  end)
