@@ -278,6 +278,23 @@ local function makeNavRow(key,action)
   name:SetJustifyH("LEFT")
   b:SetFontString(name)
   b.caption=name
+  if type(b.CreateTexture)=="function" then
+    local shade=b:CreateTexture(nil,"BACKGROUND")
+    if shade and shade.SetColorTexture then
+      shade:SetColorTexture(.17,.21,.22,.87)
+      shade:SetAllPoints(b)
+      shade:Hide()
+      b.selectedShade=shade
+    end
+    local stripe=b:CreateTexture(nil,"ARTWORK")
+    if stripe and stripe.SetColorTexture then
+      stripe:SetColorTexture(.90,.70,.40,.95)
+      stripe:SetPoint("TOPLEFT",b,"TOPLEFT",0,0)
+      stripe:SetSize(3,34)
+      stripe:Hide()
+      b.selectedStripe=stripe
+    end
+  end
   b:SetScript("OnClick",action)
   navButtons[key]=b
   return b
@@ -297,6 +314,8 @@ local function redrawNavigation()
     b:SetPoint("TOPLEFT",navigation,"TOPLEFT",indent and 16 or 0,y)
     b.caption:SetText((currentPage==id and GOLD or "|cffced8d3")..
       (p.title or id).."|r")
+    if b.selectedShade then if currentPage==id then b.selectedShade:Show() else b.selectedShade:Hide() end end
+    if b.selectedStripe then if currentPage==id then b.selectedStripe:Show() else b.selectedStripe:Hide() end end
     b:Show()
     y=y-34
   end
@@ -317,6 +336,8 @@ local function redrawNavigation()
       b:ClearAllPoints()
       b:SetPoint("TOPLEFT",navigation,"TOPLEFT",0,y)
       b.caption:SetText((openGroup==group.id and GOLD.."v " or MUTED.."> ")..group.label.."|r")
+      if b.selectedShade then if openGroup==group.id then b.selectedShade:Show() else b.selectedShade:Hide() end end
+      if b.selectedStripe then b.selectedStripe:Hide() end
       b:Show()
       y=y-39
       if openGroup==group.id then
