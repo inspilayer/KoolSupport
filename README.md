@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0-rc.2** is a private, pre-release UI review candidate—not an approved public 1.0.0. Full live Forever verification is required before stable promotion.
+Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0-rc.3** is a private, pre-release UI review candidate—not an approved public 1.0.0. Full live Forever verification is required before stable promotion.
 
 ## Modules
 
@@ -20,7 +20,7 @@ Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0-rc.2** is a priv
 
 **Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All eight module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
 
-The **1.0.0-rc.2 development ZIP contains one top-level folder**, `KoolSupport`, with all eight modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
+The **1.0.0-rc.3 development ZIP contains one top-level folder**, `KoolSupport`, with all eight modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
