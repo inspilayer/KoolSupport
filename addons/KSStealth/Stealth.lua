@@ -75,22 +75,31 @@ end
 
 function S:Layout(record)
  local db=self:Store()
- local size=type(db.hudScale)=="number" and db.hudScale or 1
- size=math.max(.7,math.min(1.8,size))
- local w,h,g=19*size,12*size,4*size
+ local w,h,g,offset=self:PipDimensions()
+ local appearance=self:PipStyle()
  local holder=record.holder
  holder:SetSize(CAP*w+(CAP-1)*g,h)
  holder:ClearAllPoints()
  local anchor=healthBar(record.plate)
  if db.hudPlacement=="above" then
-  holder:SetPoint("BOTTOM",anchor,"TOP",0,4)
+  holder:SetPoint("BOTTOM",anchor,"TOP",0,offset)
  else
-  holder:SetPoint("TOP",anchor,"BOTTOM",0,-5)
+  holder:SetPoint("TOP",anchor,"BOTTOM",0,-offset)
  end
  for i,bar in ipairs(record.bars) do
   bar:ClearAllPoints()
-  bar:SetPoint("LEFT",holder,"LEFT",(i-1)*(w+g),0)
+  if appearance.growth=="left" then
+   bar:SetPoint("RIGHT",holder,"RIGHT",-(i-1)*(w+g),0)
+  else
+   bar:SetPoint("LEFT",holder,"LEFT",(i-1)*(w+g),0)
+  end
   bar:SetSize(w,h)
+  if self.StyleComboBar then self:StyleComboBar(bar,i) end
+  if bar.borderArt then
+   bar.borderArt:ClearAllPoints()
+   bar.borderArt:SetPoint("TOPLEFT",bar,"TOPLEFT",-1,1)
+   bar.borderArt:SetPoint("BOTTOMRIGHT",bar,"BOTTOMRIGHT",1,-1)
+  end
  end
 end
 
@@ -109,11 +118,17 @@ function S:MakePlate(plate,unit)
   if type(bar.CreateTexture)=="function" then
    local backing=bar:CreateTexture(nil,"BACKGROUND")
    backing:SetAllPoints(bar)
+   bar.backing=backing
    if backing.SetColorTexture then backing:SetColorTexture(.10,.11,.13,.88)
    elseif backing.SetTexture and backing.SetVertexColor then
     backing:SetTexture("Interface\\Buttons\\WHITE8X8")
     backing:SetVertexColor(.10,.11,.13,.88)
    end
+  end
+  if type(bar.CreateTexture)=="function" then
+   local border=bar:CreateTexture(nil,"BACKGROUND",nil,-1)
+   bar.borderArt=border
+   if border.SetColorTexture then border:SetColorTexture(1,.72,.20,.5) end
   end
   record.bars[i]=bar
  end
