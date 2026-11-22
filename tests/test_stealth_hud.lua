@@ -5,6 +5,21 @@ InCombatLockdown=function()return false end
 UnitClass=function()return "Druid","DRUID" end
 local SECRET=setmetatable({opaque=true},{__eq=function()error("secret compared")end,
  __lt=function()error("secret compared")end,__tostring=function()error("secret printed")end})
+local function opaque()
+ return setmetatable({energy=true},{
+  __eq=function()error("energy value compared")end,
+  __lt=function()error("energy value compared")end,
+  __le=function()error("energy value compared")end,
+  __add=function()error("energy value added")end,
+  __div=function()error("energy value divided")end,
+  __tostring=function()error("energy value printed")end,
+ })
+end
+local energyNow,energyMax=opaque(),opaque()
+local powerKind=3
+UnitPowerType=function(unit)assert(unit=="player");return powerKind end
+UnitPower=function(unit,power)assert(unit=="player" and power==3);return energyNow end
+UnitPowerMax=function(unit,power)assert(unit=="player" and power==3);return energyMax end
 local frames={}
 local function frame(kind,parent)
  local f={kind=kind,parent=parent,hidden=false,children={},values={}}
@@ -71,6 +86,32 @@ for i,bar in ipairs(record.bars) do
  assert(bar.values[#bar.values]==SECRET,"opaque combo points must reach native status bars")
 end
 assert(reads>0)
+assert(record.energyBar,"Energy progress bar should exist under target pips")
+assert(record.energyBar.anchor[1]=="TOP" and record.energyBar.anchor[2]==record.holder
+ and record.energyBar.anchor[3]=="BOTTOM","energy should stack below combo pips")
+assert(rawequal(record.energyBar.max,energyMax),"native bar must receive opaque maximum unchanged")
+assert(rawequal(record.energyBar.values[#record.energyBar.values],energyNow),
+ "native bar must receive opaque current energy unchanged")
+assert(not record.energyBar.hidden,"energy defaults visible when player has energy power type")
+assert(S:Store().energyEnabled)
+assert(S:SetEnergyHeight(14))
+assert(S:Store().energyHeight==14)
+assert(record.energyBar.h==14)
+assert(S:SetEnergyColor("cyan"))
+assert(S:Store().energyColor=="cyan")
+assert(record.energyBar.color[3]>.9)
+assert(S:SetEnergyEnabled(false))
+assert(record.energyBar.hidden)
+assert(S:SetEnergyEnabled(true))
+assert(not record.energyBar.hidden)
+powerKind=0 -- Caster or bear: no energy bar below target.
+S:UpdateAll()
+assert(record.energyBar.hidden,"non-energy forms must hide bar")
+powerKind=3
+S:UpdateAll()
+assert(not record.energyBar.hidden,"cat form restores progress bar")
+assert(not S:SetEnergyColor("invalid"))
+assert(not S:SetEnergyHeight("big"))
 -- Simulate the Forever client not sending UNIT_COMBO_POINTS after a builder.
 -- Only the OnUpdate safety net should refresh the native bars.
 local eventFrame
@@ -144,6 +185,9 @@ selected=nil
 S:UpdateAll()
 assert(record.holder.hidden,"no selected visible nameplate must hide points")
 InCombatLockdown=function()return true end
+assert(not S:SetEnergyEnabled(false))
+assert(not S:SetEnergyHeight(7))
+assert(not S:SetEnergyColor("gold"))
 assert(not S:PresetPips("frost"))
 assert(not S:CustomizePips("palette","crimson"))
 assert(not S:ResetPipDesign())
