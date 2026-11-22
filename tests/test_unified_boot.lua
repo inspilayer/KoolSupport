@@ -92,7 +92,7 @@ end
 assert(trackerInitialized,"Afflictions tracker must initialize in the new host addon namespace")
 local K=KoolSupport
 assert(K.API_VERSION==1)
-assert(K.VERSION=="0.10.15-rc.2")
+assert(K.VERSION=="1.0.0-rc.1")
 assert(K.BarTheme and K.CollectLaunchChecks)
 assert(K.XPReminder and K.XPReminder.INTERVAL==900,
   "XP reminder must be a Base component, not an optional module")
