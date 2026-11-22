@@ -48,7 +48,7 @@ def verify():
     assert '## Version: ' + VERSION in body
     assert '## SavedVariablesPerCharacter: KoolSupportDB' in body, 'Preserve existing character preferences'
     assert '## SavedVariables: KSAfflictionsTrackerDB' in body, 'Register the tracker in the new host addon'
-    original_base = ['Core.lua', 'XPReminder.lua', 'BarTheme.lua', 'Diagnostics.lua', 'UI.lua']
+    original_base = ['Core.lua', 'UIWidgets.lua', 'XPReminder.lua', 'BarTheme.lua', 'Diagnostics.lua', 'UI.lua']
     expected = list(original_base)
     for module, deps in MODULES.items():
         toc = ADDONS / module / (module + '.toc')
