@@ -28,6 +28,11 @@ local function frame(kind,parent)
  function f:SetSize(w,h)self.w,self.h=w,h end
  function f:SetFrameLevel(n)self.level=n end
  function f:GetFrameLevel()return 3 end
+ function f:GetParent()return self.parent end
+ function f:GetText()return self.text end
+ function f:ClearFocus()end
+ function f:SetAutoFocus()end
+ function f:SetMaxLetters()end
  function f:CreateTexture()return frame("Texture",self)end
  function f:CreateFontString()return frame("FontString",self)end
  function f:SetStatusBarTexture(path)self.texture=path end
@@ -125,6 +130,45 @@ S:UpdateAll()
 assert(not record.energyBar.hidden,"cat form restores progress bar")
 assert(not S:SetEnergyColor("invalid"))
 assert(not S:SetEnergyHeight("big"))
+-- Custom breakpoints are user-authored public numbers. Current Energy and max
+-- remain opaque, passed unchanged to native visual sinks.
+assert(S:SetEnergyBreakpoints("70, 35"))
+assert(S:EnergySettings().energyBreakpoints=="35, 70")
+assert(S:EnergyBreakpoints()[1]==35 and S:EnergyBreakpoints()[2]==70)
+assert(record.energySegmentFrame and not record.energySegmentFrame.hidden)
+assert(record.energyBar.hidden,"segmented mode must hide ordinary bar")
+for i,range in ipairs({{0,35},{35,70},{70,100}}) do
+ local b=record.energySegments[i]
+ assert(not b.hidden,"active segment must be visible")
+ assert(b.min==range[1] and b.max==range[2],"segment endpoints must be fixed config")
+ assert(rawequal(b.values[#b.values],energyNow),"secret Energy value passed without comparison")
+end
+assert(record.energySegments[4].hidden,"unused segments must hide")
+local firstW=record.energySegments[1].w
+assert(firstW>0 and record.energySegments[2].w>0)
+assert(S:SetEnergySegmentGap(0))
+assert(S:EnergySettings().energySegmentGap==0)
+assert(record.energySegments[1].anchor[3]=="LEFT")
+assert(S:SetEnergySegmentGap(2))
+assert(record.energySegments[2].anchor[4]>firstW,"visible gap appears between pills")
+assert(S:SetEnergyCeiling(120))
+assert(record.energySegments[3].max==120)
+assert(S:SetEnergyBreakpoints("10, 20, 35, 50, 70, 85, 90, 99, 105, 115"))
+assert(not record.energySegments[11].hidden,"ten marks make eleven capsules")
+assert(not S:SetEnergyBreakpoints("1,2,3,4,5,6,7,8,9,10,11"))
+assert(not S:SetEnergyBreakpoints("35,35"))
+assert(not S:SetEnergyBreakpoints("-5,70"))
+assert(not S:SetEnergyBreakpoints("0,70"))
+assert(not S:SetEnergyBreakpoints("120"))
+assert(not S:SetEnergyBreakpoints("35.5"))
+assert(not S:SetEnergyBreakpoints("35,,70"))
+assert(not S:SetEnergyCeiling(100),"ceiling below existing breakpoint should fail without mutation")
+assert(S:EnergySettings().energyCeiling==120)
+assert(S:SetEnergyBreakpoints(""))
+assert(record.energySegmentFrame.hidden)
+assert(not record.energyBar.hidden,"clearing breakpoints returns original bar")
+assert(rawequal(record.energyBar.max,energyMax))
+assert(S:SetEnergyBreakpoints("35,70"))
 -- Simulate the Forever client not sending UNIT_COMBO_POINTS after a builder.
 -- Only the OnUpdate safety net should refresh the native bars.
 local eventFrame
@@ -204,6 +248,9 @@ InCombatLockdown=function()return true end
 assert(not S:SetEnergyEnabled(false))
 assert(not S:SetEnergyHeight(7))
 assert(not S:SetEnergyColor("gold"))
+assert(not S:SetEnergyBreakpoints("40, 80"))
+assert(not S:SetEnergyCeiling(150))
+assert(not S:SetEnergySegmentGap(1))
 assert(not S:PresetPips("frost"))
 assert(not S:CustomizePips("palette","crimson"))
 assert(not S:ResetPipDesign())
