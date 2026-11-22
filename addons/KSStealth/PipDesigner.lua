@@ -45,6 +45,7 @@ function S.BuildDesignerPage(parent)
  preview:SetPoint("CENTER",previewPanel,"CENTER",0,-8)
  preview:SetSize(130,20)
  local bars={}
+ local syncControls={}
  for i=1,5 do
   local bar=CreateFrame("StatusBar",nil,preview)
   bar:SetMinMaxValues(i-1,i)
@@ -81,6 +82,7 @@ function S.BuildDesignerPage(parent)
  end
  local function refresh()
   refreshPreview()
+  for _,sync in ipairs(syncControls) do sync() end
   for name,b in pairs(tabs) do
    b:SetText(activeTab==name and "[ "..name:upper().." ]" or name:upper())
   end
@@ -95,13 +97,13 @@ function S.BuildDesignerPage(parent)
   refresh()
  end
  local nav=box(parent,22,-238,895,51)
- for i,name in ipairs({"themes","geometry","finish"}) do
-  tabs[name]=button(nav,name:upper(),13+(i-1)*293,-8,282,function()
+ for i,name in ipairs({"themes","geometry","colors","finish"}) do
+  tabs[name]=button(nav,name:upper(),13+(i-1)*220,-8,207,function()
    activeTab=name;refresh()
   end)
  end
  local area=box(parent,22,-299,895,321)
- for _,name in ipairs({"themes","geometry","finish"}) do
+ for _,name in ipairs({"themes","geometry","colors","finish"}) do
   bodies[name]=CreateFrame("Frame",nil,area)
   bodies[name]:SetAllPoints(area)
  end
@@ -135,6 +137,7 @@ function S.BuildDesignerPage(parent)
    apply(S.CustomizePips,key,S:PipStyle()[key]+step);sync()
   end)
   sync()
+  syncControls[#syncControls+1]=sync
   return sync
  end
  stepper(geo,"width","Width",15,-55,2)
@@ -154,6 +157,42 @@ function S.BuildDesignerPage(parent)
   local next=S:HUDSettings().hudPlacement=="above" and "below" or "above"
   apply(S.SetHUDPlacement,next)
  end)
+ local colors=bodies.colors
+ label(colors,GOLD.."YOUR OWN COLOR MIX|r",15,-12,470,true)
+ label(colors,"Adjust red, green and blue independently; selecting any channel activates Custom.",15,-50,865)
+ local rgb={}
+ local channels={{"customR","RED"},{"customG","GREEN"},{"customB","BLUE"}}
+ for i,channel in ipairs(channels) do
+  local field,title=channel[1],channel[2]
+  local y=-97-(i-1)*59
+  local readout=label(colors,"",15,y,255)
+  local function sync()
+   readout:SetText(title..": "..string.format("%d%%",math.floor(S:PipStyle()[field]*100+.5)))
+  end
+  button(colors,"- 5%",289,y+8,122,function()
+   apply(S.CustomizePips,field,S:PipStyle()[field]-.05)
+  end)
+  button(colors,"+ 5%",424,y+8,122,function()
+   apply(S.CustomizePips,field,S:PipStyle()[field]+.05)
+  end)
+  rgb[#rgb+1]=sync
+  syncControls[#syncControls+1]=sync
+ end
+ button(colors,"USE CUSTOM COLOR",591,-103,279,function()
+  apply(S.CustomizePips,"palette","custom")
+ end)
+ label(colors,GOLD.."COLOR SEQUENCING|r",591,-167,274)
+ button(colors,"SOLID",592,-195,86,function()
+  apply(S.CustomizePips,"colorMode","uniform")
+ end)
+ button(colors,"RAMP",684,-195,90,function()
+  apply(S.CustomizePips,"colorMode","progression")
+ end)
+ button(colors,"RAINBOW",780,-195,89,function()
+  apply(S.CustomizePips,"colorMode","rainbow")
+ end)
+ label(colors,MUTED.."Solid = one color. Ramp = stronger brightness at later points. Rainbow = five different colors.|r",
+  15,-279,861)
  local finish=bodies.finish
  label(finish,GOLD.."FILL TREATMENT|r",15,-12,350,true)
  button(finish,"SMOOTH GRADIENT",15,-49,280,function()apply(S.CustomizePips,"texture","smooth")end)
