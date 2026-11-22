@@ -104,6 +104,144 @@ function S:StyleEnergyBar(bar)
  end
 end
 
+-- Energy segmented pills are purely presentational. Each segment has a fixed,
+-- player-configured range and receives the SAME opaque UnitPower result through
+-- its native StatusBar:SetValue; never compare or calculate on combat Energy.
+local MAX_ENERGY_BREAKS=10
+local function breakpointsFrom(raw,ceiling)
+ if type(raw)~="string" or #raw>120 then return nil,"Enter at most ten numbers" end
+ local parsed,seen={},{}
+ if raw:match("^%s*$") then return parsed end
+ if raw:find("[^%d,%s]") then return nil,"Use whole numbers separated by commas" end
+ if raw:match("^%s*,") or raw:match(",%s*,") or raw:match(",%s*$") then
+  return nil,"Remove empty breakpoint entries"
+ end
+ for number in raw:gmatch("%d+") do
+  local value=tonumber(number)
+  if not value or value<1 or value>=ceiling or seen[value] then
+   return nil,"Breakpoints must be unique and strictly between 0 and "..ceiling
+  end
+  parsed[#parsed+1]=value
+  if #parsed>MAX_ENERGY_BREAKS then return nil,"Maximum ten breakpoints" end
+  seen[value]=true
+ end
+ if #parsed==0 then return nil,"Enter at least one energy value" end
+ table.sort(parsed)
+ return parsed
+end
+function S:EnergySettings()
+ local db=self:HUDSettings()
+ if type(db.energyCeiling)~="number" or db.energyCeiling~=db.energyCeiling
+    or db.energyCeiling<50 or db.energyCeiling>250 then db.energyCeiling=100 end
+ if type(db.energySegmentGap)~="number" or db.energySegmentGap~=db.energySegmentGap then
+  db.energySegmentGap=1
+ end
+ db.energySegmentGap=math.max(0,math.min(4,db.energySegmentGap))
+ if type(db.energyBreakpoints)~="string" then db.energyBreakpoints="" end
+ local parsed=breakpointsFrom(db.energyBreakpoints,db.energyCeiling)
+ if not parsed then db.energyBreakpoints="" end
+ return db
+end
+function S:EnergyBreakpoints()
+ local db=self:EnergySettings()
+ return breakpointsFrom(db.energyBreakpoints,db.energyCeiling) or {}
+end
+function S:SetEnergyBreakpoints(raw)
+ if KoolSupport:IsInCombat() then return false,"Edit Energy breakpoints outside combat" end
+ local ceiling=self:EnergySettings().energyCeiling
+ local parsed,err=breakpointsFrom(raw,ceiling)
+ if not parsed then return false,err end
+ self:EnergySettings().energyBreakpoints=table.concat(parsed,", ")
+ self:Relayout()
+ return true
+end
+function S:SetEnergyCeiling(value)
+ if KoolSupport:IsInCombat() then return false,"Set Energy maximum outside combat" end
+ if type(value)~="number" or value~=value or value==math.huge or
+   value~=math.floor(value) or value<50 or value>250 then
+  return false,"Maximum Energy must be a whole number from 50 to 250"
+ end
+ local db=self:EnergySettings()
+ local marks,err=breakpointsFrom(db.energyBreakpoints,value)
+ if not marks then return false,err end
+ db.energyCeiling=value
+ self:Relayout()
+ return true
+end
+function S:SetEnergySegmentGap(value)
+ if KoolSupport:IsInCombat() then return false,"Change Energy spacing outside combat" end
+ if type(value)~="number" or value~=math.floor(value) or value<0 or value>4 then
+  return false,"Gap must be 0, 1, 2, 3 or 4 pixels"
+ end
+ self:EnergySettings().energySegmentGap=value
+ self:Relayout()
+ return true
+end
+-- Configure fixed, numeric segment boundaries; never inspect resource data.
+function S:LayoutEnergySegments(bars,width,height)
+ local db=self:EnergySettings()
+ local marks=self:EnergyBreakpoints()
+ local count=#marks+1
+ local gap=db.energySegmentGap*db.hudScale
+ local remaining=math.max(1,width-gap*(count-1))
+ local previous=0
+ local at=0
+ for i,bar in ipairs(bars) do
+  if i<=count and #marks>0 then
+   local upper=marks[i] or db.energyCeiling
+   local size=remaining*(upper-previous)/db.energyCeiling
+   bar:ClearAllPoints()
+   bar:SetPoint("LEFT",bar:GetParent(),"LEFT",at,0)
+   bar:SetSize(size,height)
+   bar:SetMinMaxValues(previous,upper)
+   self:StyleEnergyBar(bar)
+   bar:Show()
+   at=at+size+gap
+   previous=upper
+  else
+   bar:Hide()
+  end
+ end
+ return #marks>0
+end
+function S:CreateEnergySegments(parent)
+ local group=CreateFrame("Frame",nil,parent)
+ local bars={}
+ for i=1,MAX_ENERGY_BREAKS+1 do
+  local bar=CreateFrame("StatusBar",nil,group)
+  bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+  bar:SetMinMaxValues(0,100)
+  bar:SetValue(0)
+  if type(bar.CreateTexture)=="function" then
+   local backing=bar:CreateTexture(nil,"BACKGROUND")
+   backing:SetAllPoints(bar)
+   if backing.SetColorTexture then backing:SetColorTexture(.08,.09,.12,.88) end
+   bar.backing=backing
+  end
+  -- Modern client optional rounded mask. Fail open to plain, tightly-spaced
+  -- native rectangles on Forever clients lacking MaskTexture support.
+  if type(bar.CreateMaskTexture)=="function" and
+     type(bar.GetStatusBarTexture)=="function" then
+   local ok,mask=pcall(bar.CreateMaskTexture,bar,nil,"ARTWORK")
+   if ok and mask then
+    local ready=pcall(function()
+     mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+     mask:SetAllPoints(bar)
+     local fill=bar:GetStatusBarTexture()
+     if fill and fill.AddMaskTexture then fill:AddMaskTexture(mask) end
+     if bar.backing and bar.backing.AddMaskTexture then
+      bar.backing:AddMaskTexture(mask)
+     end
+    end)
+    if ready then bar.pillMask=mask end
+   end
+  end
+  bars[i]=bar
+ end
+ group:Hide()
+ return group,bars
+end
+
 -- Pip Designer: all settings are presentation-only and saved per character.
 -- This code never reads, inspects or branches on the possibly secret combo value.
 local PRESETS={
