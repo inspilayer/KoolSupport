@@ -15,6 +15,9 @@ function S:Store()
   local s=d.modules.ks_stealth
   if s.nameplates==nil then s.nameplates=true end
   if s.hudEnabled==nil then s.hudEnabled=true end
+  if s.energyEnabled==nil then s.energyEnabled=true end
+  if type(s.energyHeight)~="number" then s.energyHeight=8 end
+  if s.energyColor~="lime" and s.energyColor~="amber" and s.energyColor~="cyan" then s.energyColor="gold" end
   if s.hudPlacement~="above" then s.hudPlacement="below" end
   if s.talentImpactOverlay==nil then s.talentImpactOverlay=false end
   if s.talentAnnotate==nil then s.talentAnnotate=false end
@@ -101,6 +104,20 @@ function S:Layout(record)
    bar.borderArt:SetPoint("BOTTOMRIGHT",bar,"BOTTOMRIGHT",1,-1)
   end
  end
+ -- Separate, continuous player-energy progress bar below the five segments.
+ -- It is part of the nameplate frame, never a detached draggable HUD.
+ if record.energyBar then
+  local energy=record.energyBar
+  energy:ClearAllPoints()
+  energy:SetPoint("TOP",holder,"BOTTOM",0,-3)
+  energy:SetSize(CAP*w+(CAP-1)*g,db.energyHeight*self:HUDSettings().hudScale)
+  local palette={
+   gold={1,.79,.16},lime={.54,.94,.19},
+   amber={1,.46,.12},cyan={.24,.81,.96},
+  }
+  local rgb=palette[db.energyColor] or palette.gold
+  energy:SetStatusBarColor(rgb[1],rgb[2],rgb[3],.98)
+ end
 end
 
 function S:MakePlate(plate,unit)
@@ -132,6 +149,22 @@ function S:MakePlate(plate,unit)
   end
   record.bars[i]=bar
  end
+ -- The player-energy resource has its own native StatusBar. No secret
+ -- value is read during creation, and it is styled independently of pips.
+ record.energyBar=CreateFrame("StatusBar",nil,holder)
+ record.energyBar:SetStatusBarTexture(TEX)
+ record.energyBar:SetStatusBarColor(1,.79,.16,.98)
+ record.energyBar:SetMinMaxValues(0,100)
+ record.energyBar:SetValue(0)
+ if type(record.energyBar.CreateTexture)=="function" then
+  local backing=record.energyBar:CreateTexture(nil,"BACKGROUND")
+  backing:SetAllPoints(record.energyBar)
+  if backing.SetColorTexture then backing:SetColorTexture(.07,.09,.12,.85)
+  elseif backing.SetTexture and backing.SetVertexColor then
+   backing:SetTexture("Interface\\Buttons\\WHITE8X8")
+   backing:SetVertexColor(.07,.09,.12,.85)
+  end
+ end
  self.plates[plate]=record
  self:Layout(record)
  return record
@@ -141,6 +174,31 @@ function S:HideAll()
  for _,record in pairs(self.plates) do record.holder:Hide() end
 end
 
+-- Secret-safe player energy: resource value and max are passed unchanged
+-- to native StatusBar APIs; never format, compare or divide either value.
+function S:UpdateEnergy(record)
+ local bar=record and record.energyBar
+ if not bar then return end
+ local db=self:Store()
+ if not db.energyEnabled or type(UnitPower)~="function" or
+   type(UnitPowerMax)~="function" or type(UnitPowerType)~="function" then
+  bar:Hide()
+  return
+ end
+ local okType,powerType=pcall(UnitPowerType,"player")
+ if not okType or not readable(powerType) or powerType~=3 then
+  -- Rogue and Cat-form Druid show ENERGY. Bear and caster forms do not.
+  bar:Hide()
+  return
+ end
+ local okCurrent,current=pcall(UnitPower,"player",3)
+ local okMax,maxPower=pcall(UnitPowerMax,"player",3)
+ if not okCurrent or not okMax then bar:Hide();return end
+ -- These protected values are not inspected or converted.
+ local okRange=pcall(bar.SetMinMaxValues,bar,0,maxPower)
+ local okValue=okRange and pcall(bar.SetValue,bar,current)
+ if okValue then bar:Show() else bar:Hide() end
+end
 function S:ComboDiagnosticText()
  local info=self.comboDiagnostic or {}
  return "Combo diagnostics: "..tostring(info.phase or "not initialized")..
@@ -185,6 +243,7 @@ function S:UpdateTargetNameplate(origin)
    return
   end
  end
+ self:UpdateEnergy(record)
  self.comboDiagnostic.phase="Five StatusBars updated"
  if origin=="auto" then self.comboHealth.autoUpdates=self.comboHealth.autoUpdates+1 end
  record.holder:Show()
