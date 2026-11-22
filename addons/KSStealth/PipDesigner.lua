@@ -31,13 +31,6 @@ local function button(parent,text,x,y,w,callback)
  end
  return f
 end
-local function safeTexture(frame,...)
- if frame.SetColorTexture then frame:SetColorTexture(...)
- elseif frame.SetTexture and frame.SetVertexColor then
-  frame:SetTexture("Interface\\Buttons\\WHITE8X8")
-  frame:SetVertexColor(...)
- end
-end
 local function format(value)
  return type(value)=="number" and string.format("%.2f",value) or tostring(value)
 end
@@ -63,7 +56,7 @@ function S.BuildDesignerPage(parent)
   end
   bars[i]=bar
  end
- local redraw,activeTab="themes"
+ local activeTab="themes"
  local tabs={}
  local bodies={}
  local function refreshPreview()
