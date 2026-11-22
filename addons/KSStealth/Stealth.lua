@@ -129,8 +129,17 @@ function S:Layout(record)
   else
    energy:SetPoint("TOP",holder,"BOTTOM",0,-3)
   end
-  energy:SetSize(width,db.energyHeight*self:HUDSettings().hudScale)
+  local height=db.energyHeight*self:HUDSettings().hudScale
+  energy:SetSize(width,height)
   if self.StyleEnergyBar then self:StyleEnergyBar(energy) end
+  if record.energySegmentFrame then
+   local segmentFrame=record.energySegmentFrame
+   segmentFrame:ClearAllPoints()
+   -- Match the legacy Energy bar so both above/below placements align.
+   segmentFrame:SetPoint("CENTER",energy,"CENTER",0,0)
+   segmentFrame:SetSize(width,height)
+   self:LayoutEnergySegments(record.energySegments,width,height)
+  end
  end
 end
 
@@ -184,6 +193,9 @@ function S:MakePlate(plate,unit)
    backing:SetVertexColor(.07,.09,.12,.85)
   end
  end
+ if type(self.CreateEnergySegments)=="function" then
+  record.energySegmentFrame,record.energySegments=self:CreateEnergySegments(holder)
+ end
  self.plates[plate]=record
  self:Layout(record)
  return record
@@ -198,25 +210,50 @@ end
 function S:UpdateEnergy(record)
  local bar=record and record.energyBar
  if not bar then return end
+ local segments=record.energySegments
+ local group=record.energySegmentFrame
+ local function hideResource()
+  bar:Hide()
+  if group then group:Hide() end
+ end
  local db=self:Store()
  if not db.energyEnabled or type(UnitPower)~="function" or
    type(UnitPowerMax)~="function" or type(UnitPowerType)~="function" then
-  bar:Hide()
+  hideResource()
   return
  end
  local okType,powerType=pcall(UnitPowerType,"player")
  if not okType or not readable(powerType) or powerType~=3 then
-  -- Rogue and Cat-form Druid show ENERGY. Bear and caster forms do not.
-  bar:Hide()
+  hideResource()
   return
  end
  local okCurrent,current=pcall(UnitPower,"player",3)
  local okMax,maxPower=pcall(UnitPowerMax,"player",3)
- if not okCurrent or not okMax then bar:Hide();return end
- -- These protected values are not inspected or converted.
- local okRange=pcall(bar.SetMinMaxValues,bar,0,maxPower)
- local okValue=okRange and pcall(bar.SetValue,bar,current)
- if okValue then bar:Show() else bar:Hide() end
+ if not okCurrent or not okMax then hideResource();return end
+ local segmented=group and segments and #self:EnergyBreakpoints()>0
+ if segmented then
+  -- Every segment consumes the SAME possibly secret current energy value.
+  -- Each SetMinMaxValues range is fixed from user configuration, not power.
+  local allOk=true
+  for i=1,#self:EnergyBreakpoints()+1 do
+   if not pcall(segments[i].SetValue,segments[i],current) then
+    allOk=false
+    break
+   end
+  end
+  if allOk then
+   bar:Hide()
+   group:Show()
+  else
+   hideResource()
+  end
+ else
+  if group then group:Hide() end
+  -- Preserve the original native bar when no breakpoints are configured.
+  local okRange=pcall(bar.SetMinMaxValues,bar,0,maxPower)
+  local okValue=okRange and pcall(bar.SetValue,bar,current)
+  if okValue then bar:Show() else bar:Hide() end
+ end
 end
 function S:ComboDiagnosticText()
  local info=self.comboDiagnostic or {}
