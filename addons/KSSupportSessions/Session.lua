@@ -64,6 +64,7 @@ function S.BuildPage(parent)
     f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);f:SetWidth(w or 730);f:SetJustifyH("LEFT");f:SetText(v);return f
   end
   local function button(text,x,y,w,fn)
+    if KoolSupport.UIKit then return KoolSupport.UIKit:Button(parent,text,x,y,w,fn,"secondary",28) end
     local f=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
     f:SetSize(w,29);f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);f:SetText(text);f:SetScript("OnClick",fn);return f
   end
