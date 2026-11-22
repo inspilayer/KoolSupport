@@ -1,5 +1,6 @@
 -- KS Stealth: target nameplate combo points. No detached HUD.
 local S=KSStealth
+local KIT=KoolSupport.UIKit
 local FONT=STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 local GOLD="|cffffd87a"
 local MUTED="|cff9fb4ad"
@@ -7,10 +8,11 @@ local function label(parent,value,x,y,w,big)
  local l=parent:CreateFontString(nil,"OVERLAY",big and "GameFontNormalLarge" or "GameFontNormal")
  l:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
  l:SetWidth(w);l:SetJustifyH("LEFT");l:SetText(value)
- if l.SetFont then pcall(l.SetFont,l,FONT,big and 24 or 18,"") end
+ if l.SetFont then pcall(l.SetFont,l,FONT,big and 20 or 14,"") end
  return l
 end
 local function panel(parent,x,y,w,h)
+ if KIT then return KIT:Panel(parent,x,y,w,h) end
  local f=CreateFrame("Frame",nil,parent,"BackdropTemplate")
  f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);f:SetSize(w,h)
  if f.SetBackdrop then
@@ -21,6 +23,7 @@ local function panel(parent,x,y,w,h)
  return f
 end
 local function button(parent,value,x,y,w,callback)
+ if KIT then return KIT:Button(parent,value,x,y,w,callback,"secondary",32) end
  local f=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
  f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);f:SetSize(w,43)
  f:SetText(value);f:SetScript("OnClick",callback)
