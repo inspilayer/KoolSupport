@@ -195,6 +195,9 @@ function S:LayoutEnergySegments(bars,width,height)
    bar:SetSize(size,height)
    bar:SetMinMaxValues(previous,upper)
    self:StyleEnergyBar(bar)
+   -- Color is shared with the normal Energy bar, but its rounded/gradient
+   -- texture is NOT: each segment is a clean square-ended rectangle.
+   bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
    bar:Show()
    at=at+size+gap
    previous=upper
@@ -218,24 +221,7 @@ function S:CreateEnergySegments(parent)
    if backing.SetColorTexture then backing:SetColorTexture(.08,.09,.12,.88) end
    bar.backing=backing
   end
-  -- Modern client optional rounded mask. Fail open to plain, tightly-spaced
-  -- native rectangles on Forever clients lacking MaskTexture support.
-  if type(bar.CreateMaskTexture)=="function" and
-     type(bar.GetStatusBarTexture)=="function" then
-   local ok,mask=pcall(bar.CreateMaskTexture,bar,nil,"ARTWORK")
-   if ok and mask then
-    local ready=pcall(function()
-     mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-     mask:SetAllPoints(bar)
-     local fill=bar:GetStatusBarTexture()
-     if fill and fill.AddMaskTexture then fill:AddMaskTexture(mask) end
-     if bar.backing and bar.backing.AddMaskTexture then
-      bar.backing:AddMaskTexture(mask)
-     end
-    end)
-    if ready then bar.pillMask=mask end
-   end
-  end
+  -- Square-ended segments by design: no masks, rounded art, or pill caps.
   bars[i]=bar
  end
  group:Hide()
