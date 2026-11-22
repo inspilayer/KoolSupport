@@ -23,7 +23,7 @@ UnitPowerMax=function(unit,power)assert(unit=="player" and power==3);return ener
 local frames={}
 local function frame(kind,parent)
  local f={kind=kind,parent=parent,hidden=false,children={},values={}}
- function f:SetPoint(...)self.anchor={...}end
+ function f:SetPoint(...)self.anchor={...};self.anchorCalls=(self.anchorCalls or 0)+1 end
  function f:ClearAllPoints()self.anchor=nil end
  function f:SetSize(w,h)self.w,self.h=w,h end
  function f:SetFrameLevel(n)self.level=n end
@@ -86,6 +86,19 @@ for i,bar in ipairs(record.bars) do
  assert(bar.values[#bar.values]==SECRET,"opaque combo points must reach native status bars")
 end
 assert(reads>0)
+-- Keeping a resolved nameplate must never re-anchor it every 150ms.
+local firstAnchorCalls=record.holder.anchorCalls
+S:UpdateAll()
+S:UpdateAll()
+assert(record.holder.anchorCalls==firstAnchorCalls,"stable targets must not re-anchor on refresh")
+-- The outer nameplate may survive a Blizzard healthBar replacement.
+local replacementHealth=frame("StatusBar",nameplate)
+nameplate.UnitFrame.healthBar=replacementHealth
+S:UpdateAll()
+assert(record.holder.anchor[2]==replacementHealth,"recycled nameplate must follow the new health bar")
+assert(record.holder.anchorCalls==firstAnchorCalls+1,"refresh should correct changed healthBar only once")
+S:UpdateAll()
+assert(record.holder.anchorCalls==firstAnchorCalls+1,"no repeated positioning after healthBar swap")
 assert(record.energyBar,"Energy progress bar should exist under target pips")
 assert(record.energyBar.anchor[1]=="TOP" and record.energyBar.anchor[2]==record.holder
  and record.energyBar.anchor[3]=="BOTTOM","energy should stack below combo pips")
@@ -170,9 +183,12 @@ local persisted=S:Store().pipStyle
 assert(type(persisted)=="table","pip designs persist per character")
 assert(S:HUDSettings().hudPlacement=="below")
 assert(S:SetHUDPlacement("above"))
-assert(record.holder.anchor[2]==health and record.holder.anchor[1]=="BOTTOM")
+assert(record.holder.anchor[2]==replacementHealth and record.holder.anchor[1]=="BOTTOM")
+assert(record.energyBar.anchor[2]==record.holder and record.energyBar.anchor[1]=="BOTTOM",
+ "when above the healthbar, energy must sit above the pips, not between pips and health")
 assert(S:SetHUDPlacement("below"))
 assert(record.holder.anchor[1]=="TOP")
+assert(record.energyBar.anchor[1]=="TOP","below placement keeps energy below pips")
 assert(S:SetHUDScale(1.3))
 assert(record.bars[1].w>19)
 assert(S:ResetHUDPosition())
