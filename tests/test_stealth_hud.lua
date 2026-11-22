@@ -80,17 +80,39 @@ assert(reads==originalReads,"refresh must be throttled")
 eventFrame.OnUpdate(eventFrame,.06)
 assert(reads==originalReads+1,"combo bars must update without any event or manual /kool combo")
 assert(S.comboHealth.ticks==1 and S.comboHealth.autoUpdates==1)
+-- Forever can return nil for C_NamePlate.GetNamePlateForUnit("target")
+-- during combat, even though the current target and plate remain valid.
+-- The already verified plate must keep receiving the opaque combo value.
+local prior=S.comboHealth.autoUpdates
+selected=nil
+eventFrame.OnUpdate(eventFrame,.16)
+assert(S.comboHealth.autoUpdates==prior+1,
+ "temporary combat nameplate lookup failure must use the verified cached plate")
+assert(not record.holder.hidden,"cached target remains visible during temporary lookup failure")
+selected=nameplate
+eventFrame.OnUpdate(eventFrame,.16)
+assert(S.comboHealth.autoUpdates==prior+2)
+-- A real target change invalidates the cached identity; never show prior target.
+S:OnEvent("PLAYER_TARGET_CHANGED")
+selected=nil
+eventFrame.OnUpdate(eventFrame,.16)
+assert(record.holder.hidden,"cannot use a cached plate after target changes")
+selected=nameplate
+eventFrame.OnUpdate(eventFrame,.16)
+assert(not record.holder.hidden,"freshly resolved target restores points")
 local readBeforeStatus=reads
 local healthText=S:ComboHealthText()
 assert(healthText:find("ticks=1",1,true) and healthText:find("auto-updates=1",1,true))
 assert(reads==readBeforeStatus,"status must not trigger a refresh")
 assert(record.bars[1].values[#record.bars[1].values]==SECRET)
+-- On nameplate removal, the cache must not survive recycling.
+S:OnEvent("PLAYER_TARGET_CHANGED")
 selected=nil
 eventFrame.OnUpdate(eventFrame,.16)
-assert(record.holder.hidden,"target loss must automatically hide display without manual refresh")
+assert(record.holder.hidden,"target loss after explicit target event hides the previous nameplate")
 selected=nameplate
 eventFrame.OnUpdate(eventFrame,.16)
-assert(not record.holder.hidden,"target reappearance must automatically restore pips")
+assert(not record.holder.hidden,"freshly reacquired target restores pips")
 assert(S:HUDSettings().hudPlacement=="below")
 assert(S:SetHUDPlacement("above"))
 assert(record.holder.anchor[2]==health and record.holder.anchor[1]=="BOTTOM")
