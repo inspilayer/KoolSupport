@@ -271,20 +271,33 @@ local function makeNavRow(key,action)
   b=CreateFrame("Button",nil,navigation)
   b:SetSize(250,34)
   b:EnableMouse(true)
+  local section=key:sub(1,6)=="group:"
+  b.isSection=section
   local name=b:CreateFontString(nil,"OVERLAY","GameFontHighlight")
   enlarge(name,14)
-  name:SetPoint("LEFT",b,"LEFT",9,0)
-  name:SetWidth(235)
+  name:SetPoint("LEFT",b,"LEFT",section and 15 or 12,0)
+  name:SetWidth(section and 221 or 229)
   name:SetJustifyH("LEFT")
   b:SetFontString(name)
   b.caption=name
   if type(b.CreateTexture)=="function" then
+    -- Section categories are actual solid buttons, not translucent captions.
+    -- Solid dark backing masks busy world scenery and makes labels readable.
     local shade=b:CreateTexture(nil,"BACKGROUND")
     if shade and shade.SetColorTexture then
-      shade:SetColorTexture(.17,.21,.22,.87)
+      shade:SetColorTexture(.13,.17,.20,section and 1 or .98)
       shade:SetAllPoints(b)
-      shade:Hide()
+      if not section then shade:Hide() end
       b.selectedShade=shade
+    end
+    if section then
+      local hover=b:CreateTexture(nil,"BORDER")
+      if hover and hover.SetColorTexture then
+        hover:SetColorTexture(.25,.32,.34,1)
+        hover:SetAllPoints(b)
+        hover:Hide()
+        b.hoverShade=hover
+      end
     end
     local stripe=b:CreateTexture(nil,"ARTWORK")
     if stripe and stripe.SetColorTexture then
@@ -294,6 +307,14 @@ local function makeNavRow(key,action)
       stripe:Hide()
       b.selectedStripe=stripe
     end
+  end
+  if section then
+    b:SetScript("OnEnter",function(self)
+      if self.hoverShade then self.hoverShade:Show() end
+    end)
+    b:SetScript("OnLeave",function(self)
+      if self.hoverShade then self.hoverShade:Hide() end
+    end)
   end
   b:SetScript("OnClick",action)
   navButtons[key]=b
@@ -312,7 +333,7 @@ local function redrawNavigation()
     local b=makeNavRow(id,function()KS:ShowPage(id)end)
     b:ClearAllPoints()
     b:SetPoint("TOPLEFT",navigation,"TOPLEFT",indent and 16 or 0,y)
-    b.caption:SetText((currentPage==id and GOLD or "|cffced8d3")..
+    b.caption:SetText((currentPage==id and GOLD or "|cfff0f2f0")..
       (p.title or id).."|r")
     if b.selectedShade then if currentPage==id then b.selectedShade:Show() else b.selectedShade:Hide() end end
     if b.selectedStripe then if currentPage==id then b.selectedStripe:Show() else b.selectedStripe:Hide() end end
@@ -335,11 +356,25 @@ local function redrawNavigation()
       end)
       b:ClearAllPoints()
       b:SetPoint("TOPLEFT",navigation,"TOPLEFT",0,y)
-      b.caption:SetText((openGroup==group.id and GOLD.."v " or MUTED.."> ")..group.label.."|r")
-      if b.selectedShade then if openGroup==group.id then b.selectedShade:Show() else b.selectedShade:Hide() end end
-      if b.selectedStripe then b.selectedStripe:Hide() end
+      local expanded=openGroup==group.id
+      b.caption:SetText((expanded and "|cffffd894" or "|cfff7f9f8")..
+        (expanded and "  -  " or "  +  ")..group.label.."|r")
+      -- An opaque filled section button stays visible even when collapsed.
+      if b.selectedShade then
+        b.selectedShade:Show()
+        if type(b.selectedShade.SetColorTexture)=="function" then
+          if expanded then
+            b.selectedShade:SetColorTexture(.22,.30,.32,1)
+          else
+            b.selectedShade:SetColorTexture(.13,.17,.20,1)
+          end
+        end
+      end
+      if b.selectedStripe then
+        if expanded then b.selectedStripe:Show() else b.selectedStripe:Hide() end
+      end
       b:Show()
-      y=y-39
+      y=y-40
       if openGroup==group.id then
         for _,page in ipairs(group.pages) do drawPage(page,true) end
         y=y-8
@@ -401,6 +436,14 @@ function KS:Open(page)
     navigation = CreateFrame("Frame", nil, window)
     navigation:SetPoint("TOPLEFT", window, "TOPLEFT", 26, -100)
     navigation:SetSize(250, 680)
+    if type(navigation.CreateTexture)=="function" then
+      local backdrop=navigation:CreateTexture(nil,"BACKGROUND")
+      if backdrop and backdrop.SetColorTexture then
+        backdrop:SetColorTexture(.035,.048,.062,1)
+        backdrop:SetAllPoints(navigation)
+        navigation.backdrop=backdrop
+      end
+    end
     content = CreateFrame("Frame", nil, window)
     content:SetPoint("TOPLEFT", window, "TOPLEFT", 292, -100)
     content:SetSize(950, 695)
