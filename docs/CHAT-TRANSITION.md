@@ -496,3 +496,24 @@ Added KS Stealth **Pip Designer** page from Combat > KS Stealth > Open Pip Desig
 ### KS Stealth energy progress bar (Nov 22, 2026)
 
 Added optional continuously filled **player Energy progress bar directly underneath the five combo-point segments on the selected monster's overhead health bar**. The existing target-only nameplate lookup, combo-point protected-value rendering, live periodic refresh and UI shell remain intact. The energy tracker is another native StatusBar owned by each target's combo-holder, anchored TOP-to-BOTTOM beneath the pips, with the same overall pip-stack width and a 3px gap. `UnitPowerType("player")` must report Energy (3); otherwise hide the energy bar (Druid bear/caster form); only Rogue/Cat displays. `UnitPower("player",3)` and `UnitPowerMax("player",3)` are obtained with pcall and passed **unchanged** to `StatusBar:SetValue` and `StatusBar:SetMinMaxValues`; never inspect, divide, format or compare current/max secret values in Lua. If those APIs are unavailable/reject values, hide only the energy bar and preserve pips. Display ON by default with per-character SavedVariables `energyEnabled`, `energyHeight`, `energyColor`; KS Stealth settings offer toggle, 4-color cycling (gold/lime/amber/cyan) and height ±2 px (4-20 range). Pip Designer's idle preview uses constant 65/100 energy beneath synthetic 3/5 points. No extra addon dependency or TOC. Tests deliberately provide opaque energy current/max values and verify direct native pass-through, non-energy form suppression, toggle, persisted settings, combat restrictions, and existing combo tests. Live acceptance still needed: Cat energy drains and regens smoothly below combo points, Rogue works, Bear hides energy, target swaps hide previous nameplate, colors/height persist after /reload.
+
+## 1.0 public-release program — RC1 UI iteration (2026-11-22)
+
+Branch: release/1.0-ui-rc1, based on feature/guilty-forever-ignore-notes (the eight-module unpublished candidate). Version 1.0.0-rc.1 is NOT stable or public. The existing 0.10.x tags and main remain untouched. Product owner authorized public promotion after iterations; live validation is still required.
+
+### Iteration 1 — compact shared UI system
+
+- New addons/KoolSupport/UIWidgets.lua loaded after Core through the single TOC. KoolSupport.UIKit provides native Panel, Text, Button, SettingRow, Segmented, and StyleExistingButton helpers. Dark slate, subdued gold, consistent 12–22px typography and neutral secondary controls replace the oversized bright WoW button template.
+- Main UI shrinks font inflation/sidebar row height; active page receives subtle backdrop and gold accent; Pip Designer is grouped under Combat.
+- KS Stealth, Pip Designer, Quest Checker, Afflictions, Campfire, Threat, Macro Suite, Workshop, Spellbook, Support Sessions use neutral buttons and shared visual language where safe. Guilty Forever remains the visual reference, unchanged.
+- No changes to combo/energy protected resource calculation or refresh, macro ownership, ignore history or SavedVariables schema.
+- 1.0.0-rc.1 version aligned in scripts/check.py, Core, all module manifests, and offline unified test. New test_ui_widgets.lua tests basic native UI behaviors.
+
+### RC2 / stable acceptance gate
+
+1. Install RC1 in Forever and capture 1080p and reduced scale screenshots of Home, sidebar, Modules, FAQ, KS Stealth, Pip Designer, Macros, Sessions, Quest, Afflictions, Campfire, Threat, and Guilty Forever. Check clipping, button handlers, text sizes and navigation.
+2. Verify Cat/Rogue combo refresh, 5-bar styling, Energy updates, form changes, target swaps and resource secrecy; run macro installer and hand-edited ownership protections; confirm saved settings and Guilty Forever two-part names survive /reload.
+3. Fix screenshot-discovered defects in 1.0.0-rc.2; rerun Lua suite, unified package validator and actual upstream packager dry run.
+4. Only after owner acceptance create stable 1.0.0 on main, tag v1.0.0 through explicit user-approved release flow, and independently verify CurseForge public file and its version.
+
+Public release blockers: full in-client visual and module smoke test, verified non-taint and macro safety, and public artifact validation. CI alone cannot satisfy these gates.
