@@ -73,7 +73,7 @@ local PRESETS={
  minimal={shape="square",palette="silver",texture="flat",width=10,height=10,gap=3,opacity=.85,emptyAlpha=.35},
 }
 local PALETTES={
- gold={1,.72,.20},crimson={.97,.22,.28},emerald={.20,.86,.50},
+ custom={1,.72,.20},gold={1,.72,.20},crimson={.97,.22,.28},emerald={.20,.86,.50},
  violet={.71,.43,1},frost={.28,.77,1},silver={.88,.91,.95},
  ember={1,.42,.13},rose={1,.47,.70},toxic={.73,1,.18},
 }
@@ -83,10 +83,12 @@ local TEXTURES={
 }
 local SHAPES={bars=true,slim=true,square=true,chunky=true}
 local ALLOWED={shape=SHAPES,palette=PALETTES,texture=TEXTURES,
- growth={right=true,left=true},border={none=true,subtle=true,strong=true}}
+ growth={right=true,left=true},border={none=true,subtle=true,strong=true},
+ colorMode={uniform=true,progression=true,rainbow=true}}
 local NUMBERS={
  width={8,42,1},height={5,26,1},gap={0,16,1},
  opacity={.35,1,.05},emptyAlpha={.1,1,.05},
+ customR={0,1,.05},customG={0,1,.05},customB={0,1,.05},
  offset={0,32,1},
 }
 local function clamp(value,min,max)
@@ -103,6 +105,10 @@ function S:PipStyle()
  if style.growth~="left" then style.growth="right" end
  if not ALLOWED.border[style.border] then style.border="subtle" end
  if style.offset==nil then style.offset=5 end
+ if style.customR==nil then style.customR=1 end
+ if style.customG==nil then style.customG=.72 end
+ if style.customB==nil then style.customB=.20 end
+ if not ALLOWED.colorMode[style.colorMode] then style.colorMode="uniform" end
  return style
 end
 function S:PresetPips(name)
@@ -133,7 +139,9 @@ function S:CustomizePips(key,value)
  else
   return false,"Unknown pip setting"
  end
- self:PipStyle()[key]=value
+ local style=self:PipStyle()
+ style[key]=value
+ if key=="customR" or key=="customG" or key=="customB" then style.palette="custom" end
  self:Relayout()
  return true
 end
@@ -150,6 +158,16 @@ end
 function S:StyleComboBar(bar,i)
  local style=self:PipStyle()
  local palette=PALETTES[style.palette] or PALETTES.gold
+ if style.palette=="custom" then
+  palette={style.customR,style.customG,style.customB}
+ end
+ if style.colorMode=="rainbow" then
+  local rainbow={PALETTES.crimson,PALETTES.ember,PALETTES.gold,PALETTES.emerald,PALETTES.violet}
+  palette=rainbow[i] or PALETTES.gold
+ elseif style.colorMode=="progression" then
+  local factor=.58+.105*(i-1)
+  palette={palette[1]*factor,palette[2]*factor,palette[3]*factor}
+ end
  if bar.SetStatusBarTexture then bar:SetStatusBarTexture(self:PipTexture()) end
  if bar.SetStatusBarColor then
   bar:SetStatusBarColor(palette[1],palette[2],palette[3],style.opacity)
