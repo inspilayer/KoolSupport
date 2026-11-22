@@ -7,7 +7,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / '.pkgmeta'
 MODULES = ('KSMacros', 'KSSupportSessions', 'KSStealth',
-           'KSAfflictions', 'KSCampfireChat', 'KSThreat', 'KSQuestChecker')
+           'KSAfflictions', 'KSCampfireChat', 'KSThreat', 'KSQuestChecker', 'KSGuiltyForever')
 
 def fields(text):
     current = None
@@ -68,7 +68,7 @@ def validate_meta():
     assert (ROOT / 'LICENSE').is_file()
     assert (ROOT / 'addons' / 'KSAfflictions' / 'Vendor' / 'LICENSE').is_file()
     assert (ROOT / 'addons' / 'KSAfflictions' / 'Vendor' / 'NOTICE.md').is_file()
-    print('PASS CurseForge .pkgmeta: one KoolSupport root with seven nested modules')
+    print('PASS CurseForge .pkgmeta: one KoolSupport root with eight nested modules')
 
 def validate_zip(path):
     with zipfile.ZipFile(path) as archive:

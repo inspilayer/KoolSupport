@@ -32,6 +32,7 @@ Modules\KSStealth\TalentImpactData.lua
 Modules\KSStealth\TalentResolver.lua
 Modules\KSStealth\TalentTooltip.lua
 Modules\KSStealth\UI.lua
+Modules\KSStealth\PipDesigner.lua
 Modules\KSStealth\TalentImpactUI.lua
 Modules\KSStealth\Module.lua
 
@@ -65,3 +66,8 @@ Modules\KSThreat\Module.lua
 Modules\KSQuestChecker\QuestChecker.lua
 Modules\KSQuestChecker\UI.lua
 Modules\KSQuestChecker\Module.lua
+
+# Guilty Forever
+Modules\KSGuiltyForever\GuiltyForever.lua
+Modules\KSGuiltyForever\UI.lua
+Modules\KSGuiltyForever\Module.lua
