@@ -140,7 +140,7 @@ SlashCmdList.KOOLSUPPORT = function(text)
       if type(KSStealth.ComboDiagnosticText)=="function" then
         print("  "..KSStealth:ComboDiagnosticText())
       end
-    else print("KoolSupport: combo status unavailable.") end
+    else print("KoolSupport: combo status unavailable. This install may be missing the updated KS Stealth file; check that only one KoolSupport addon folder is installed, then /reload.") end
     return
   end
   if page == "combo" or page == "combodiag" then
