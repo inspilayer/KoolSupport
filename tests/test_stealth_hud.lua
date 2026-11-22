@@ -58,6 +58,7 @@ end
 assert(loadfile("addons/KoolSupport/Core.lua"))()
 assert(loadfile("addons/KSStealth/Stealth.lua"))()
 assert(loadfile("addons/KSStealth/HUD.lua"))()
+assert(loadfile("addons/KSStealth/PipDesigner.lua"))()
 KoolSupport:RegisterModule({id="ks_stealth",title="KS Stealth",apiVersion=1,defaultEnabled=true})
 local S=KSStealth
 S.active=false
@@ -96,6 +97,36 @@ assert(record.holder.hidden,"target loss must automatically hide display without
 selected=nameplate
 eventFrame.OnUpdate(eventFrame,.16)
 assert(not record.holder.hidden,"target reappearance must automatically restore pips")
+-- Design changes cannot modify protected combo values or automatic refresh.
+local firstRecord=record
+local before=firstRecord.bars[1].values[#firstRecord.bars[1].values]
+assert(S:PresetPips("jewels"))
+assert(S:PipStyle().shape=="square")
+assert(S:PipStyle().palette=="violet")
+assert(S:CustomizePips("width",24))
+assert(S:CustomizePips("height",20))
+assert(S:CustomizePips("gap",9))
+assert(S:CustomizePips("offset",12))
+assert(S:CustomizePips("growth","left"))
+assert(S:CustomizePips("texture","flat"))
+assert(S:CustomizePips("palette","emerald"))
+assert(S:CustomizePips("colorMode","rainbow"))
+assert(S:CustomizePips("border","strong"))
+assert(S:CustomizePips("customR",.45))
+assert(S:PipStyle().palette=="custom")
+assert(S:CustomizePips("customG",.60))
+assert(S:CustomizePips("customB",.80))
+assert(not S:CustomizePips("shape","mystery"))
+assert(not S:CustomizePips("gap","bad"))
+assert(S:PipStyle().growth=="left")
+assert(firstRecord.bars[1].anchor[1]=="RIGHT")
+assert(firstRecord.bars[1].values[#firstRecord.bars[1].values]==before,
+ "changing pip design must never read/rewrite combat values")
+assert(S:ResetPipDesign())
+assert(S:PipStyle().palette=="gold")
+assert(S:PipStyle().width==19)
+local persisted=S:Store().pipStyle
+assert(type(persisted)=="table","pip designs persist per character")
 assert(S:HUDSettings().hudPlacement=="below")
 assert(S:SetHUDPlacement("above"))
 assert(record.holder.anchor[2]==health and record.holder.anchor[1]=="BOTTOM")
@@ -113,12 +144,25 @@ selected=nil
 S:UpdateAll()
 assert(record.holder.hidden,"no selected visible nameplate must hide points")
 InCombatLockdown=function()return true end
+assert(not S:PresetPips("frost"))
+assert(not S:CustomizePips("palette","crimson"))
+assert(not S:ResetPipDesign())
 assert(not S:SetHUDPlacement("above"))
 assert(not S:SetHUDScale(1.5))
 assert(not S:SetHUDEnabled(false))
 assert(not S:ResetHUDPosition())
 InCombatLockdown=function()return false end
 assert(loadfile("addons/KSStealth/UI.lua"))()
+local previewBefore=#frames
+local designerParent=frame("Frame",UIParent)
+S.BuildDesignerPage(designerParent)
+local previewSegments=0
+for i=previewBefore+1,#frames do
+ local w=frames[i]
+ if w.kind=="StatusBar" and w.values[#w.values]==3 then previewSegments=previewSegments+1 end
+end
+assert(previewSegments==5,"designer must show five pip previews while idle")
+
 local parent=frame("Frame",UIParent)
 S.BuildPage(parent)
 local above,below
