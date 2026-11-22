@@ -141,6 +141,8 @@ for i,range in ipairs({{0,35},{35,70},{70,100}}) do
  local b=record.energySegments[i]
  assert(not b.hidden,"active segment must be visible")
  assert(b.min==range[1] and b.max==range[2],"segment endpoints must be fixed config")
+ assert(b.texture=="Interface\\\\Buttons\\\\WHITE8X8","energy segments must be square solid rectangles")
+ assert(b.pillMask==nil,"rounded masks must never be installed")
  assert(rawequal(b.values[#b.values],energyNow),"secret Energy value passed without comparison")
 end
 assert(record.energySegments[4].hidden,"unused segments must hide")
