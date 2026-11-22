@@ -1,6 +1,7 @@
 -- KS Stealth Pip Designer. Preview uses constant, non-combat 3/5.
 -- All controls mutate only persisted visual settings outside combat.
 local S=KSStealth
+local KIT=KoolSupport.UIKit
 local FONT=STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 local GOLD="|cffffd87a"
 local MUTED="|cff9fb4ad"
@@ -8,10 +9,11 @@ local function label(parent,str,x,y,w,big)
  local f=parent:CreateFontString(nil,"OVERLAY",big and "GameFontNormalLarge" or "GameFontNormal")
  f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
  f:SetWidth(w);f:SetJustifyH("LEFT");f:SetText(str)
- if f.SetFont then pcall(f.SetFont,f,FONT,big and 23 or 16,"") end
+ if f.SetFont then pcall(f.SetFont,f,FONT,big and 20 or 14,"") end
  return f
 end
 local function box(parent,x,y,w,h)
+ if KIT then return KIT:Panel(parent,x,y,w,h) end
  local f=CreateFrame("Frame",nil,parent,"BackdropTemplate")
  f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);f:SetSize(w,h)
  if f.SetBackdrop then
@@ -22,6 +24,7 @@ local function box(parent,x,y,w,h)
  return f
 end
 local function button(parent,text,x,y,w,callback)
+ if KIT then return KIT:Button(parent,text,x,y,w,callback,"secondary",30) end
  local f=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
  f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);f:SetSize(w,34)
  f:SetText(text);f:SetScript("OnClick",callback)
