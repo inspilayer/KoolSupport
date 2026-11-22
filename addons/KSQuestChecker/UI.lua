@@ -1,5 +1,6 @@
 -- KS Quest Checker native WoW UI: type a name or ID, click result to check.
 local A=KSQuestChecker
+local KIT=KoolSupport.UIKit
 local GOLD="|cffffd87a"
 local MUTED="|cff9fb4ad"
 local GREEN="|cff9bd9ab"
@@ -13,6 +14,7 @@ local function label(parent,text,x,y,w,font)
   return l
 end
 local function button(parent,text,x,y,w,cb)
+  if KIT then return KIT:Button(parent,text,x,y,w,cb,"secondary",25) end
   local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
   b:SetSize(w,29)
   b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
