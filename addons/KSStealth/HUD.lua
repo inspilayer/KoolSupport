@@ -62,6 +62,33 @@ function S:SetHUDLocked(_)
 end
 
 
+-- Optional player energy display; rendering reads resources only in Stealth.lua.
+function S:SetEnergyEnabled(enabled)
+ if KoolSupport:IsInCombat() then return false,"Change energy display outside combat" end
+ if type(enabled)~="boolean" then return false,"Expected energy toggle" end
+ self:HUDSettings().energyEnabled=enabled
+ self:UpdateAll()
+ return true
+end
+function S:SetEnergyHeight(value)
+ if KoolSupport:IsInCombat() then return false,"Resize energy display outside combat" end
+ if type(value)~="number" or value~=value or value==math.huge or value==-math.huge then
+  return false,"Invalid height"
+ end
+ self:HUDSettings().energyHeight=math.max(4,math.min(20,math.floor(value+.5)))
+ self:Relayout()
+ return true
+end
+function S:SetEnergyColor(color)
+ if KoolSupport:IsInCombat() then return false,"Change energy color outside combat" end
+ if color~="gold" and color~="lime" and color~="amber" and color~="cyan" then
+  return false,"Unknown energy color"
+ end
+ self:HUDSettings().energyColor=color
+ self:Relayout()
+ return true
+end
+
 -- Pip Designer: all settings are presentation-only and saved per character.
 -- This code never reads, inspects or branches on the possibly secret combo value.
 local PRESETS={
