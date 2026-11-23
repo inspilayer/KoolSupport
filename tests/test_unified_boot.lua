@@ -53,7 +53,7 @@ KSAfflictionsTrackerDB={untouched=sentinel}
 -- KoolSupport addon namespace (critical for DoesItDie event initialization).
 local ns={}
 local counts={KoolSupport=0,KSMacros=0,KSSupportSessions=0,KSStealth=0,
- KSAfflictions=0,KSCampfireChat=0,KSThreat=0,KSQuestChecker=0,KSGuiltyForever=0}
+ KSAfflictions=0,KSCampfireChat=0,KSThreat=0,KSQuestChecker=0,KSGuiltyForever=0,KSSleepingBag=0}
 local loaded={}
 local toc=assert(io.open("addons/KoolSupport/KoolSupport.toc","r"))
 for line in toc:lines() do
@@ -100,10 +100,10 @@ assert(K.pages.xp_reminder and K:CanOpenPage("xp_reminder"))
 assert(not KoolSupportDB.core or KoolSupportDB.core.xpReminder==nil,
   "Cold loading Base must not mutate reminder settings until used")
 assert(K.modules.ks_macros and K.modules.ks_support_sessions and
- K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat and K.modules.ks_quest_checker and K.modules.ks_guilty_forever)
-assert( #K.moduleOrder==8,"exactly eight independently managed child modules")
+ K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat and K.modules.ks_quest_checker and K.modules.ks_guilty_forever and K.modules.ks_sleeping_bag)
+assert( #K.moduleOrder==9,"exactly nine independently managed child modules")
 for _,id in ipairs({"home","modules","launch_checks","macro_suite","full_spellbook",
- "macro_workshop","support_session","stealth","stealth_talents","afflictions","campfire_chat","quest_checker","guilty_forever"}) do
+ "macro_workshop","support_session","stealth","stealth_talents","afflictions","campfire_chat","quest_checker","guilty_forever","sleeping_bag"}) do
  assert(K.pages[id] and K:CanOpenPage(id),"page must be registered: "..id)
 end
 assert(K:GetModule("ks_support_sessions").requires[1]=="ks_macros")
@@ -115,6 +115,11 @@ assert(K:GetModule("ks_quest_checker").requires[1]==nil)
 assert(K:CanOpenPage("quest_checker"))
 assert(K:GetModule("ks_guilty_forever").requires[1]==nil)
 assert(K:CanOpenPage("guilty_forever"))
+assert(not K:IsModuleEnabled("ks_sleeping_bag"),"leveling navigator must default off")
+assert(not K:CanOpenPage("sleeping_bag"))
+assert(K:SetModuleEnabled("ks_sleeping_bag",true))
+assert(K:CanOpenPage("sleeping_bag"))
+assert(K:SetModuleEnabled("ks_sleeping_bag",false))
 assert(K:SetModuleEnabled("ks_quest_checker",false))
 assert(not K:CanOpenPage("quest_checker"))
 assert(K:SetModuleEnabled("ks_quest_checker",true))
@@ -145,4 +150,4 @@ assert(K:CanOpenPage("support_session"))
 assert(not K:SetModuleEnabled("ks_macros",false),"active support dependency must protect macros")
 assert(KoolSupportDB.untouched==sentinel and KSAfflictionsTrackerDB.untouched==sentinel)
 assert(createdMacros==0)
-print("PASS unified boot: ONE TOC loads all eight code groups in order, shared namespace, eight modules, no macro writes")
+print("PASS unified boot: ONE TOC loads all nine code groups in order, shared namespace, nine modules, no macro writes")
