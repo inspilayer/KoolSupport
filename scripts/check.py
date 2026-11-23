@@ -20,6 +20,7 @@ MODULES = {
     'KSThreat': ['KoolSupport'],
     'KSQuestChecker': ['KoolSupport'],
     'KSGuiltyForever': ['KoolSupport'],
+    'KSSleepingBag': ['KoolSupport'],
 }
 
 def entries(toc):
