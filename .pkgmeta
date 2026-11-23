@@ -12,6 +12,7 @@ move-folders:
     KoolSupport/addons/KSThreat: KoolSupport/Modules/KSThreat
     KoolSupport/addons/KSQuestChecker: KoolSupport/Modules/KSQuestChecker
     KoolSupport/addons/KSGuiltyForever: KoolSupport/Modules/KSGuiltyForever
+    KoolSupport/addons/KSSleepingBag: KoolSupport/Modules/KSSleepingBag
 ignore:
     - docs
     - tests
@@ -29,4 +30,5 @@ ignore:
     - addons/KSThreat/KSThreat.toc
     - addons/KSQuestChecker/KSQuestChecker.toc
     - addons/KSGuiltyForever/KSGuiltyForever.toc
+    - addons/KSSleepingBag/KSSleepingBag.toc
 license-output: LICENSE
