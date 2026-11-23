@@ -2,7 +2,7 @@
 ## Title: KS Sleeping Bag Navigator
 ## Notes: Optional faction-aware Cozy Sleeping Bag quest guide and draggable arrow.
 ## Author: InspiLayer
-## Version: 1.0.0-rc.5
+## Version: 1.0.0-rc.6
 ## Dependencies: KoolSupport
 
 SleepingBag.lua
