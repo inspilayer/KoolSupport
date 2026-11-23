@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: KoolSupport
-## Notes: Unified KoolSupport suite with seven optional in-game modules
+## Notes: Unified KoolSupport suite with nine optional in-game modules
 ## Author: InspiLayer
 ## Version: 1.0.0-rc.5
 ## SavedVariablesPerCharacter: KoolSupportDB
@@ -74,6 +74,6 @@ Modules\KSGuiltyForever\UI.lua
 Modules\KSGuiltyForever\Module.lua
 
 # Sleeping Bag Navigator (optional leveling guide)
-Modules\\KSSleepingBag\\SleepingBag.lua
-Modules\\KSSleepingBag\\UI.lua
-Modules\\KSSleepingBag\\Module.lua
+Modules\KSSleepingBag\SleepingBag.lua
+Modules\KSSleepingBag\UI.lua
+Modules\KSSleepingBag\Module.lua
