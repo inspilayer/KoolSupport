@@ -103,7 +103,7 @@ assert(K.modules.ks_macros and K.modules.ks_support_sessions and
  K.modules.ks_stealth and K.modules.ks_afflictions and K.modules.ks_campfire_chat and K.modules.ks_threat and K.modules.ks_quest_checker and K.modules.ks_guilty_forever and K.modules.ks_sleeping_bag)
 assert( #K.moduleOrder==9,"exactly nine independently managed child modules")
 for _,id in ipairs({"home","modules","launch_checks","macro_suite","full_spellbook",
- "macro_workshop","support_session","stealth","stealth_talents","afflictions","campfire_chat","quest_checker","guilty_forever","sleeping_bag"}) do
+ "macro_workshop","support_session","stealth","stealth_talents","afflictions","campfire_chat","quest_checker","guilty_forever"}) do
  assert(K.pages[id] and K:CanOpenPage(id),"page must be registered: "..id)
 end
 assert(K:GetModule("ks_support_sessions").requires[1]=="ks_macros")
@@ -115,6 +115,7 @@ assert(K:GetModule("ks_quest_checker").requires[1]==nil)
 assert(K:CanOpenPage("quest_checker"))
 assert(K:GetModule("ks_guilty_forever").requires[1]==nil)
 assert(K:CanOpenPage("guilty_forever"))
+assert(K.pages.sleeping_bag,"optional guide page must be registered")
 assert(not K:IsModuleEnabled("ks_sleeping_bag"),"leveling navigator must default off")
 assert(not K:CanOpenPage("sleeping_bag"))
 assert(K:SetModuleEnabled("ks_sleeping_bag",true))
