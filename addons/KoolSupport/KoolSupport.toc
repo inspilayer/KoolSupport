@@ -72,3 +72,8 @@ Modules\KSQuestChecker\Module.lua
 Modules\KSGuiltyForever\GuiltyForever.lua
 Modules\KSGuiltyForever\UI.lua
 Modules\KSGuiltyForever\Module.lua
+
+# Sleeping Bag Navigator (optional leveling guide)
+Modules\\KSSleepingBag\\SleepingBag.lua
+Modules\\KSSleepingBag\\UI.lua
+Modules\\KSSleepingBag\\Module.lua
