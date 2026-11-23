@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: Guilty Forever
+## Notes: Private ignore reasons and group reminders
+## Author: InspiLayer
+## Version: 1.0.0-rc.6
+## Dependencies: KoolSupport
+GuiltyForever.lua
+UI.lua
+Module.lua

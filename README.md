@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. Current source candidate **0.10.15-rc.2** adds the unpublished KS Quest Checker and movable KS Stealth combo HUD; do not publish without a Forever client test and separate owner approval.
+Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0-rc.6** is a private, pre-release UI review candidate—not an approved public 1.0.0. Full live Forever verification is required before stable promotion.
 
 ## Modules
 
@@ -11,15 +11,16 @@ Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. Current source candidate
 | **KoolSupport Base** | Included | Home, navigation, settings, module manager |
 | **KS Macros** | Included and on by default | Generic Macro Suite, Full Spellbook, Custom Builder |
 | **KS Support Sessions** | Included; player-toggleable | Healer class presets, named focus, heals, battle rez, follow/assist |
-| **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point pips on visible nameplates **and a separately movable HUD**, with saved per-character position, scale, visibility and lock |
+| **KS Stealth** | Included; player-toggleable | Rogue/Feral combo-point pips plus optional personal Energy bar on the current target's overhead nameplate; dedicated Pip Designer and saved visual settings |
 | **KS Afflictions** | Included; player-toggleable | Minimal centered DIES text on known-lethal native health bars; optional advanced displays (MIT DoesItDie engine) |
 | **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
 | **KS Quest Checker** | Included; player-toggleable | Search quest names and IDs, then check Blizzard's character completion flag; optionally uses a separately installed QuestieDB for a full quest-name index |
+| **Guilty Forever** | Included; player-toggleable | Private ignore reasons, first-name + surname enemy tags, saved grudge ledger and party/target reminders |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
-**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All seven module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
+**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All eight module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
 
-The **0.10.15 development ZIP contains one top-level folder**, `KoolSupport`, with all seven modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
+The **1.0.0-rc.6 development ZIP contains one top-level folder**, `KoolSupport`, with all eight modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
@@ -148,3 +149,8 @@ Use `/kool quest` or **Tools → Quest Checker**. Enter a quest name (e.g. *The 
 ## KS Stealth movable combo HUD (0.10.15-rc.2 development)
 
 Go to `/kool` → **Combat → KS Stealth**. Toggle **HUD: ON**, click **Unlock / move HUD**, drag the **DRAG COMBO POINTS** label to the desired position, then **Lock HUD position**. Optional independent controls resize or reset the HUD. It shows five gold native combo-point pips for your current target on Druid/Rogue, and disappears when target is lost while locked. Unlocked mode always shows empty positioning pips. Its visibility and position are independent from nameplate combo pips. All settings persist per character and cannot be changed while in combat. Combo values are forwarded directly to native Blizzard StatusBars without Lua comparing restricted secret values. Live Forever verification required before Beta.
+
+
+## Road to 1.0 public
+
+RC1 establishes the compact slate/gold UI kit, smaller sidebar typography, neutral button treatments and unified styling in the main workshop and module pages. RC2 will address in-game visual review notes. Do not publish stable until the 8-module Forever smoke test, combat/resource rendering, macro ownership protection, SavedVariables persistence, packaging/license validation and product-owner acceptance all pass. See [roadmap](docs/ROADMAP.md) and [transition](docs/CHAT-TRANSITION.md).

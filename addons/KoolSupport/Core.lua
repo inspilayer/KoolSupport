@@ -2,7 +2,7 @@
 KoolSupport = KoolSupport or {}
 local KS = KoolSupport
 KS.API_VERSION = 1
-KS.VERSION = "0.10.15-rc.2"
+KS.VERSION = "1.0.0-rc.6"
 KS.modules = KS.modules or {}
 KS.moduleOrder = KS.moduleOrder or {}
 KS.pages = KS.pages or {}
@@ -108,12 +108,50 @@ function KS:CanOpenPage(id)
   return self:IsModuleEnabled(page.moduleId)
 end
 
+-- Convenient ledger shortcut; only stages a note, never ignores a player.
+SLASH_KSGUILTYFOREVER1="/gf"
+SlashCmdList=SlashCmdList or {}
+SlashCmdList.KSGUILTYFOREVER=function(raw)
+ local verb,name=(raw or ""):match("^%s*(%S+)%s+(.+)%s*$")
+ if verb and verb:lower()=="enemy" then
+  name=name:match("^%s*(.-)%s*$")
+  if KSGuiltyForever and KSGuiltyForever.PrepareEditor
+    and KSGuiltyForever:PrepareEditor(name,"enemy") then
+   KS:Open("guilty_forever")
+   return
+  end
+  if print then print("Guilty Forever: enter a valid character name. Usage: /gf enemy CharacterName") end
+  return
+ end
+ KS:Open("guilty_forever")
+end
+
 SLASH_KOOLSUPPORT1 = "/kool"
 SlashCmdList = SlashCmdList or {}
 SlashCmdList.KOOLSUPPORT = function(text)
   local page = (text or ""):lower():match("^%s*(.-)%s*$")
   if page == "" then page = "home" end
   if page == "quest" or page == "quests" or page == "qc" then page = "quest_checker" end
+  if page == "guilty" or page == "gf" or page == "ignore" then page = "guilty_forever" end
+  -- Passive status: does NOT invoke a refresh (unlike /kool combo).
+  if page == "combostatus" or page == "combostats" then
+    if KSStealth and type(KSStealth.ComboHealthText)=="function" then
+      print("KoolSupport "..KS.VERSION.."  "..KSStealth:ComboHealthText())
+      if type(KSStealth.ComboDiagnosticText)=="function" then
+        print("  "..KSStealth:ComboDiagnosticText())
+      end
+    else print("KoolSupport: combo status unavailable. This install may be missing the updated KS Stealth file; check that only one KoolSupport addon folder is installed, then /reload.") end
+    return
+  end
+  if page == "combo" or page == "combodiag" then
+    if KSStealth and KSStealth.UpdateAll and KSStealth.ComboDiagnosticText then
+      KSStealth:UpdateAll()
+      print("KoolSupport "..KS.VERSION.."  "..KSStealth:ComboDiagnosticText())
+    else
+      print("KoolSupport: combo diagnostics unavailable.")
+    end
+    return
+  end
   if page == "dies" or page == "diecheck" then
     local A=KSAfflictions
     if not A or type(A.DiagnosticLine)~="function" then

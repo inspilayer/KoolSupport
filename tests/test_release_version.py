@@ -35,6 +35,11 @@ class ReleaseVersionTests(unittest.TestCase):
             with self.subTest(source=source):
                 self.assertEqual(module.extract_version(source), "0.10.14-rc.1")
 
+    def test_allow_explicit_1_0_0_stable_only(self):
+        self.assertEqual(module.extract_version("VERSION='1.0.0'\n"), "1.0.0")
+        with self.assertRaises(ValueError):
+            module.extract_version("VERSION='1.0.1'\n")
+
     def test_reject_missing_duplicate_and_nonliteral_versions(self):
         for source in (
             "OTHER='0.10.14-rc.1'\n",

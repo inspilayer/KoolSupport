@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read the release-candidate version from scripts/check.py without executing it.
+"""Read the candidate or stable version from scripts/check.py without executing it.
 
 Used by the publish-beta workflow to prevent a formatting change such as
 VERSION = '0.10.14-rc.1' from silently producing an empty release tag.
@@ -10,7 +10,7 @@ import re
 import sys
 
 CHECKER = Path(__file__).resolve().with_name("check.py")
-RELEASE_CANDIDATE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+\Z")
+RELEASE_CANDIDATE = re.compile(r"(?:[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+|1\.0\.0)\Z")
 
 
 def extract_version(source: str) -> str:
@@ -29,7 +29,7 @@ def extract_version(source: str) -> str:
         raise ValueError(f"Expected exactly one VERSION assignment, found {len(values)}")
     version = values[0]
     if not RELEASE_CANDIDATE.fullmatch(version):
-        raise ValueError(f"Not an approved RC version: {version!r}")
+        raise ValueError(f"Not an approved candidate/stable version: {version!r}")
     return version
 
 
