@@ -49,7 +49,7 @@ local function buildHome(parent)
   {"MACRO WORKSHOP","Presets, spellbook and custom macro creation.","Open Macro Suite","macro_suite"},
   {"COMBAT","Afflictions, stealth, tracking and threat.","Open Afflictions","afflictions"},
   {"SOCIAL","Guilty Forever and Campfire Chat.","Open Guilty Forever","guilty_forever"},
-  {"QUESTS & TOOLS","Quest checker, launch checks and reminders.","Open Quest Checker","quest_checker"},
+  {"QUESTS & TOOLS","Quest checker, Sleeping Bag guide and reminders.","Open Quest Checker","quest_checker"},
  }
  for i,c in ipairs(cards) do
   local x=25+((i-1)%2)*455
@@ -255,7 +255,7 @@ local categories={
   {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
   {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_designer","stealth_talents"}},
   {id="social",label="SOCIAL",pages={"campfire_chat","guilty_forever"}},
-  {id="system",label="TOOLS",pages={"quest_checker","xp_reminder","launch_checks"}},
+  {id="system",label="TOOLS",pages={"quest_checker","sleeping_bag","xp_reminder","launch_checks"}},
   {id="help",label="FAQ / HELP",pages={"faq"}},
 }
 local function groupForPage(id)
