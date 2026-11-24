@@ -2,7 +2,7 @@
 ## Title: KS Quest Checker
 ## Notes: Read-only searchable quest completion checker.
 ## Author: InspiLayer
-## Version: 1.0.0-rc.6
+## Version: 1.0.0
 ## Dependencies: KoolSupport
 
 QuestChecker.lua
