@@ -1,0 +1,11 @@
+## Interface: 16001
+## Title: KS Combat Text Studio
+## Notes: Optional movable Blizzard-style combat text and animated lanes for Forever.
+## Author: InspiLayer
+## Version: 1.1.0-rc.1
+## Dependencies: KoolSupport
+
+CombatText.lua
+Render.lua
+UI.lua
+Module.lua
