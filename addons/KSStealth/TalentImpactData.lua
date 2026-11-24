@@ -303,6 +303,20 @@ S.TalentImpacts={
  },
 }
 
+
+S.TalentImpactClassOrder={"DRUID","ROGUE","SHAMAN","MAGE","HUNTER","PALADIN"}
+S.TalentImpactClassNames={
+ DRUID="Druid",ROGUE="Rogue",SHAMAN="Shaman",
+ MAGE="Mage",HUNTER="Hunter",PALADIN="Paladin",
+}
+function S:TalentImpactClassSummary()
+ local names={}
+ for _,token in ipairs(self.TalentImpactClassOrder) do
+  names[#names+1]=self.TalentImpactClassNames[token]
+ end
+ return table.concat(names,", ")
+end
+
 function S:GetTalentImpactCatalog(classToken)
  if classToken==nil and type(UnitClass)=="function" then
   local _,token=UnitClass("player")
