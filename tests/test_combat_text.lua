@@ -44,6 +44,10 @@ local function frame(kind,parent)
  function f:SetJustifyH()end
  function f:SetScript(ev,fn)self[ev]=fn end
  function f:RegisterEvent(ev)self.registered=self.registered or {};self.registered[ev]=true end
+ function f:RegisterUnitEvent(ev,unit)
+  assert(ev=="UNIT_COMBAT" and unit=="target")
+  self.registeredUnit={ev,unit}
+ end
  objects[#objects+1]=f
  return f
 end
@@ -53,7 +57,12 @@ function UIParent:GetCenter()return 400,300 end
 CombatText=frame("Frame",UIParent)
 CombatText:SetPoint("TOP",UIParent,"TOP",12,-36)
 local defaultAnchor={CombatText:GetPoint()}
-local cvars={enableFloatingCombatText="1"}
+local cvars={
+ enableFloatingCombatText="1",
+ floatingCombatTextCombatDamage_v2="1",
+ WorldTextScreenY_v2="0.11",
+ WorldTextCritScreenY_v2="0.13",
+}
 GetCVar=function(k)return cvars[k]end
 SetCVar=function(k,v)cvars[k]=v end
 assert(loadfile("addons/KoolSupport/Core.lua"))()
@@ -64,10 +73,28 @@ assert(loadfile("addons/KSCombatText/Module.lua"))()
 local S=KSCombatText
 local KS=KoolSupport
 assert(not KS:IsModuleEnabled("ks_combat_text"),"new 1.1 module defaults off")
-assert(KS.pages.combat_text and KS.pages.combat_text_tuning)
+assert(KS.pages.combat_text and KS.pages.combat_text_tuning and KS.pages.combat_text_native)
+assert(S.registration.UNIT_COMBAT and S.targetEventFrame.registeredUnit[2]=="target")
 assert(KS:SetModuleEnabled("ks_combat_text",true))
-assert(S:Store().mode=="native" and S:Store().lanes.incoming.size==23)
-assert(CombatText.point[1]=="CENTER","native mode docks Blizzard frame")
+assert(S:Store().mode=="studio" and S:Store().lanes.incoming.size==23,
+ "Studio must be active by default when player opts into module")
+assert(S:Store().showTarget and S:Store().lanes.target.enabled,
+ "Observed-target source cannot be silently disabled")
+assert(CombatText.point[1]=="TOP","Studio must not move the native frame")
+assert(S:SetMode("native"))
+assert(CombatText.point[1]=="CENTER","native mode docks Blizzard self text")
+assert(S:SetNativeTargetHeight(5))
+assert(tonumber(cvars.WorldTextScreenY_v2)>0.11)
+assert(tonumber(cvars.WorldTextCritScreenY_v2)>0.13)
+assert(S:NativeTextStatus():find("Target height CVars: available",1,true))
+assert(not S:SetNativeTargetHeight(41))
+assert(S:SetNativeTargetHeight(0))
+assert(cvars.WorldTextScreenY_v2=="0.11")
+assert(cvars.WorldTextCritScreenY_v2=="0.13")
+assert(S:SetOption("hideNativeOutgoing",true))
+assert(cvars.floatingCombatTextCombatDamage_v2=="0")
+assert(S:SetOption("hideNativeOutgoing",false))
+assert(cvars.floatingCombatTextCombatDamage_v2=="1")
 assert(S:MoveNative(118,80))
 assert(CombatText.point[4]==118 and CombatText.point[5]==80)
 assert(S:SetUnlocked(true))
@@ -89,7 +116,12 @@ assert(not S:SetLaneOption("incoming","size",0/0))
 assert(not S:SetLaneOption("incoming","limit","ten"))
 assert(S:Preset("fountain"))
 assert(S:Store().lanes.heal.pattern=="fountain")
-assert(S:SetMode("studio"))
+assert(S:SetMode("native"))
+assert(S:Preset("arcade"))
+assert(S:Store().mode=="studio","visual preset must switch to Studio")
+assert(S:SetMode("native"))
+assert(S:Preview(),"preview must actively switch to Studio")
+assert(S:Store().mode=="studio")
 local nativeEventsBefore=S.stats.nativeEvents
 local before=#objects
 S:Receive("COMBAT_TEXT_UPDATE","DAMAGE",secret)
@@ -105,11 +137,15 @@ S:Receive("COMBAT_TEXT_UPDATE","HEAL",secret)
 S:Receive("COMBAT_TEXT_UPDATE","MISS",secret)
 assert(#objects==poolCreated,"no frames allocated by combat event handling")
 local observed=S.stats.targetEvents
-S:Receive("UNIT_COMBAT","target","WOUND","CRITICAL",secret)
-assert(S.stats.targetEvents==observed,"observed-target lane opt-in")
+assert(S.targetEventFrame.OnEvent,"must install a real targeted unit listener")
+S.targetEventFrame.OnEvent(S.targetEventFrame,"UNIT_COMBAT","target","WOUND","CRITICAL",secret)
+assert(S.stats.targetEvents==observed+1,"real target event callback must render")
+S.targetEventFrame.OnEvent(S.targetEventFrame,"UNIT_COMBAT","player","WOUND","NORMAL",secret)
+assert(S.stats.targetEvents==observed+1,"must never misclassify self as target")
+assert(S:SetOption("showTarget",false))
+S.targetEventFrame.OnEvent(S.targetEventFrame,"UNIT_COMBAT","target","WOUND","NORMAL",secret)
+assert(S.stats.targetEvents==observed+1,"disabling observed target must work")
 assert(S:SetOption("showTarget",true))
-S:Receive("UNIT_COMBAT","target","WOUND","CRITICAL",secret)
-assert(S.stats.targetEvents==observed+1)
 local x,y,alpha,scale=S:Animation("fountain",.25,1,80,50,3)
 assert(type(x)=="number" and type(y)=="number" and alpha>=0 and alpha<=1)
 assert(S:SetOption("nativeHidden",true))
@@ -123,6 +159,15 @@ assert(KS:SetModuleEnabled("ks_combat_text",true))
 assert(cvars.enableFloatingCombatText=="0","re-enabling opt-in module should reapply saved setting")
 assert(S:SetOption("nativeHidden",false))
 assert(cvars.enableFloatingCombatText=="1")
+assert(S:SetOption("hideNativeOutgoing",true))
+assert(S:SetNativeTargetHeight(-8))
+assert(KS:SetModuleEnabled("ks_combat_text",false))
+assert(cvars.floatingCombatTextCombatDamage_v2=="1","disable must restore outgoing damage")
+assert(cvars.WorldTextScreenY_v2=="0.11","disable must restore native world text")
+assert(cvars.WorldTextCritScreenY_v2=="0.13")
+assert(KS:SetModuleEnabled("ks_combat_text",true))
+assert(cvars.floatingCombatTextCombatDamage_v2=="0","opted-in outgoing suppression restored when reenabled")
+assert(S:SetOption("hideNativeOutgoing",false))
 assert(S:Preview())
 local sampled=false
 for _,o in ipairs(objects) do
@@ -130,9 +175,11 @@ for _,o in ipairs(objects) do
 end
 assert(sampled)
 local mockParent=frame("Frame",UIParent)
-assert(type(S.BuildPage)=="function" and type(S.BuildTuningPage)=="function")
+assert(type(S.BuildPage)=="function" and type(S.BuildTuningPage)=="function"
+ and type(S.BuildNativePage)=="function")
 S.BuildPage(mockParent)
 S.BuildTuningPage(mockParent)
+S.BuildNativePage(mockParent)
 inCombat=true
 assert(not S:SetMode("native"))
 assert(not S:Preset("zen"))
@@ -142,7 +189,7 @@ assert(not S:SetUnlocked(false))
 assert(not S:SetOption("nativeHidden",true))
 inCombat=false
 assert(S:Reset())
-assert(S:Store().mode=="native")
+assert(S:Store().mode=="studio")
 assert(KS:SetModuleEnabled("ks_combat_text",false))
 assert(not KS:IsModuleEnabled("ks_combat_text"))
-print("PASS KS Combat Text: native anchor, 4 lanes, 12 patterns, 5 fonts, previews, secret passthrough, combat and CVar restore")
+print("PASS KS Combat Text: actual UNIT_COMBAT target listener, Studio styles, native world text CVars, outgoing suppression, secret value and restore")
