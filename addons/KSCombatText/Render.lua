@@ -16,6 +16,104 @@ local oldPoints=nil
 local oldFloating=nil
 local changedFloating=false
 local nativeMoved=false
+-- Blizzard renders outgoing damage in world text, NOT the CombatText frame.
+-- Forever exposes vertical world-text placement through these two CVars.
+-- Native mode intentionally does not claim to restyle Blizzard fonts.
+local WORLD_HIT="WorldTextScreenY_v2"
+local WORLD_CRIT="WorldTextCritScreenY_v2"
+local OUTGOING_CVARS={"floatingCombatTextCombatDamage_v2","floatingCombatTextCombatDamage"}
+local outgoingKey,outgoingBefore,outgoingChanged=nil,nil,false
+local targetBaseline=nil
+local targetMoved=false
+local function getCvar(name)
+ if C_CVar and type(C_CVar.GetCVar)=="function" then
+  local ok,value=pcall(C_CVar.GetCVar,name)
+  if ok then return value end
+ end
+ if type(GetCVar)=="function" then
+  local ok,value=pcall(GetCVar,name)
+  if ok then return value end
+ end
+ return nil
+end
+local function setCvar(name,value)
+ if C_CVar and type(C_CVar.SetCVar)=="function" then
+  return pcall(C_CVar.SetCVar,name,tostring(value))
+ end
+ if type(SetCVar)=="function" then return pcall(SetCVar,name,tostring(value)) end
+ return false
+end
+function S:RestoreOutgoingVisibility()
+ if not outgoingChanged then return true end
+ if KS:IsInCombat() then return false,"Wait until outside combat" end
+ if not outgoingKey or outgoingBefore==nil then return false,"Original Blizzard damage setting unavailable" end
+ if not setCvar(outgoingKey,outgoingBefore) then
+  return false,"Failed to restore outgoing damage text"
+ end
+ outgoingChanged=false
+ return true
+end
+function S:UpdateOutgoingVisibility()
+ if KS:IsInCombat() then return false,"Change Blizzard damage visibility outside combat" end
+ if not self:Enabled() or not self:Store().hideNativeOutgoing then
+  return self:RestoreOutgoingVisibility()
+ end
+ local key=outgoingKey
+ if not key then
+  for _,candidate in ipairs(OUTGOING_CVARS) do
+   local value=getCvar(candidate)
+   if value~=nil and value~="" then
+    key=candidate
+    break
+   end
+  end
+ end
+ if not key then return false,"Blizzard outgoing-damage CVar unavailable on this client" end
+ if not outgoingChanged then
+  outgoingBefore=getCvar(key)
+  if outgoingBefore==nil then return false,"Could not read original outgoing damage setting" end
+ end
+ if not setCvar(key,"0") then return false,"Could not hide Blizzard outgoing damage" end
+ outgoingKey=key;outgoingChanged=true
+ return true
+end
+function S:RestoreNativeTargetHeight()
+ if not targetMoved then return true end
+ if KS:IsInCombat() then return false,"Wait until outside combat" end
+ if not targetBaseline then return false,"Target text defaults unavailable" end
+ if not setCvar(WORLD_HIT,targetBaseline.hit) or
+    not setCvar(WORLD_CRIT,targetBaseline.crit) then
+  return false,"Could not restore target text height"
+ end
+ targetMoved=false
+ return true
+end
+function S:SetNativeTargetHeight(steps)
+ if KS:IsInCombat() then return false,"Adjust Blizzard target text out of combat" end
+ if type(steps)~="number" or steps~=math.floor(steps) or steps< -40 or steps>40 then
+  return false,"Native target text height must be -40 through 40"
+ end
+ local rawHit,rawCrit=getCvar(WORLD_HIT),getCvar(WORLD_CRIT)
+ local hit,crit=tonumber(rawHit),tonumber(rawCrit)
+ if not hit or not crit then
+  return false,"Forever's native outgoing target-height CVars are unavailable"
+ end
+ if steps==0 then
+  self:Store().native.targetSteps=0
+  return self:RestoreNativeTargetHeight()
+ end
+ if not targetBaseline then
+  targetBaseline={hit=rawHit,crit=rawCrit}
+ end
+ -- 1 screen-height step = 0.002 of the client coordinate fraction.
+ local diff=(steps-(self:Store().native.targetSteps or 0))*.002
+ if not setCvar(WORLD_HIT,hit+diff) or not setCvar(WORLD_CRIT,crit+diff) then
+  return false,"Forever rejected the target height change"
+ end
+ self:Store().native.targetSteps=steps
+ targetMoved=true
+ return true
+end
 function S:RestoreBlizzardAnchor()
  if not nativeMoved or KS:IsInCombat() then return false end
  local frame=nativeFrame()
@@ -33,6 +131,7 @@ function S:DockBlizzard()
  if KS:IsInCombat() then return false,"Blizzard frame can only move outside combat" end
  local frame=nativeFrame()
  if not frame or type(frame.SetPoint)~="function" or type(frame.GetPoint)~="function" then
+  self.nativeMoveStatus="self frame unavailable (outgoing uses target CVars)"
   return false,"The Blizzard CombatText frame is unavailable on this client"
  end
  if not nativeMoved then
@@ -49,8 +148,9 @@ function S:DockBlizzard()
   frame:ClearAllPoints()
   frame:SetPoint("CENTER",UIParent,"CENTER",db.native.x,db.native.y)
  end)
- if ok then nativeMoved=true;return true end
- return false,"Forever blocked moving the Blizzard CombatText frame"
+ if ok then nativeMoved=true;self.nativeMoveStatus="self frame moved";return true end
+ self.nativeMoveStatus="self frame movement rejected"
+ return false,"Forever blocked moving the Blizzard self-combat-text frame"
 end
 function S:RestoreBlizzardVisibility()
  if not changedFloating or KS:IsInCombat() then return false end
@@ -151,7 +251,9 @@ end
 function S:Refresh()
  if not self:Enabled() then
   self:RestoreBlizzardAnchor()
+  self:RestoreNativeTargetHeight()
   self:RestoreBlizzardVisibility()
+  self:RestoreOutgoingVisibility()
   for _,frame in pairs(anchors) do frame:Hide();frame:EnableMouse(false) end
   if nativeHandle then nativeHandle:Hide();nativeHandle:EnableMouse(false) end
   for _,queue in pairs(pools) do
@@ -164,6 +266,9 @@ function S:Refresh()
  -- the player explicitly re-enables this optional module outside combat.
  if db.nativeHidden and not changedFloating and not KS:IsInCombat() then
   self:UpdateBlizzardVisibility()
+ end
+ if db.hideNativeOutgoing and not outgoingChanged and not KS:IsInCombat() then
+  self:UpdateOutgoingVisibility()
  end
  if db.mode=="native" and not KS:IsInCombat() then
   self:DockBlizzard()
@@ -233,7 +338,10 @@ function S:Queue(key,value,critical)
 end
 function S:Preview()
  if not self:Enabled() then return false,"Enable KS Combat Text first" end
- if self:Store().mode~="studio" then return false,"Choose Studio mode to preview effects" end
+ if self:Store().mode~="studio" then
+  local ok,why=self:SetMode("studio")
+  if not ok then return false,why end
+ end
  if not self:EnsureFrames() then return false,"Preview outside combat" end
  self:Queue("incoming","-842",false)
  self:Queue("incoming","-2,461",true)
