@@ -2,7 +2,7 @@
 ## Title: KoolSupport
 ## Notes: Unified KoolSupport suite with nine optional in-game modules
 ## Author: InspiLayer
-## Version: 1.0.0-rc.6
+## Version: 1.0.0
 ## SavedVariablesPerCharacter: KoolSupportDB
 ## SavedVariables: KSAfflictionsTrackerDB
 
