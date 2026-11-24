@@ -120,8 +120,10 @@ function S:SetOption(key,value)
  local s=self:Store()
  if key=="showTarget" then s.showTarget=not not value
  elseif key=="nativeHidden" then
+  local before=s.nativeHidden
   s.nativeHidden=not not value
-  self:UpdateBlizzardVisibility()
+  local ok,why=self:UpdateBlizzardVisibility()
+  if not ok then s.nativeHidden=before;return false,why end
  else return false,"Unknown setting" end
  self:Refresh()
  return true
