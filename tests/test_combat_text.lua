@@ -116,6 +116,13 @@ assert(S:SetOption("nativeHidden",true))
 assert(cvars.enableFloatingCombatText=="0")
 assert(S:SetOption("nativeHidden",false))
 assert(cvars.enableFloatingCombatText=="1")
+assert(S:SetOption("nativeHidden",true))
+assert(KS:SetModuleEnabled("ks_combat_text",false))
+assert(cvars.enableFloatingCombatText=="1","disabling module must restore original Blizzard setting")
+assert(KS:SetModuleEnabled("ks_combat_text",true))
+assert(cvars.enableFloatingCombatText=="0","re-enabling opt-in module should reapply saved setting")
+assert(S:SetOption("nativeHidden",false))
+assert(cvars.enableFloatingCombatText=="1")
 assert(S:Preview())
 local sampled=false
 for _,o in ipairs(objects) do
