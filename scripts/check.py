@@ -21,6 +21,7 @@ MODULES = {
     'KSQuestChecker': ['KoolSupport'],
     'KSGuiltyForever': ['KoolSupport'],
     'KSSleepingBag': ['KoolSupport'],
+    'KSCombatText': ['KoolSupport'],
 }
 
 def entries(toc):
@@ -109,7 +110,7 @@ def verify_unified_package(path):
     assert 'KoolSupport/KoolSupport.toc' in names
     assert 'KoolSupport/Modules/KSAfflictions/Vendor/LICENSE' in names
     assert 'KoolSupport/Modules/KSAfflictions/Vendor/NOTICE.md' in names
-    print('PASS one KoolSupport root, nine source modules nested, MIT notice retained')
+    print('PASS one KoolSupport root, ten source modules nested, MIT notice retained')
 
 def package():
     zip_unified('KoolSupport_CurseForge_Standard')
