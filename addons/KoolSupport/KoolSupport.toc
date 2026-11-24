@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: KoolSupport
-## Notes: Unified KoolSupport suite with nine optional in-game modules
+## Notes: Unified KoolSupport suite with ten optional in-game modules
 ## Author: InspiLayer
 ## Version: 1.1.0-rc.1
 ## SavedVariablesPerCharacter: KoolSupportDB
