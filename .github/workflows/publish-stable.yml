@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       confirmed_public:
-        description: 'I approve publicly publishing stable 1.0.0 on GitHub and CurseForge'
+        description: 'I approve publicly publishing stable 1.0.0 on GitHub; CurseForge publication requires separate verification'
         type: boolean
         required: true
         default: false
       confirmed_live_smoke:
-        description: 'I have completed the live Forever 8-module smoke test including UI, combo/energy and macros'
+        description: 'I have completed the live Forever 9-module smoke test including UI, combo/energy and macros'
         type: boolean
         required: true
         default: false
@@ -97,7 +97,7 @@ jobs:
           git tag -a v1.0.0 -m "KoolSupport 1.0.0 public stable release"
           git push origin refs/tags/v1.0.0
           gh release create v1.0.0 "$PACKAGE" --title "KoolSupport 1.0.0" \
-            --notes "Public 1.0.0 stable release after owner-confirmed Forever smoke tests. Includes all eight modules in one installable KoolSupport folder." \
+            --notes "Public 1.0.0 stable release after owner-confirmed Forever smoke tests. Includes all nine modules in one installable KoolSupport folder." \
             --latest
 
       - name: Record external CurseForge verification reminder
