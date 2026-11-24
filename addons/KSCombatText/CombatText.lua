@@ -276,7 +276,22 @@ function S:Receive(event,...)
 end
 local events=CreateFrame("Frame")
 S.registration={}
-for _,event in ipairs({"COMBAT_TEXT_UPDATE","UNIT_COMBAT","PLAYER_ENTERING_WORLD",
+-- Forever's UNIT_COMBAT is designed for *unit tokens*. Explicit
+-- RegisterUnitEvent("UNIT_COMBAT","target") is used by working Forever SCT
+-- addons, unlike RC2's unreliable general RegisterEvent handling.
+local targetListener=CreateFrame("Frame")
+local targetRegistered=type(targetListener.RegisterUnitEvent)=="function" and
+ pcall(targetListener.RegisterUnitEvent,targetListener,"UNIT_COMBAT","target")
+if targetRegistered then
+ targetListener:SetScript("OnEvent",function(_,event,...)
+  S:Receive(event,...)
+ end)
+else
+ targetRegistered=pcall(events.RegisterEvent,events,"UNIT_COMBAT")
+end
+S.registration.UNIT_COMBAT=targetRegistered
+S.targetEventFrame=targetListener
+for _,event in ipairs({"COMBAT_TEXT_UPDATE","PLAYER_ENTERING_WORLD",
  "PLAYER_REGEN_ENABLED"}) do
  S.registration[event]=pcall(events.RegisterEvent,events,event)
 end
