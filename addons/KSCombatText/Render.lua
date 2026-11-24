@@ -16,9 +16,6 @@ local oldPoints=nil
 local oldFloating=nil
 local changedFloating=false
 local nativeMoved=false
-local function setShown(frame,enabled)
- if enabled then frame:Show() else frame:Hide() end
-end
 function S:RestoreBlizzardAnchor()
  if not nativeMoved or KS:IsInCombat() then return false end
  local frame=nativeFrame()
@@ -26,7 +23,7 @@ function S:RestoreBlizzardAnchor()
  local ok=pcall(function()
   frame:ClearAllPoints()
   if oldPoints and #oldPoints>0 then
-   for _,a in ipairs(oldPoints) do frame:SetPoint(unpack(a)) end
+   for _,a in ipairs(oldPoints) do frame:SetPoint(a[1],a[2],a[3],a[4],a[5]) end
   else frame:SetPoint("CENTER",UIParent,"CENTER",0,0) end
  end)
  if ok then nativeMoved=false end
