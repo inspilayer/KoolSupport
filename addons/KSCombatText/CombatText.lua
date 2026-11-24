@@ -62,20 +62,33 @@ function S:Store()
  db.modules=db.modules or {}
  db.modules.ks_combat_text=db.modules.ks_combat_text or {}
  local s=db.modules.ks_combat_text
- if s.mode~="native" and s.mode~="studio" then s.mode="native" end
+ -- RC1 mistakenly defaulted to Native, which ignores Studio style edits.
+ -- One-time RC3 migration. Later explicit Native selections are preserved.
+ if s.combatTextV3~=true then
+  s.mode="studio"
+  s.combatTextV3=true
+ end
+ if s.mode~="native" and s.mode~="studio" then s.mode="studio" end
  if type(s.unlocked)~="boolean" then s.unlocked=false end
  if type(s.nativeHidden)~="boolean" then s.nativeHidden=false end
- if type(s.showTarget)~="boolean" then s.showTarget=false end
+ -- UNIT_COMBAT target damage is observed, not attributed to the player.
+ if type(s.showTarget)~="boolean" then s.showTarget=true end
+ if s.targetLaneV3~=true then s.showTarget=true;s.targetLaneV3=true end
  if type(s.lanes)~="table" then s.lanes={} end
  if type(s.preset)~="string" or not self.PRESETS[s.preset] then s.preset="classic" end
  if type(s.native)~="table" then s.native={x=0,y=0} end
+ if type(s.native.targetSteps)~="number" then s.native.targetSteps=0 end
+ if type(s.hideNativeOutgoing)~="boolean" then s.hideNativeOutgoing=false end
  for _,key in ipairs(self.LANES) do
   local o=defaultOffsets[key]
   if type(s.lanes[key])~="table" then s.lanes[key]={} end
   local l=s.lanes[key]
   if not finite(l.x) then l.x=o.x end
   if not finite(l.y) then l.y=o.y end
-  if type(l.enabled)~="boolean" then l.enabled=key~="target" end
+  if type(l.enabled)~="boolean" then l.enabled=true end
+  if key=="target" and s.targetLaneV3==true and l.targetLaneV3~=true then
+   l.enabled=true;l.targetLaneV3=true
+  end
   if not self.PATTERNS[l.pattern] then l.pattern=self.PRESETS[s.preset].pattern end
   if not self.FONTS[l.font] then l.font=self.PRESETS[s.preset].font end
   if not self.PALETTES[l.palette] then l.palette=self.PRESETS[s.preset].palette end
@@ -119,6 +132,11 @@ function S:SetOption(key,value)
  if KS:IsInCombat() then return false,"Change combat text outside combat" end
  local s=self:Store()
  if key=="showTarget" then s.showTarget=not not value
+ elseif key=="hideNativeOutgoing" then
+  local before=s.hideNativeOutgoing
+  s.hideNativeOutgoing=not not value
+  local ok,why=self:UpdateOutgoingVisibility()
+  if not ok then s.hideNativeOutgoing=before;return false,why end
  elseif key=="nativeHidden" then
   local before=s.nativeHidden
   s.nativeHidden=not not value
@@ -152,6 +170,9 @@ function S:SetLaneOption(lane,key,value)
   value=clamp(math.floor(value/range[3]+.5)*range[3],range[1],range[2])
  end
  opts[key]=value
+ -- Style edits always select Studio: Blizzard Native cannot apply these
+ -- custom fonts/animations, and RC2 silently showed no change.
+ if key~="enabled" then self:Store().mode="studio" end
  self:Refresh()
  return true
 end
@@ -161,6 +182,7 @@ function S:Preset(name)
  if not p then return false,"Unknown preset" end
  local s=self:Store()
  s.preset=name
+ s.mode="studio"
  for _,k in ipairs(self.LANES) do
   local lane=s.lanes[k]
   for _,field in ipairs({"pattern","font","size","lifetime","speed","spread","critScale","outline","palette"}) do
@@ -221,9 +243,14 @@ function S:Animation(pattern,age,life,speed,spread,serial)
  return dx,dy,clamp(alpha,0,1),scale
 end
 function S:SourceStats()
- local a=self.stats or {nativeEvents=0,targetEvents=0,dropped=0,errors=0}
- return ("Native events: %d | Target observations: %d | Dropped: %d | Errors: %d"):format(
-  a.nativeEvents,a.targetEvents,a.dropped,a.errors)
+ local a=self.stats or {}
+ local s=self:Store()
+ local reg=self.registration or {}
+ return ("Module: %s | Mode: %s | COMBAT_TEXT_UPDATE: %s (%d) | UNIT_COMBAT: %s (%d) | Dropped: %d | Text errors: %d | Native dock: %s"):format(
+  self:Enabled() and "ON" or "OFF",s.mode,
+  reg.COMBAT_TEXT_UPDATE and "registered" or "unavailable",a.nativeEvents or 0,
+  reg.UNIT_COMBAT and "registered" or "unavailable",a.targetEvents or 0,
+  a.dropped or 0,a.errors or 0,self.nativeMoveStatus or "unverified")
 end
 S.stats=S.stats or {nativeEvents=0,targetEvents=0,dropped=0,errors=0}
 -- S.Queue is injected by Render.lua after its UI pools are initialized.
@@ -248,9 +275,10 @@ function S:Receive(event,...)
  end
 end
 local events=CreateFrame("Frame")
+S.registration={}
 for _,event in ipairs({"COMBAT_TEXT_UPDATE","UNIT_COMBAT","PLAYER_ENTERING_WORLD",
  "PLAYER_REGEN_ENABLED"}) do
- pcall(events.RegisterEvent,events,event)
+ S.registration[event]=pcall(events.RegisterEvent,events,event)
 end
 events:SetScript("OnEvent",function(_,event,...)
  if event=="PLAYER_ENTERING_WORLD" or event=="PLAYER_REGEN_ENABLED" then
