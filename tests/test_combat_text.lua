@@ -146,6 +146,21 @@ assert(S:SetOption("showTarget",false))
 S.targetEventFrame.OnEvent(S.targetEventFrame,"UNIT_COMBAT","target","WOUND","NORMAL",secret)
 assert(S.stats.targetEvents==observed+1,"disabling observed target must work")
 assert(S:SetOption("showTarget",true))
+-- Switching back to Native must restore Blizzard and prevent the last
+-- Studio numbers from remaining frozen when its OnUpdate stops.
+assert(S:SetOption("hideNativeOutgoing",true))
+assert(cvars.floatingCombatTextCombatDamage_v2=="0")
+assert(S:SetMode("native"))
+assert(cvars.floatingCombatTextCombatDamage_v2=="1")
+for _,o in ipairs(objects) do
+ if o.kind=="FontString" and rawequal(o.text,secret) then
+  assert(not o.shown,"Studio number cannot stay visible in Native mode")
+ end
+end
+assert(S:SetMode("studio"))
+assert(cvars.floatingCombatTextCombatDamage_v2=="0")
+assert(S:SetOption("hideNativeOutgoing",false))
+assert(cvars.floatingCombatTextCombatDamage_v2=="1")
 local x,y,alpha,scale=S:Animation("fountain",.25,1,80,50,3)
 assert(type(x)=="number" and type(y)=="number" and alpha>=0 and alpha<=1)
 assert(S:SetOption("nativeHidden",true))
