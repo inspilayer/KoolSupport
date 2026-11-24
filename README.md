@@ -17,11 +17,12 @@ Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0** is staged for 
 | **KS Quest Checker** | Included; player-toggleable | Search quest names and IDs, then check Blizzard's character completion flag; optionally uses a separately installed QuestieDB for a full quest-name index |
 | **Guilty Forever** | Included; player-toggleable | Private ignore reasons, first-name + surname enemy tags, saved grudge ledger and party/target reminders |
 | **Sleeping Bag Navigator** | Included; off by default | Draggable guide for the Cozy Sleeping Bag quest chain, including faction routes, hidden-object steps, and map-pin fallback |
+| **KS Combat Text Studio** | Included; **off by default** in 1.1 development | Native Blizzard combat text dock, four animated text lanes, presets, fonts, crit emphasis, draggable placement and event diagnostics |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
-**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All nine module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
+**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All ten module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
 
-The **1.0.0 release ZIP contains one top-level folder**, `KoolSupport`, with all nine modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
+The **1.0.0 release ZIP contains one top-level folder**, `KoolSupport`, with all ten modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
@@ -155,3 +156,10 @@ Go to `/kool` → **Combat → KS Stealth**. Toggle **HUD: ON**, click **Unlock 
 ## Road to 1.0 public
 
 RC1 establishes the compact slate/gold UI kit, smaller sidebar typography, neutral button treatments and unified styling in the main workshop and module pages. RC2 will address in-game visual review notes. Do not publish stable until the 8-module Forever smoke test, combat/resource rendering, macro ownership protection, SavedVariables persistence, packaging/license validation and product-owner acceptance all pass. See [roadmap](docs/ROADMAP.md) and [transition](docs/CHAT-TRANSITION.md).
+
+
+## 1.1.0-rc.1 — Combat Text Studio (development)
+
+1.0.0 remains the public stable baseline. This 1.1 release candidate adds an **optional, disabled-by-default** Combat Text Studio module under Combat. After enabling, choose **Native** to move Blizzard's ordinary combat text, or **Studio** for four custom animated text lanes. Presets: Classic, Minimal, Arcade, Fountain, Cascade, Zen; 12 animation styles, five built-in client fonts, four palettes, editable font size/crit multiplier/outline/speed/lifetime/spread/opacity/max messages. Unlock and drag positions or type `/kct test` to preview; `/kct status` summarizes the event stream. No external fonts are bundled. The module restores Blizzard anchor/CVar changes when disabled.
+
+**Forever limitation:** its public event APIs do not give reliable full attribution of outgoing player-only hits, so the optional UNIT_COMBAT lane explicitly shows observed target events, not guaranteed personal damage. Other lanes rely on the Forever client's COMBAT_TEXT_UPDATE availability and secret-safe values. The module does not alter damage calculations or cast spells. Live client verification is required before a 1.1 stable public update.
