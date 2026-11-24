@@ -12,3 +12,7 @@ KoolSupport:RegisterPage({
  id="combat_text_tuning",title="Text Fine Tuning",moduleId="ks_combat_text",
  build=function(parent)KSCombatText.BuildTuningPage(parent)end,
 })
+KoolSupport:RegisterPage({
+ id="combat_text_native",title="Blizzard Text Settings",moduleId="ks_combat_text",
+ build=function(parent)KSCombatText.BuildNativePage(parent)end,
+})
