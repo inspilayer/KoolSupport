@@ -42,7 +42,7 @@ function S.BuildPage(parent)
  local state=S:Store()
  if not S.LANES[1] then return end
  local banner=text(parent,GOLD.."KS COMBAT TEXT  /  STUDIO|r",22,-17,900,22)
- text(parent,DIM.."Blizzard-faithful native dock or original animated text zones. All positions save per character.|r",
+ text(parent,DIM.."STUDIO applies fonts, animations and colors. NATIVE keeps Blizzard's own appearance.|r",
   22,-49,900,13)
  local mode=box(parent,21,-79,895,82)
  text(mode,GOLD.."RENDER MODE|r",13,-12,335,16)
@@ -85,7 +85,10 @@ function S.BuildPage(parent)
  local left=box(parent,21,-172,895,88)
  text(left,GOLD.."PRESET LIBRARY|r",13,-12,400,16)
  for i,name in ipairs(orderPresets) do
-  button(left,name:upper(),12+(i-1)*146,-45,137,function()apply(S.Preset,name)end)
+  button(left,name:upper(),12+(i-1)*146,-45,137,function()
+   apply(S.Preset,name)
+   KS:ShowPage("combat_text")
+  end)
  end
  local nav=box(parent,21,-270,895,72)
  text(nav,GOLD.."TEXT AREAS|r",13,-9,670,16)
@@ -109,18 +112,21 @@ function S.BuildPage(parent)
   local y=-64-math.floor((i-1)/6)*35
   button(panel,pattern:upper(),x,y,137,function()
    apply(S.SetLaneOption,selectedLane,"pattern",pattern)
+   KS:ShowPage("combat_text")
   end)
  end
  text(panel,DIM.."FONT|r",13,-149,200,12)
  for i,font in ipairs(orderFonts) do
   button(panel,font:upper(),12+(i-1)*174,-172,167,function()
    apply(S.SetLaneOption,selectedLane,"font",font)
+   KS:ShowPage("combat_text")
   end)
  end
  text(panel,DIM.."PALETTE|r",13,-213,205,12)
  for i,palette in ipairs(orderPalettes) do
   button(panel,palette:upper(),12+(i-1)*218,-236,206,function()
    apply(S.SetLaneOption,selectedLane,"palette",palette)
+   KS:ShowPage("combat_text")
   end
   )
  end
@@ -132,7 +138,7 @@ function S.BuildPage(parent)
   status:SetText(ok and GOLD.."Preview sent to your four zones.|r" or
    "|cffffa58d"..(why or "Preview unavailable").."|r")
  end)
- button(parent,"BLIZZARD VISIBILITY",486,-650,217,function()KS:ShowPage("combat_text_tuning")end)
+ button(parent,"BLIZZARD TEXT SETTINGS",486,-650,217,function()KS:ShowPage("combat_text_native")end)
  button(parent,"RESET ALL",717,-650,199,function()
   apply(S.Reset)
   KS:ShowPage("combat_text")
@@ -195,10 +201,8 @@ function S.BuildTuningPage(parent)
   S:SetMode(db.mode=="native" and "studio" or "native")
   KS:ShowPage("combat_text_tuning")
  end)
- button(tools,db.nativeHidden and "RESTORE BLIZZARD" or "HIDE BLIZZARD",201,-43,195,function()
-  local ok,why=S:SetOption("nativeHidden",not S:Store().nativeHidden)
-  status:SetText(ok and "Blizzard setting changed." or (why or "Client did not accept CVar change."))
-  KS:ShowPage("combat_text_tuning")
+ button(tools,"BLIZZARD TEXT OPTIONS",201,-43,195,function()
+  KS:ShowPage("combat_text_native")
  end)
  button(tools,db.showTarget and "TARGET EVENTS ON" or "TARGET EVENTS OFF",408,-43,213,function()
   S:SetOption("showTarget",not S:Store().showTarget)
@@ -215,6 +219,73 @@ function S.BuildTuningPage(parent)
  end)
  text(parent,DIM.."Target events are OBSERVED hits on your current target; Forever cannot reliably attribute all of them to you.|r",
   22,-626,888,12)
+end
+
+
+function S.BuildNativePage(parent)
+ text(parent,GOLD.."KS COMBAT TEXT  /  BLIZZARD INTEGRATION|r",23,-20,900,21)
+ text(parent,DIM.."Native settings affect Blizzard text only. Studio controls apply only to KoolSupport's custom text.|r",
+  23,-56,890,13)
+ local settings=box(parent,21,-99,895,194)
+ text(settings,GOLD.."TARGET DAMAGE POSITION|r",17,-17,815,17)
+ text(settings,"Blizzard draws outgoing damage separately from the self-combat-text frame.",17,-52,825,13)
+ text(settings,"Native target text supports vertical movement only; no native font/animation override.",17,-77,825,13)
+ local count=text(settings,"",17,-108,650,14)
+ local status=text(parent,"",23,-607,860,13)
+ local function update()
+  count:SetText("Target height: "..S:Store().native.targetSteps.." steps  |  "..S:NativeTextStatus())
+ end
+ local function move(delta)
+  local db=S:Store()
+  local value=math.max(-40,math.min(40,(db.native.targetSteps or 0)+delta))
+  local ok,why=S:SetNativeTargetHeight(value)
+  status:SetText(ok and GOLD.."Blizzard target text height saved.|r" or
+    "|cffffa88b"..(why or "Native target control unavailable").."|r")
+  update()
+ end
+ button(settings,"LOWER −5",17,-145,191,function()move(-5)end)
+ button(settings,"RAISE +5",223,-145,191,function()move(5)end)
+ button(settings,"RESET HEIGHT",429,-145,191,function()
+  local ok,why=S:SetNativeTargetHeight(0)
+  status:SetText(ok and "Restored default target height." or (why or "Reset unavailable"))
+  update()
+ end)
+ button(settings,"UNLOCK SELF FRAME",635,-145,244,function()
+  local ok,why=S:SetMode("native")
+  if ok then S:SetUnlocked(true) end
+  status:SetText(ok and "Drag BLIZZARD TEXT DOCK; outgoing target text uses height above." or why)
+  update()
+ end)
+ update()
+ local output=box(parent,21,-310,895,166)
+ text(output,GOLD.."DUPLICATE TEXT / OUTGOING NUMBERS|r",17,-15,815,17)
+ text(output,"Studio may show observed hits while Blizzard shows native damage. Hide ONLY Blizzard's outgoing damage",17,-47,851,13)
+ text(output,"to reduce duplication. Incoming native healing/damage remains under Blizzard's own controls.",17,-72,851,13)
+ local function reflect()
+  local db=S:Store()
+  return db.hideNativeOutgoing and "SHOW BLIZZARD OUTGOING" or "HIDE BLIZZARD OUTGOING"
+ end
+ local toggle=button(output,reflect(),17,-110,420,function()end)
+ toggle:SetScript("OnClick",function()
+  local ok,why=S:SetOption("hideNativeOutgoing",not S:Store().hideNativeOutgoing)
+  status:SetText(ok and "Blizzard outgoing setting updated." or
+    (why or "This client does not support outgoing CVar changes."))
+  toggle:SetText(reflect())
+  update()
+ end)
+ button(output,"NATIVE SOURCE STATUS",457,-110,420,function()
+  status:SetText(S:NativeTextStatus())
+ end)
+ local info=box(parent,21,-492,895,100)
+ text(info,GOLD.."CLIENT LIMITATIONS|r",17,-14,700,16)
+ text(info,"Observations on your target include other players' hits. Studio does not promise attribution.",17,-44,855,13)
+ text(info,"If /kct status reports zero incoming and target events after fighting, your client isn't delivering them.",17,-72,855,13)
+ button(parent,"BACK TO STUDIO",24,-652,256,function()KS:ShowPage("combat_text")end)
+ button(parent,"STUDIO PREVIEW",294,-652,215,function()
+  local ok,why=S:Preview()
+  status:SetText(ok and "Switched to Studio and displayed the test numbers." or why)
+ end)
+ button(parent,"RECHECK EVENTS",528,-652,387,function()status:SetText(S:SourceStats())end)
 end
 
 SLASH_KSCOMBAT1="/kct"
