@@ -1,12 +1,13 @@
 ## Interface: 16001
 ## Title: KoolSupport
-## Notes: Unified KoolSupport suite with seven optional in-game modules
+## Notes: Unified KoolSupport suite with nine optional in-game modules
 ## Author: InspiLayer
-## Version: 0.10.15-rc.2
+## Version: 1.0.0
 ## SavedVariablesPerCharacter: KoolSupportDB
 ## SavedVariables: KSAfflictionsTrackerDB
 
 Core.lua
+UIWidgets.lua
 XPReminder.lua
 BarTheme.lua
 Diagnostics.lua
@@ -32,6 +33,7 @@ Modules\KSStealth\TalentImpactData.lua
 Modules\KSStealth\TalentResolver.lua
 Modules\KSStealth\TalentTooltip.lua
 Modules\KSStealth\UI.lua
+Modules\KSStealth\PipDesigner.lua
 Modules\KSStealth\TalentImpactUI.lua
 Modules\KSStealth\Module.lua
 
@@ -65,3 +67,13 @@ Modules\KSThreat\Module.lua
 Modules\KSQuestChecker\QuestChecker.lua
 Modules\KSQuestChecker\UI.lua
 Modules\KSQuestChecker\Module.lua
+
+# Guilty Forever
+Modules\KSGuiltyForever\GuiltyForever.lua
+Modules\KSGuiltyForever\UI.lua
+Modules\KSGuiltyForever\Module.lua
+
+# Sleeping Bag Navigator (optional leveling guide)
+Modules\KSSleepingBag\SleepingBag.lua
+Modules\KSSleepingBag\UI.lua
+Modules\KSSleepingBag\Module.lua

@@ -39,6 +39,7 @@ function M.BuildSuite(parent)
     f:SetWidth(width);f:SetJustifyH("LEFT");f:SetText(value);return f
   end
   local function button(value,x,y,width,fn)
+    if KoolSupport.UIKit then return KoolSupport.UIKit:Button(parent,value,x,y,width,fn,"secondary",29) end
     local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
     b:SetSize(width,31);b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
     b:SetText(value);b:SetScript("OnClick",fn);return b

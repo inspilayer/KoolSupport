@@ -225,3 +225,11 @@ A seventh independent registered module, `ks_quest_checker`, owns `quest_checker
 ## 0.10.15-rc.2 — movable Stealth combo HUD (within existing module)
 
 `addons/KSStealth/HUD.lua` is now loaded immediately after `Stealth.lua` inside the existing single physical KoolSupport TOC, with **no eighth module**. Existing per-nameplate combo points remain independent; a new 5-pip UIParent-anchored HUD shows the selected target's points on Rogue/Druid. Every fixed-range `StatusBar` receives `GetComboPoints("player","target")` directly without Lua inspecting/comparing/formatting the secret value. The HUD is precreated when possible outside combat, hides on lost target/unsupported class/disable, and shows empty positioning pips when unlocked. Dragging is mouse-enabled only unlocked, blocked during combat; UIParent-relative offsets, lock state, scale and visibility live additively under `KoolSupportDB.modules.ks_stealth` for that character. Its scale is independent of existing nameplate scale. WoW event-driven updates, no combat polling and no gameplay automation. 0.10.15-rc.2 remains unpublished pending real client test.
+
+
+## Guilty Forever
+
+`KSGuiltyForever` is a unified source module registered through Base. `KoolSupportDB.modules.ks_guilty_forever.notes` is per-character persistent and additive. All ignore API calls are read-only; native ignore behavior belongs exclusively to Blizzard. Group scan uses current party/raid unit tokens and no automated group decisions. Notification suppression is session-only, not a deletion of any stored reason. The module supports `/kool guilty` and a manual edit page; updates require normal release validation.
+
+
+Enemy-faction tagging stores `kind="enemy"` in the existing Guilty Forever note entries without a schema replacement. A manual UI action accepts only `UnitIsPlayer` and `UnitIsEnemy("player", "target")` validated targets. A read-only `PLAYER_TARGET_CHANGED` callback reminds for saved enemy-tag notes once per session. It does not create a Blizzard ignore, query hidden units, or perform PvP actions.

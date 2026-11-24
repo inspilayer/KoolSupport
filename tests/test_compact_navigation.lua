@@ -25,6 +25,8 @@ local function mk(kind)
  function frame:SetPoint(...)self.point={...}end
  function frame:ClearAllPoints()self.point=nil end
  function frame:SetAllPoints(x)self.allPoints=x end
+ function frame:SetColorTexture(...)self.color={...}end
+ function frame:CreateTexture()return mk("Texture")end
  function frame:SetSize(w,h)self.width=w;self.height=h end
  function frame:SetWidth(w)self.width=w end
  function frame:SetJustifyH()end
@@ -70,9 +72,22 @@ local function findCaption(term,onlyVisible)
 end
 K:Open("home")
 assert(findCaption("COMBAT",true) and findCaption("MACROS",true))
+local combatButton=findCaption("COMBAT",true)
+assert(combatButton.isSection,"category must be implemented as a button")
+assert(combatButton.selectedShade and not combatButton.selectedShade.hidden,
+ "collapsed section needs opaque filled background")
+assert(combatButton.selectedShade.color[4]==1,"section background must be fully opaque")
+assert(combatButton.hoverShade and combatButton.scripts.OnEnter and combatButton.scripts.OnLeave,
+ "category must have visible hover feedback")
+combatButton.scripts.OnEnter(combatButton)
+assert(not combatButton.hoverShade.hidden,"hover should highlight section")
+combatButton.scripts.OnLeave(combatButton)
+assert(combatButton.hoverShade.hidden,"hover should restore section color")
 assert(not findCaption("KS Afflictions",true),"Collapsed nav should not expose every page")
 local combat=findCaption("COMBAT",true)
 combat.scripts.OnClick()
+assert(combat.selectedShade.color[4]==1 and combat.selectedShade.color[1]>.20,
+ "expanded section should have stronger solid background")
 assert(findCaption("KS Afflictions",true),"Combat category expands")
 assert(findCaption("KS Threat",true) and findCaption("KS Stealth",true))
 assert(not findCaption("Builder",true),"Unselected category should remain folded")

@@ -1,0 +1,106 @@
+name: Publish KoolSupport 1.0.0 Stable (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmed_public:
+        description: 'I approve publicly publishing stable 1.0.0 on GitHub; CurseForge publication requires separate verification'
+        type: boolean
+        required: true
+        default: false
+      confirmed_live_smoke:
+        description: 'I have completed the live Forever 9-module smoke test including UI, combo/energy and macros'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: koolsupport-stable-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main branch and explicit release gates
+        env:
+          PUBLIC_APPROVED: ${{ inputs.confirmed_public }}
+          LIVE_APPROVED: ${{ inputs.confirmed_live_smoke }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" || "$PUBLIC_APPROVED" != "true" || "$LIVE_APPROVED" != "true" ]]; then
+            echo "::error::Stable release requires main and both explicit approvals."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require exact stable 1.0.0 manifest version
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_release_version.py
+          version="$(python3 scripts/release_version.py)"
+          if [[ "$version" != "1.0.0" ]]; then
+            echo "::error::Refusing stable tag for candidate version $version"
+            exit 1
+          fi
+
+      - name: Install Lua 5.4
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+      - name: Verify Lua, macro safety, saved data, packaging
+        run: |
+          python3 scripts/check.py --package
+          python3 scripts/check_preview.py
+          python3 scripts/check_curseforge_packaging.py
+
+      - name: Build actual CurseForge package without upload
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+
+      - name: Validate exact upstream zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find .release -type f -name 'KoolSupport*.zip' | sort)
+          if (( ${#files[@]} != 1 )); then
+            echo "::error::Expected exactly one native addon ZIP"
+            exit 1
+          fi
+          python3 scripts/check_curseforge_packaging.py --built-zip "${files[0]}"
+          echo "PACKAGE=${files[0]}" >> "$GITHUB_ENV"
+
+      - name: Create immutable v1.0.0 tag and public GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
+            echo "::error::Main moved during checks. Rerun from current main."
+            exit 1
+          fi
+          if git show-ref --verify --quiet refs/tags/v1.0.0; then
+            echo "::error::v1.0.0 already exists. Never overwrite a public tag."
+            exit 1
+          fi
+          git config user.name "KoolSupport Release Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a v1.0.0 -m "KoolSupport 1.0.0 public stable release"
+          git push origin refs/tags/v1.0.0
+          gh release create v1.0.0 "$PACKAGE" --title "KoolSupport 1.0.0" \
+            --notes "Public 1.0.0 stable release after owner-confirmed Forever smoke tests. Includes all nine modules in one installable KoolSupport folder." \
+            --latest
+
+      - name: Record external CurseForge verification reminder
+        shell: bash
+        run: |
+          echo "Stable v1.0.0 published on GitHub; verify the external CurseForge webhook/file separately." >> "$GITHUB_STEP_SUMMARY"

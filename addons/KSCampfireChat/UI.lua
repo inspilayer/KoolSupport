@@ -14,6 +14,7 @@ local function label(parent,text,x,y,w,font)
   return l
 end
 local function button(parent,text,x,y,w,cb)
+  if KoolSupport.UIKit then return KoolSupport.UIKit:Button(parent,text,x,y,w,cb,"secondary",30) end
   local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
   b:SetSize(w,36)
   b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)

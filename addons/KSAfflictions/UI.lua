@@ -1,6 +1,7 @@
 -- KS Afflictions UI: clear everyday controls; advanced details stay in their own view.
 -- Native WoW controls only; no protected actions or DoT data in configuration.
 local A=KSAfflictions
+local KIT=KoolSupport.UIKit
 local GOLD="|cffffd87a"
 local GREEN="|cff9de4b3"
 local MUTED="|cff9fb4ad"
@@ -14,6 +15,7 @@ local function label(parent,txt,x,y,width,font)
   return t
 end
 local function button(parent,txt,x,y,w,fn)
+  if KIT then return KIT:Button(parent,txt,x,y,w,fn,"secondary",27) end
   local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
   b:SetSize(w,29)
   b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)

@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: KS Sleeping Bag Navigator
+## Notes: Optional faction-aware Cozy Sleeping Bag quest guide and draggable arrow.
+## Author: InspiLayer
+## Version: 1.0.0
+## Dependencies: KoolSupport
+
+SleepingBag.lua
+UI.lua
+Module.lua

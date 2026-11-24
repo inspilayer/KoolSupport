@@ -63,6 +63,7 @@ function M.BuildSpellbook(parent)
     t:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);t:SetWidth(w);t:SetJustifyH("LEFT");t:SetText(text);return t
   end
   local function btn(text,x,y,w,callback)
+    if KoolSupport.UIKit then return KoolSupport.UIKit:Button(parent,text,x,y,w,callback,"secondary",29) end
     local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
     b:SetSize(w or 140,29);b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y);b:SetText(text);b:SetScript("OnClick",callback);return b
   end
