@@ -2,7 +2,7 @@
 ## Title: KS Combat Text Studio
 ## Notes: Optional movable Blizzard-style combat text and animated lanes for Forever.
 ## Author: InspiLayer
-## Version: 1.1.0-rc.2
+## Version: 1.1.0-rc.3
 ## Dependencies: KoolSupport
 
 CombatText.lua
