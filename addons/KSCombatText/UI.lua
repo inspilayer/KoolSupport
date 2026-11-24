@@ -46,6 +46,7 @@ function S.BuildPage(parent)
   22,-49,900,13)
  local mode=box(parent,21,-79,895,82)
  text(mode,GOLD.."RENDER MODE|r",13,-12,335,16)
+ text(mode,DIM.."Blizzard frame: "..((CombatText or CombatTextFrame) and "detected" or "unavailable").."|r",491,-11,380,12)
  local status=text(parent,"",22,-650,860,13)
  local lane=state.lanes[selectedLane]
  local laneHeader,details
@@ -221,6 +222,10 @@ SlashCmdList=SlashCmdList or {}
 SlashCmdList.KSCOMBAT=function(raw)
  local command=(raw or ""):match("^%s*(%S+)") or ""
  if command=="test" then S:Preview()
+ elseif command=="status" then
+  if type(print)=="function" then
+   print("KoolSupport  "..S:SourceStats())
+  end
  elseif command=="unlock" then S:SetUnlocked(true)
  elseif command=="lock" then S:SetUnlocked(false)
  else KS:Open("combat_text") end
