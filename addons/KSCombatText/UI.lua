@@ -75,8 +75,8 @@ function S.BuildPage(parent)
     ("|cffffa58d"..(why or "Setting unavailable").."|r"))
   refresh()
  end
- local native=button(mode,"BLIZZARD ORIGINAL",13,-38,269,function()apply(S.SetMode,"native")end)
- local studio=button(mode,"ANIMATED STUDIO",296,-38,269,function()apply(S.SetMode,"studio")end)
+ local native=button(mode,state.mode=="native" and "[ SELECTED ] BLIZZARD" or "BLIZZARD ORIGINAL",13,-38,269,function()apply(S.SetMode,"native")end)
+ local studio=button(mode,state.mode=="studio" and "[ SELECTED ] STUDIO" or "ANIMATED STUDIO",296,-38,269,function()apply(S.SetMode,"studio")end)
  button(mode,state.unlocked and "LOCK ZONES" or "UNLOCK & DRAG",582,-38,292,function()
   apply(S.SetUnlocked,not S:Store().unlocked)
   KS:ShowPage("combat_text")
@@ -123,8 +123,7 @@ function S.BuildPage(parent)
   end
   )
  end
- local extras=box(parent,21,-639,895,1)
- -- Floating area constraints use the lower portion of the page.
+  -- Floating area constraints use the lower portion of the page.
  -- Keep the size controls inside a subpage accessible via a single button.
  button(parent,"TYPE, SPEED & EFFECTS",21,-650,267,function()KS:ShowPage("combat_text_tuning")end)
  button(parent,"PREVIEW",305,-650,165,function()
@@ -152,7 +151,7 @@ local adjustments={
  {"limit","ACTIVE LINES",1},
 }
 function S.BuildTuningPage(parent)
- local status=text(parent,"",23,-635,865,13)
+ local status=text(parent,"",23,-154,865,13)
  text(parent,GOLD.."COMBAT TEXT  /  FINE TUNING|r",22,-17,882,22)
  text(parent,DIM.."Tune individual lanes, text density, crit intensity and Blizzard integration.|r",
  22,-55,875,13)
@@ -164,7 +163,7 @@ function S.BuildTuningPage(parent)
   end)
  end
  local lane=S:Store().lanes[selectedLane]
- local p=box(parent,21,-169,895,380)
+ local p=box(parent,21,-169,895,365)
  local title=text(p,GOLD..laneNames[selectedLane]:upper().."  |  TYPOGRAPHY + MOTION|r",14,-14,790,17)
  local function save(key,value)
   local ok,why=S:SetLaneOption(selectedLane,key,value)
@@ -188,7 +187,7 @@ function S.BuildTuningPage(parent)
    save("outline",entry[1])
   end)
  end
- local tools=box(parent,21,-564,895,95)
+ local tools=box(parent,21,-541,895,82)
  local db=S:Store()
  text(tools,GOLD.."BLIZZARD & TARGET SETTINGS|r",13,-10,700,15)
  button(tools,db.mode=="native" and "NATIVE MODE" or "STUDIO MODE",13,-43,175,function()
@@ -208,13 +207,13 @@ function S.BuildTuningPage(parent)
   S:SetUnlocked(not S:Store().unlocked)
   KS:ShowPage("combat_text_tuning")
  end)
- button(parent,"BACK TO STUDIO",24,-672,241,function()KS:ShowPage("combat_text")end)
- button(parent,"PREVIEW",279,-672,186,function()
+ button(parent,"BACK TO STUDIO",24,-650,241,function()KS:ShowPage("combat_text")end)
+ button(parent,"PREVIEW",279,-650,186,function()
   local ok,why=S:Preview()
   status:SetText(ok and "Preview sent." or (why or "Preview unavailable"))
  end)
  text(parent,DIM.."Target events are OBSERVED hits on your current target; Forever cannot reliably attribute all of them to you.|r",
-  22,-613,888,12)
+  22,-626,888,12)
 end
 
 SLASH_KSCOMBAT1="/kct"
