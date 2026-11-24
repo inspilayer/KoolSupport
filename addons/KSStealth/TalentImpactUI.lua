@@ -1,6 +1,7 @@
 -- KS Stealth talent impact browser. Opt-in, read-only, paged for the 605px pane.
 -- Numeric examples are labeled "normalized" and never claim actual damage.
 local S=KSStealth
+local KIT=KoolSupport.UIKit
 local PER_PAGE=5
 local function label(parent,value,x,y,width,font)
  local f=parent:CreateFontString(nil,"OVERLAY",font or "GameFontNormal")
@@ -11,6 +12,7 @@ local function label(parent,value,x,y,width,font)
  return f
 end
 local function button(parent,value,x,y,width,callback)
+ if KIT then return KIT:Button(parent,value,x,y,width,callback,"secondary",30) end
  local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
  b:SetSize(width,30)
  b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y)
@@ -19,14 +21,15 @@ local function button(parent,value,x,y,width,callback)
  return b
 end
 function S.BuildTalentPage(parent)
- label(parent,"|cffffd87aKS Stealth - Talent Impacts|r",20,-18,770,"GameFontNormalLarge")
+ label(parent,"|cffffd87aTALENT IMPACTS  /  CLASS STUDY|r",20,-18,770,"GameFontNormalLarge")
  label(parent,"Read-only rank, spellbook and talent effects. No casts, combat automation or hidden damage reads.",20,-50,775)
  label(parent,"API-calculated costs may include other effects; 100-damage and 200%-crit examples are illustrative.",20,-72,775,"GameFontHighlightSmall")
 
  local class
  if type(UnitClass)=="function" then local _;_,class=UnitClass("player") end
- if class~="DRUID" and class~="ROGUE" then
-  label(parent,"|cffff8080Supported class catalog: Druid and Rogue only.|r",20,-133,755)
+ if #S:GetTalentImpactCatalog(class)==0 then
+  label(parent,"|cffffb48cNo curated catalog for your class yet.|r",20,-132,755)
+  label(parent,"Supported: "..S:TalentImpactClassSummary(),20,-169,795)
   return
  end
  local status=label(parent,"",20,-550,760,"GameFontHighlightSmall")
@@ -77,7 +80,8 @@ function S.BuildTalentPage(parent)
  label(parent,caption,20,-140,755,"GameFontHighlightSmall")
 
  local catalog=S:GetTalentImpactCatalog(class)
- label(parent,"|cffffd87aTalents ("..#catalog..")|r",20,-176,330,"GameFontNormalLarge")
+ label(parent,"|cffffd87a"..(S.TalentImpactClassNames[class] or class).." talents ("..#catalog..")|r",
+  20,-176,350,"GameFontNormalLarge")
  label(parent,"|cffffd87aAffected abilities|r",395,-176,388,"GameFontNormalLarge")
  local selected=1
  local page=1
@@ -168,5 +172,5 @@ function S.BuildTalentPage(parent)
  end)
  if S:Store().talentAnnotate then S:InstallTalentTooltipHook() end
  navigate(0)
- status:SetText("Forever data pending in-game validation; unsupported numbers are never invented.")
+ status:SetText("Curated Forever rank effects; conditions are not simulated. Live APIs must confirm trained ranks.")
 end

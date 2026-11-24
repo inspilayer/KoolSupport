@@ -1,4 +1,4 @@
-# One CurseForge installable addon folder with eight in-game optional module folders.
+# One CurseForge installable addon folder with ten in-game optional module folders.
 # Source modules remain separate for engineering tests; distribution nests them.
 package-as: KoolSupport
 enable-nolib-creation: no
@@ -13,6 +13,7 @@ move-folders:
     KoolSupport/addons/KSQuestChecker: KoolSupport/Modules/KSQuestChecker
     KoolSupport/addons/KSGuiltyForever: KoolSupport/Modules/KSGuiltyForever
     KoolSupport/addons/KSSleepingBag: KoolSupport/Modules/KSSleepingBag
+    KoolSupport/addons/KSCombatText: KoolSupport/Modules/KSCombatText
 ignore:
     - docs
     - tests
@@ -31,4 +32,5 @@ ignore:
     - addons/KSQuestChecker/KSQuestChecker.toc
     - addons/KSGuiltyForever/KSGuiltyForever.toc
     - addons/KSSleepingBag/KSSleepingBag.toc
+    - addons/KSCombatText/KSCombatText.toc
 license-output: LICENSE

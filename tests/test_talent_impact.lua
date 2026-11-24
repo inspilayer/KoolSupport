@@ -49,7 +49,12 @@ local db=S:Store()
 assert(db.talentImpactOverlay==false,"opt-in must default OFF")
 assert(#S:GetTalentImpactCatalog("DRUID")==6)
 assert(#S:GetTalentImpactCatalog("ROGUE")==10)
+assert(#S:GetTalentImpactCatalog("SHAMAN")==8)
+assert(#S:GetTalentImpactCatalog("MAGE")==6)
+assert(#S:GetTalentImpactCatalog("HUNTER")==6)
+assert(#S:GetTalentImpactCatalog("PALADIN")==6)
 assert(#S:GetTalentImpactCatalog("PRIEST")==0)
+assert(S:TalentImpactClassSummary():find("Shaman",1,true))
 local sf=S:GetTalentImpactById("DRUID","savage_fury")
 assert(sf and sf.maxRank==2)
 assert(table.concat(sf.abilities,",")=="Claw,Rake,Shred,Maul,Swipe")
@@ -104,11 +109,20 @@ local ok=S:SetTalentImpactOverlay(false)
 assert(ok==false and db.talentImpactOverlay==true and db.unknownCustomSetting.kept)
 InCombatLockdown=function()return false end
 assert(S:SetTalentImpactOverlay(false) and db.talentImpactOverlay==false)
-class="MAGE"
+-- Browse every new class without talent APIs; UI must degrade gracefully.
+db.talentImpactOverlay=true
+for _,token in ipairs({"SHAMAN","MAGE","HUNTER","PALADIN"}) do
+ class=token
+ local classPage=frame("Frame")
+ S.BuildTalentPage(classPage)
+ assert(#S:GetTalentImpactCatalog()==(token=="SHAMAN" and 8 or 6))
+end
+class="PRIEST"
 local unsupported=frame("Frame")
 S.BuildTalentPage(unsupported)
 assert(#S:GetTalentImpactCatalog()==0)
+db.talentImpactOverlay=false
 assert(KoolSupport:CanOpenPage("stealth_talents"))
 assert(KoolSupport:SetModuleEnabled("ks_stealth",false))
 assert(not KoolSupport:CanOpenPage("stealth_talents"),"plugin disable gates talent page")
-print("PASS talent impacts: two-class catalogs, hover UI, opt-in, persistence, module and combat gates")
+print("PASS talent impacts: six-class curated catalogs, hover UI, opt-in, persistence, module and combat gates")

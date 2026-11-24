@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: KoolSupport
-## Notes: Unified KoolSupport suite with nine optional in-game modules
+## Notes: Unified KoolSupport suite with ten optional in-game modules
 ## Author: InspiLayer
-## Version: 1.0.0
+## Version: 1.1.0-rc.3
 ## SavedVariablesPerCharacter: KoolSupportDB
 ## SavedVariables: KSAfflictionsTrackerDB
 
@@ -77,3 +77,9 @@ Modules\KSGuiltyForever\Module.lua
 Modules\KSSleepingBag\SleepingBag.lua
 Modules\KSSleepingBag\UI.lua
 Modules\KSSleepingBag\Module.lua
+
+# Combat Text Studio (opt-in, post-1.0)
+Modules\KSCombatText\CombatText.lua
+Modules\KSCombatText\Render.lua
+Modules\KSCombatText\UI.lua
+Modules\KSCombatText\Module.lua

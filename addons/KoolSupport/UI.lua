@@ -253,7 +253,7 @@ end
 -- stack of bulky buttons with simple text rows. Page IDs/dependencies unchanged.
 local categories={
   {id="workshop",label="MACROS",pages={"macro_suite","full_spellbook","macro_workshop","support_session"}},
-  {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_designer","stealth_talents"}},
+  {id="combat",label="COMBAT",pages={"afflictions","ks_threat","stealth","stealth_designer","stealth_talents","combat_text","combat_text_tuning","combat_text_native"}},
   {id="social",label="SOCIAL",pages={"campfire_chat","guilty_forever"}},
   {id="system",label="TOOLS",pages={"quest_checker","sleeping_bag","xp_reminder","launch_checks"}},
   {id="help",label="FAQ / HELP",pages={"faq"}},

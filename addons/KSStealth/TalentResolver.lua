@@ -147,9 +147,9 @@ function S:RefreshTalentInsights()
  if KoolSupport:IsInCombat() then return false,"Refresh Talent Impacts outside combat" end
  local class
  if type(UnitClass)=="function" then local _; _,class=UnitClass("player") end
- if class~="DRUID" and class~="ROGUE" then
+ if not class or #self:GetTalentImpactCatalog(class)==0 then
   self.talentSnapshot=nil
-  return false,"Talent Impacts currently supports Druid and Rogue"
+  return false,"No curated Talent Impacts catalog for this class"
  end
  local talents,talentWhy=self:ReadTalentRanks()
  local abilities,spellWhy=self:ReadLearnedAbilities()
@@ -207,6 +207,14 @@ function S:AbilityInsights(ability)
     if self:Store().talentCritEstimate then
      description=description.."; 200% crit example: "..(200+2*value)
     end
+   elseif mod.kind=="healing_pct" then
+    description="+"..value.."% healing (normalized 100 -> "..(100+value)..")"
+   elseif mod.kind=="cast_flat" then
+    description="-"..value.." sec cast time"
+   elseif mod.kind=="duration_flat" then
+    description="+"..value.." sec duration"
+   elseif mod.kind=="range_yards" then
+    description="+"..value.." yards range"
    elseif mod.kind=="crit_chance" then
     description="+"..value.." percentage points crit chance"
    elseif mod.kind=="cost_flat" then
