@@ -16,7 +16,7 @@ local function frame(kind,parent)
  local f={kind=kind or "Frame",parent=parent,shown=true}
  function f:SetSize(w,h)self.w,self.h=w,h end
  function f:SetPoint(...)self.point={...}end
- function f:GetPoint()return unpack(self.point or {"CENTER",UIParent,"CENTER",0,0})end
+ function f:GetPoint()return table.unpack(self.point or {"CENTER",UIParent,"CENTER",0,0})end
  function f:GetNumPoints()return self.point and 1 or 0 end
  function f:ClearAllPoints()self.point=nil end
  function f:SetText(t)self.text=t end
