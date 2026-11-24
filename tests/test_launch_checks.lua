@@ -6,7 +6,7 @@ InCombatLockdown=function() return false end
 local toc=16001
 GetBuildInfo=function()return "11.2",12345,"Nov 3",toc end
 local loaded={
- KoolSupport=true,KSMacros=false,KSSupportSessions=false,KSStealth=false,KSAfflictions=false,KSCampfireChat=false,KSThreat=false,KSQuestChecker=false,KSGuiltyForever=false,KSSleepingBag=false,
+ KoolSupport=true,KSMacros=false,KSSupportSessions=false,KSStealth=false,KSAfflictions=false,KSCampfireChat=false,KSThreat=false,KSQuestChecker=false,KSGuiltyForever=false,KSSleepingBag=false,KSCombatText=false,
 }
 C_AddOns={IsAddOnLoaded=function(name)return loaded[name] or false end}
 C_SpellBook={GetNumSpellBookSkillLines=function()end,GetSpellBookItemInfo=function()end}
@@ -48,8 +48,9 @@ KS:RegisterModule({id="ks_threat",title="KS Threat",apiVersion=1,defaultEnabled=
 KS:RegisterModule({id="ks_quest_checker",title="KS Quest Checker",apiVersion=1,defaultEnabled=true})
 KS:RegisterModule({id="ks_guilty_forever",title="Guilty Forever",apiVersion=1,defaultEnabled=true})
 KS:RegisterModule({id="ks_sleeping_bag",title="Sleeping Bag Navigator",apiVersion=1,defaultEnabled=false})
+KS:RegisterModule({id="ks_combat_text",title="KS Combat Text Studio",apiVersion=1,defaultEnabled=false})
 local rows=KS:CollectLaunchChecks()
-assert(#rows==16,"build + 10 addon rows + 5 capability checks")
+assert(#rows==17,"build + 11 addon rows + 5 capability checks")
 local map={}
 for _,r in ipairs(rows)do map[r.id]=r end
 assert(map.interface.status=="MATCH")
@@ -61,6 +62,7 @@ assert(map.KSThreat.status=="OFF")
 assert(map.KSQuestChecker.status=="ENABLED")
 assert(map.KSGuiltyForever.status=="ENABLED")
 assert(map.KSSleepingBag.status=="OFF")
+assert(map.KSCombatText.status=="OFF")
 assert(map.traits.status=="PRESENT")
 assert(map.spellbook.status=="PRESENT")
 assert(map.tooltip.status=="PRESENT")
@@ -79,7 +81,7 @@ rows=KS:CollectLaunchChecks()
 for _,r in ipairs(rows)do if r.id=="spellbook" then assert(r.status=="UNAVAILABLE") end end
 -- API detection does not read any combat resources, even in combat.
 InCombatLockdown=function()return true end
-assert(#KS:CollectLaunchChecks()==16)
+assert(#KS:CollectLaunchChecks()==17)
 assert(KS:CanOpenPage("launch_checks"))
 local parent=frame()
 KS.pages.launch_checks.build(parent)
