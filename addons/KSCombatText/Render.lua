@@ -3,9 +3,10 @@
 local S=KSCombatText
 local KS=KoolSupport
 local anchors,active,pools,elapsed,serial={}, {}, {},0,0
+local nativeHandle
 local paletteOrder={incoming="incoming",heal="heal",notification="notification",target="target"}
 local laneTitles={incoming="INCOMING DAMAGE",heal="HEALS",notification="NOTIFICATIONS",
- target="TARGET OBSERVED"}
+ target="TARGET OBSERVED",native="BLIZZARD TEXT DOCK"}
 S.laneTitles=laneTitles
 
 local function nativeFrame()
@@ -124,6 +125,15 @@ function S:EnsureFrames()
  if self.framesReady then return true end
  if KS:IsInCombat() then return false end
  -- Preallocate entire pool OUTSIDE combat. Nothing is allocated in Queue.
+ nativeHandle=createAnchor("native")
+ nativeHandle:SetScript("OnDragStop",function(self)
+  self:StopMovingOrSizing()
+  local cx,cy=self:GetCenter()
+  local ux,uy=UIParent:GetCenter()
+  if type(cx)=="number" and type(cy)=="number" and
+     type(ux)=="number" and type(uy)=="number" then S:MoveNative(cx-ux,cy-uy) end
+ end)
+ nativeHandle:Hide()
  for _,key in ipairs(self.LANES) do
   local anchor=createAnchor(key)
   anchors[key]=anchor
@@ -146,6 +156,7 @@ function S:Refresh()
   self:RestoreBlizzardAnchor()
   self:RestoreBlizzardVisibility()
   for _,frame in pairs(anchors) do frame:Hide();frame:EnableMouse(false) end
+  if nativeHandle then nativeHandle:Hide();nativeHandle:EnableMouse(false) end
   for _,queue in pairs(pools) do
    for _,slot in ipairs(queue) do slot.active=false;slot.text:Hide() end
   end
@@ -158,6 +169,15 @@ function S:Refresh()
   self:RestoreBlizzardAnchor()
  end
  if not self:EnsureFrames() then return end
+ if nativeHandle then
+  if not KS:IsInCombat() then
+   nativeHandle:ClearAllPoints()
+   nativeHandle:SetPoint("CENTER",UIParent,"CENTER",db.native.x,db.native.y)
+  end
+  local editing=db.unlocked and db.mode=="native"
+  nativeHandle:EnableMouse(editing)
+  if editing then nativeHandle:Show() else nativeHandle:Hide() end
+ end
  for _,key in ipairs(self.LANES) do
   local anchor=anchors[key]
   local style=db.lanes[key]
