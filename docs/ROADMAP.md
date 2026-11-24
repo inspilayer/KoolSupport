@@ -266,3 +266,12 @@ Enemy-faction extension: manually tag a hostile player through the current targe
 | Stable 1.0.0 | Merge verified candidate, update exact version, publish immutable public GitHub release tag / CurseForge stable package | Live feature smoke (all 8 modules), secure macro behavior, saved data, license, version and artifact checks |
 
 Explicit rule: DO NOT promote RC1 directly to the public 1.0.0 release simply because mocked Lua and packaging checks pass. Review in the actual Forever client first. Stable publish must be separately authenticated and its public CurseForge file verified.
+
+
+## After 1.0.0 stable — 1.1 Combat Text Studio RC
+
+- Development PR #40 on `feature/combat-text-studio-1.1`, version `1.1.0-rc.1`; 1.0.0 public stable must remain untouched.
+- New tenth opt-in KS Combat Text module: original Blizzard floating text docking when supported, plus Studio mode with four movable lanes and twelve animation choices, six presets, five client-provided fonts, custom typography/crit/lifetime/spacing/opacity/line limits, synthetic preview, optional native text suppression (explicit and restored), safe secret-value text passthrough.
+- **Attribution:** `COMBAT_TEXT_UPDATE` feeds available incoming/healing/notification events; `UNIT_COMBAT` opt-in for observed target events only. No accurate comprehensive outgoing player-only damage promised; Forever's restricted combat log makes that a distinct future research area. Do not infer personal attribution.
+- Live 1.1 acceptance gate: prove supported native frame/CVar, no taint, event sample coverage, source counters with `/kct status`, possible doubled text, animation placement and font fallbacks, burst spam budget, disabled-mode cleanup, backwards compatible saved settings and earlier nine-module smoke.
+- Future iterations: stronger verified source classification if Forever adds supported APIs, optional font sources through a properly licensed/installed shared media provider, more granular event filters only when source provenance is reliable. No public release tag until client testing.
