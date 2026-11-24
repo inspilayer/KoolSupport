@@ -111,6 +111,48 @@ hooks[1](tooltip,{id=9001})
 assert(#tooltip.lines==count,"must not append duplicate tooltip lines")
 hooks[1](tooltip,{id=9999})
 assert(#tooltip.lines==count,"untrained talents cannot assert live modifier")
+-- Synthetic rank snapshots verify the new typed display rules without
+-- inventing any combat damage or requiring active talents on this character.
+local function snapshotFor(token,rankMap)
+ class=token
+ local found={}
+ for name,_ in pairs(rankMap) do found[name]=true end
+ S.talentSnapshot={class=token,talents={found=found,ranks=rankMap},abilities={}}
+end
+snapshotFor("SHAMAN",{
+ ["Convection"]=5,["Concussion"]=5,["Elemental Alacrity"]=3,
+})
+local shock=table.concat(S:AbilityInsightLines("Lightning Bolt")," | ")
+assert(shock:find("-10% MANA cost",1,true),shock)
+assert(shock:find("-0.5 sec cast time",1,true),shock)
+assert(shock:find("+5% damage",1,true),shock)
+snapshotFor("MAGE",{Accelerant=5,Incineration=5,Shatter=3,["Arcane Geometry"]=2})
+local mage=table.concat(S:AbilityInsightLines("Fireball")," | ")
+assert(mage:find("-0.5 sec cast time",1,true),mage)
+local ice=table.concat(S:AbilityInsightLines("Ice Lance")," | ")
+assert(ice:find("+10 percentage points crit chance",1,true),ice)
+assert(not ice:find("Shatter",1,true),
+ "conditional Frozen-target crit must not be advertised as unconditional")
+local range=table.concat(S:AbilityInsightLines("Arcane Blast")," | ")
+assert(range:find("+6 yards range",1,true),range)
+snapshotFor("HUNTER",{["Improved Stings"]=3,Efficiency=5,Barrage=3})
+local sting=table.concat(S:AbilityInsightLines("Serpent Sting")," | ")
+assert(sting:find("+20% damage",1,true) and sting:find("-15% MANA cost",1,true),sting)
+local duration=table.concat(S:AbilityInsightLines("Scorpid Sting")," | ")
+assert(duration:find("+45 sec duration",1,true),duration)
+local cooldown=table.concat(S:AbilityInsightLines("Viper Sting")," | ")
+assert(cooldown:find("-6 sec cooldown",1,true),cooldown)
+snapshotFor("PALADIN",{["Healing Light"]=3,["Improved Judgement"]=2,
+ ["Champion of the Light"]=5,Conviction=3})
+local heals=table.concat(S:AbilityInsightLines("Holy Light")," | ")
+assert(heals:find("+12% healing (normalized 100 -> 112)",1,true),heals)
+local judgement=table.concat(S:AbilityInsightLines("Judgement")," | ")
+assert(judgement:find("-2 sec cooldown",1,true),judgement)
+local hammer=table.concat(S:AbilityInsightLines("Hammer of Wrath")," | ")
+assert(hammer:find("-1 sec cast time",1,true),hammer)
+assert(#S:AbilityInsightLines("Frostbolt")==0,"no cross-class modifier leakage")
+class="DRUID"
+S.talentSnapshot=nil
 pending=true
 local no,why=S:ReadTalentRanks()
 assert(no==nil and why:find("Pending"))
@@ -128,4 +170,4 @@ local unavailable=S:ReadTalentRanks()
 assert(unavailable==nil,"missing Forever API must fail closed")
 assert(KoolSupportDB.modules.ks_stealth.talentAnnotate and
  KoolSupportDB.modules.ks_stealth.talentCritEstimate)
-print("PASS talent resolver: rank scans, learned highest spell, normalized/cost math, opt-in tooltips, no combat reads")
+print("PASS talent resolver: six class modifiers, rank scans, source-safe cost/cast/heal data, tooltips and no combat reads")
