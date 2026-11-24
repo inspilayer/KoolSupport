@@ -158,6 +158,10 @@ Go to `/kool` → **Combat → KS Stealth**. Toggle **HUD: ON**, click **Unlock 
 RC1 establishes the compact slate/gold UI kit, smaller sidebar typography, neutral button treatments and unified styling in the main workshop and module pages. RC2 will address in-game visual review notes. Do not publish stable until the 8-module Forever smoke test, combat/resource rendering, macro ownership protection, SavedVariables persistence, packaging/license validation and product-owner acceptance all pass. See [roadmap](docs/ROADMAP.md) and [transition](docs/CHAT-TRANSITION.md).
 
 
+## Talent Impacts — six-class reference (1.1.0-rc.2)
+
+The read-only **Combat → Talent Impacts** browser now supports **Druid, Rogue, Shaman, Mage, Hunter and Paladin**, with 42 curated talent references (26 newly added across the last four classes). View native talent ranks, affected learned abilities, optional tooltip annotations and conservative normalized 100-point illustrations; the viewer does not assign points or cast spells. Added typed descriptions for cast-time reductions, healing %, increased range and duration. Talent effects requiring target conditions are labeled and never treated as unconditional bonuses. The catalogs use documented Forever ranks as of November 2026 and are not exhaustive; in-game verification and later server hotfixes may change values. The browser remains part of KS Stealth and is opt-in.
+
 ## 1.1.0-rc.2 — Combat Text Studio (development)
 
 1.0.0 remains the public stable baseline. This 1.1 release candidate adds an **optional, disabled-by-default** Combat Text Studio module under Combat. After enabling, choose **Native** to move Blizzard's ordinary combat text, or **Studio** for four custom animated text lanes. Presets: Classic, Minimal, Arcade, Fountain, Cascade, Zen; 12 animation styles, five built-in client fonts, four palettes, editable font size/crit multiplier/outline/speed/lifetime/spread/opacity/max messages. Unlock and drag positions or type `/kct test` to preview; `/kct status` summarizes the event stream. No external fonts are bundled. The module restores Blizzard anchor/CVar changes when disabled.
