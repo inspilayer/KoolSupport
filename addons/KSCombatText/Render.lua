@@ -160,6 +160,11 @@ function S:Refresh()
   return
  end
  local db=self:Store()
+ -- A previously enabled native-hide preference is reapplied only when
+ -- the player explicitly re-enables this optional module outside combat.
+ if db.nativeHidden and not changedFloating and not KS:IsInCombat() then
+  self:UpdateBlizzardVisibility()
+ end
  if db.mode=="native" and not KS:IsInCombat() then
   self:DockBlizzard()
  else
