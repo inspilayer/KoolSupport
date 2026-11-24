@@ -55,7 +55,10 @@ function S:RestoreOutgoingVisibility()
 end
 function S:UpdateOutgoingVisibility()
  if KS:IsInCombat() then return false,"Change Blizzard damage visibility outside combat" end
- if not self:Enabled() or not self:Store().hideNativeOutgoing then
+ -- Blizzard native mode must never have its own outgoing text hidden by
+ -- Studio's optional replacement setting; restore it on mode switch.
+ if not self:Enabled() or self:Store().mode~="studio" or
+    not self:Store().hideNativeOutgoing then
   return self:RestoreOutgoingVisibility()
  end
  local key=outgoingKey
@@ -273,12 +276,19 @@ function S:Refresh()
   return
  end
  local db=self:Store()
+ if db.mode~="studio" then
+  -- OnUpdate intentionally stops Studio animations in Native mode.
+  -- Expire all Studio slots first or the last visible numbers would freeze.
+  for _,queue in pairs(pools) do
+   for _,slot in ipairs(queue) do slot.active=false;slot.text:Hide() end
+  end
+ end
  -- A previously enabled native-hide preference is reapplied only when
  -- the player explicitly re-enables this optional module outside combat.
  if db.nativeHidden and not changedFloating and not KS:IsInCombat() then
   self:UpdateBlizzardVisibility()
  end
- if db.hideNativeOutgoing and not outgoingChanged and not KS:IsInCombat() then
+ if not KS:IsInCombat() and (db.hideNativeOutgoing or outgoingChanged) then
   self:UpdateOutgoingVisibility()
  end
  if db.mode=="native" and not KS:IsInCombat() then
