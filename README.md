@@ -2,7 +2,7 @@
 
 **A modular, player-operated macro workshop for World of Warcraft: Forever.**
 
-Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0** is a private, pre-release UI review candidate—not an approved public 1.0.0. Full live Forever verification is required before stable promotion.
+Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0** is staged for a stable release. Public publishing remains gated on the owner's live Forever smoke-test confirmation and the protected publishing workflow.
 
 ## Modules
 
@@ -16,11 +16,12 @@ Last confirmed GitHub Beta tag: **v0.10.14-rc.1-beta**. **1.0.0** is a private, 
 | **Campfire Chat** | Included; player-toggleable | Joke, Spooky, Ramble and Edgy Joke buttons; sends one original /say line only when the Campfire Nearby buff is detected |
 | **KS Quest Checker** | Included; player-toggleable | Search quest names and IDs, then check Blizzard's character completion flag; optionally uses a separately installed QuestieDB for a full quest-name index |
 | **Guilty Forever** | Included; player-toggleable | Private ignore reasons, first-name + surname enemy tags, saved grudge ledger and party/target reminders |
+| **Sleeping Bag Navigator** | Included; off by default | Draggable guide for the Cozy Sleeping Bag quest chain, including faction routes, hidden-object steps, and map-pin fallback |
 | **KS Macro Profiles** | Planned | JSON profile sharing, safe import/export |
 
-**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All eight module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
+**Starting with 0.10.8, only the `KoolSupport/` folder goes directly inside `Interface/AddOns/`.** All nine module sources are packaged in `KoolSupport/Modules/`; the in-game Module Manager still controls optional features. Use `/kool` to open the addon (subcommands: `/kool suite`, `/kool spellbook`, `/kool builder`, `/kool support`, `/kool stealth`, `/kool modules`, `/kool quest`).
 
-The **1.0.0 development ZIP contains one top-level folder**, `KoolSupport`, with all eight modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
+The **1.0.0 release ZIP contains one top-level folder**, `KoolSupport`, with all nine modules nested. Developer ZIPs use that same layout. See [architecture](docs/ARCHITECTURE.md).
 
 ## Developer setup
 
