@@ -86,7 +86,18 @@ function S:RestoreNativeTargetHeight()
   return false,"Could not restore target text height"
  end
  targetMoved=false
+ targetBaseline=nil
+ self:Store().native.targetSteps=0
  return true
+end
+function S:NativeTextStatus()
+ local hit=getCvar(WORLD_HIT)
+ local crit=getCvar(WORLD_CRIT)
+ local damage=getCvar(outgoingKey or OUTGOING_CVARS[1])
+ local height=hit~=nil and crit~=nil and "available" or "unavailable"
+ return ("Target height CVars: %s | Outgoing Blizzard: %s | Self frame: %s"):format(
+  height,damage==nil and "unavailable" or damage,
+  self.nativeMoveStatus or "unverified")
 end
 function S:SetNativeTargetHeight(steps)
  if KS:IsInCombat() then return false,"Adjust Blizzard target text out of combat" end
